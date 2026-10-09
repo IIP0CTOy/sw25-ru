@@ -1,0 +1,13 @@
+# backups and archives
+_backup_*/
+*.zip
+
+# LevelDB service files of compendium packs (Foundry keeps them open)
+packs/**/LOCK
+packs/**/LOG
+packs/**/LOG.old
+
+# misc
+*.log
+Thumbs.db
+desktop.ini

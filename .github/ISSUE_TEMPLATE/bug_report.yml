@@ -1,0 +1,51 @@
+name: Ошибка / Bug report
+description: Что-то работает не так / Something does not work
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Пожалуйста, не вставляйте текст из книг правил. / Please do not paste text from the rulebooks.
+  - type: input
+    id: version
+    attributes:
+      label: Версия системы и Foundry / System and Foundry version
+      placeholder: "sw25-ru 2.4.1-ru.7, Foundry 14.xxx"
+    validations:
+      required: true
+  - type: dropdown
+    id: lang
+    attributes:
+      label: Язык клиента / Client language
+      options: ["Русский", "English", "日本語", "한국어"]
+    validations:
+      required: true
+  - type: dropdown
+    id: role
+    attributes:
+      label: Кто нажимал / Who clicked
+      options: ["Мастер / GM", "Игрок / Player"]
+  - type: textarea
+    id: steps
+    attributes:
+      label: Шаги / Steps to reproduce
+      placeholder: |
+        1. Открыть лист персонажа…
+        2. Нажать…
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Что ожидалось и что произошло / Expected vs actual
+    validations:
+      required: true
+  - type: textarea
+    id: console
+    attributes:
+      label: Ошибки консоли (F12) / Console errors (F12)
+      render: text
+  - type: textarea
+    id: modules
+    attributes:
+      label: Включённые модули / Active modules

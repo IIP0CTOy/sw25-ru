@@ -1,0 +1,13 @@
+Sword World 2.5 (sw25-ru) — multi-section monsters
+File: module/helpers/sections.mjs
+Copyright (c) 2026 IIP0CTOy. All rights reserved.
+
+Versions 2.4.1-ru.7 and earlier of this file were published under the MIT License.
+Starting with version 2.4.1-ru.8, this file is NOT licensed under MIT.
+
+You may download and use it as part of the sw25-ru system in your own Foundry VTT games.
+Without prior written permission from the author you may not copy,
+modify, redistribute, sell, sublicense, or include this file or
+any part of it in other packages.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.

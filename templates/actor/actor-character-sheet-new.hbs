@@ -1,0 +1,1202 @@
+{{!-- SW25-RU new character sheet (redesign, layer 1). Generated from actor-character-sheet.hbs:
+     roll buttons, form fields and tab bodies are carried over verbatim so SW25ActorSheet handlers keep working.
+     Fellow mode (system.toFellow) is intentionally not supported here. --}}
+{{#*inline "nqty"}}<li class="item n-qty" data-item-id="{{item._id}}">{{#if label}}<span class="n-qty-name">{{item.name}}</span>{{/if}}{{#if @root.isOwner}}<a class="quantity-button" data-action="decrease" data-property="item.system.quantity"><i class="fas fa-minus"></i></a>{{/if}}<input class="qt-change" type="text" name="quantityInput" value="{{item.system.quantity}}" data-dtype="Number"/>{{#if showmax}}{{#if item.system.qmax}}<span class="n-qty-max">/ {{item.system.qmax}}</span>{{/if}}{{/if}}{{#if @root.isOwner}}<a class="quantity-button" data-action="increase" data-property="item.system.quantity"><i class="fas fa-plus"></i></a>{{#if @root.system.isEdit}}<a class="item-control item-edit"><i class="fas fa-edit"></i></a><a class="item-control item-delete"><i class="fas fa-trash"></i></a>{{/if}}{{/if}}</li>{{/inline}}
+{{#*inline "nrow"}}
+<li class="item n-row{{#if spell}} spell{{/if}}" data-item-id="{{item._id}}">
+  <div class="n-row-main">
+    <a class="rollable n-row-img" data-roll-type="item"><img src="{{item.img}}" title="{{item.name}}" width="30" height="30"/></a>
+    <div class="n-row-text">
+      <h4 class="{{#if spell}}spell-label{{else}}item-label{{/if}}">{{#if spell}}{{#if item.system.level}}<span class="n-lv">{{item.system.level}}</span>{{/if}}{{/if}}<span class="n-marks">{{> "systems/sw25-ru/templates/helper/action-marks.hbs"}}</span>{{item.name}}</h4>
+      <div class="n-row-meta">{{#if item.system.mpcost}}<span class="mpcost n-tag n-tag-mp" data-cost="{{item.system.mpcost}}" data-label="{{item.name}}" data-type="{{item.type}}">{{localize "SW25.Mp"}} {{item.system.mpcost}}</span>{{/if}}{{#if item.system.hpcost}}<span class="hpcost n-tag n-tag-hp" data-cost="{{item.system.hpcost}}" data-max="{{item.system.maxhpcost}}" data-label="{{item.name}}" data-type="{{item.type}}">{{localize "SW25.Hp"}} {{item.system.hpcost}}</span>{{/if}}{{#if (eq item.type "tactics")}}{{#if (eq item.system.type "drum")}}<span class="n-tag">{{item.system.linename}}</span>{{/if}}{{#if (eq item.system.type "camp")}}{{#if item.system.cond}}<span class="n-tag">{{item.system.cond}}</span>{{/if}}{{/if}}{{#if item.system.get}}<span class="tacspowerget n-tag n-tag-get" data-tooltip="{{localize "SW25.Item.Tactics.Get"}}">{{item.system.get}}</span>{{/if}}{{#if item.system.cost}}<span class="tacspowercost n-tag n-tag-cost" data-tooltip="{{localize "SW25.Cost"}}">{{item.system.cost}}</span>{{/if}}{{/if}}{{#if (eq item.type "phasearea")}}<span class="n-tag n-tag-qi">{{item.system.typename}}: {{item.system.mincost}}{{#unless (eq item.system.maxcost 0)}}–{{item.system.maxcost}}{{/unless}}</span>{{/if}}{{#if (eq item.type "alchemytech")}}{{#unless (eq item.system.red 0)}}<span class="n-tag n-card-red">{{localize "SW25.Item.Alchemytech.Red"}} {{item.system.red}}</span>{{/unless}}{{#unless (eq item.system.green 0)}}<span class="n-tag n-card-green">{{localize "SW25.Item.Alchemytech.Green"}} {{item.system.green}}</span>{{/unless}}{{#unless (eq item.system.black 0)}}<span class="n-tag n-card-black">{{localize "SW25.Item.Alchemytech.Black"}} {{item.system.black}}</span>{{/unless}}{{#unless (eq item.system.white 0)}}<span class="n-tag n-card-white">{{localize "SW25.Item.Alchemytech.White"}} {{item.system.white}}</span>{{/unless}}{{#unless (eq item.system.gold 0)}}<span class="n-tag n-card-gold">{{localize "SW25.Item.Alchemytech.Gold"}} {{item.system.gold}}</span>{{/unless}}{{/if}}{{#if (eq item.type "magicalsong")}}{{#if (eq item.system.type "song")}}<span class="notesget n-tag n-tag-get">{{#unless (eq item.system.upget 0)}}<i class="fa-solid fa-arrow-turn-up"></i>{{item.system.upget}}{{/unless}}{{#unless (eq item.system.downget 0)}}<i class="fa-solid fa-arrow-turn-down"></i>{{item.system.downget}}{{/unless}}{{#unless (eq item.system.charmget 0)}}<i class="fa-regular fa-heart"></i>{{item.system.charmget}}{{/unless}}</span><span class="notesaddget n-tag">{{#unless (eq item.system.upadd 0)}}<i class="fa-solid fa-arrow-turn-up"></i>{{item.system.upadd}}{{/unless}}{{#unless (eq item.system.downadd 0)}}<i class="fa-solid fa-arrow-turn-down"></i>{{item.system.downadd}}{{/unless}}{{#unless (eq item.system.charmadd 0)}}<i class="fa-regular fa-heart"></i>{{item.system.charmadd}}{{/unless}}({{item.system.singpoint}})</span>{{/if}}{{#if (eq item.system.type "final")}}<span class="notescost n-tag n-tag-cost">{{#unless (eq item.system.upcost 0)}}<i class="fa-solid fa-arrow-turn-up"></i>{{item.system.upcost}}{{/unless}}{{#unless (eq item.system.downcost 0)}}<i class="fa-solid fa-arrow-turn-down"></i>{{item.system.downcost}}{{/unless}}{{#unless (eq item.system.charmcost 0)}}<i class="fa-regular fa-heart"></i>{{item.system.charmcost}}{{/unless}}</span>{{/if}}{{/if}}{{#if (and item.system.app (ne item.system.app "-"))}}<span class="n-tag">{{item.system.app}}</span>{{/if}}{{#if (and item.system.rank (ne item.system.rank "-") (ne item.type "tactics"))}}<span class="n-tag">{{localize "SW25.Item.Rank"}} {{item.system.rank}}</span>{{/if}}{{#if (and item.system.target (ne item.system.target "-"))}}<span class="n-tag">{{item.system.target}}</span>{{/if}}{{#if (and item.system.rangeshape (ne item.system.rangeshape "-"))}}<span class="n-tag">{{item.system.rangeshape}}</span>{{/if}}{{#if (and item.system.time (ne item.system.time "-"))}}<span class="n-tag">{{item.system.time}}</span>{{/if}}{{#if (and item.system.resistname (ne item.system.resistname "-"))}}<span class="n-tag n-tag-res">{{item.system.resistname}}</span>{{/if}}{{#if (and item.system.propname (ne item.system.propname "-"))}}<span class="n-tag n-tag-prop">{{item.system.propname}}</span>{{/if}}{{#if (and item.system.support (ne item.system.support "-"))}}<span class="n-tag">{{item.system.support}}</span>{{/if}}{{#if (and item.system.rtpart (ne item.system.rtpart "-"))}}<span class="n-tag">{{item.system.rtpart}}</span>{{/if}}{{#if (and item.system.itpart (ne item.system.itpart "-"))}}<span class="n-tag">{{item.system.itpart}}</span>{{/if}}</div>
+    </div>
+    <div class="n-row-acts">
+      {{#if (eq item.system.type "bibliomancer")}}<div class="item-equip"><label class="equip-toggle"><input class="eq-change" type="checkbox" name="system.equip" data-dtype="Boolean" {{#if item.system.equip}} checked {{/if}}/></label></div>{{/if}}
+      {{> "systems/sw25-ru/templates/actor/parts/actor-useitems.hbs" item=item}}
+      {{#if (eq item.type "alchemytech")}}<span class="n-cards"><a class="materialcardcost">B</a><a class="materialcardcost">A</a><a class="materialcardcost">S</a><a class="materialcardcost">SS</a></span>{{/if}}
+      {{#if (or spell item.system.usedice item.system.usepower item.system.useeffect item.system.mpcost item.system.hpcost (eq item.type "tactics") (eq item.type "phasearea") (eq item.type "alchemytech") (eq item.type "magicalsong") (eq item.type "essenceweave"))}}<a class="rollable n-btn n-btn-use" data-roll-type="item">{{#if spell}}{{localize "SW25.NewSheet.Cast"}}{{else}}{{localize "SW25.Use"}}{{/if}}</a>{{/if}}
+      <a class="changebookmark n-star{{#if item.system.bookmark}} on{{/if}}" data-tooltip="{{localize "SW25.NewSheet.Fav"}}"><i class="{{#if item.system.bookmark}}fa-solid{{else}}fa-regular{{/if}} fa-star"></i></a>
+    </div>
+  </div>
+  <div class="{{#if spell}}spell-description{{else}}item-description{{/if}} nogapmargin">
+    <div class="n-desc">{{{item.system.description}}}</div>
+    <div class="item-controls n-desc-ctl"><a class="item-control item-edit"><i class="fas fa-edit"></i></a>{{#if @root.isOwner}}<a class="item-control item-delete"><i class="fas fa-trash"></i></a>{{/if}}</div>
+  </div>
+</li>
+{{/inline}}
+<form class="{{cssClass}} {{actor.type}}" autocomplete="off">
+<section class="sw25pc sw25n{{#if system.isEdit}} is-edit{{/if}}{{#if (lte system.hp.value 0)}} is-down{{/if}}">
+
+  <header class="n-hd">
+    <div class="n-side">
+      <div class="n-portrait">
+        {{#if system.isToken}}
+          <img class="profile-img" src="{{#if token.texture.src}}{{token.texture.src}}{{else}}{{actor.prototypeToken.texture.src}}{{/if}}" title="{{actor.name}}"/>
+        {{else}}
+          <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}"/>
+        {{/if}}
+      </div>
+      <div class="n-slot">
+        {{#if (lte system.hp.value 0)}}
+        <div class="deathcheck-row" data-tooltip="{{localize "SW25.DeathCheck.Tooltip"}}">
+            <a class="deathcheckroll">
+              <i class="fa-solid fa-skull-crossbones"></i> {{localize "SW25.DeathCheck.Roll"}}
+            </a>
+            {{!-- [Round 60] pip dots so the death-check state reads at a glance,
+                 like a health track, instead of only as "3/6" text. Built from
+                 context.deathcheckPips (actor-sheet.mjs) since this codebase has
+                 no template-level range/loop helper. Kept the text counter too
+                 for exact-number clarity. --}}
+            <div class="deathcheck-status">
+              <div class="deathcheck-pips">
+                {{#each deathcheckPips as |pip|}}
+                <span class="deathcheck-pip {{#if pip.filled}}deathcheck-pip--filled{{/if}}"></span>
+                {{/each}}
+              </div>
+              <span class="deathcheck-counter">{{system.attributes.deathchecks.value}}/6</span>
+            </div>
+          </div>
+        {{else}}
+        <div class="n-lvl"><small>{{localize "SW25.Level"}}</small><b>{{system.attributes.advlevel.value}}</b></div>
+        <div class="n-lvl"><small>{{localize "SW25.Attributes.Exp"}}</small><b>{{system.attributes.totalexp}}</b></div>
+        {{/if}}
+      </div>
+    </div>
+
+    <div class="n-main">
+      <div class="n-namebar">
+        <div class="n-nameplate">
+          <div class="n-np-text">
+          <section class="header__title">
+      <h1 class="header__title--name">
+      {{#if system.isEdit}}
+        <input class="header--input" id="{{actor._id}}name" name="name" type="text" value="{{actor.name}}" placeholder="Name"/>
+      {{else}}
+        {{actor.name}}
+      {{/if}}
+      </h1>
+    </section>
+
+    <section class="header__overview">
+      {{#if system.isEdit}}
+        <div class="header__overview--race">
+          <input class="header--input" id="{{actor._id}}race" type="text" name="system.race" value="{{system.race}}" placeholder="{{localize "SW25.Race"}}" data-dtype="String" data-tooltip="{{localize "SW25.Race"}}"/>
+        </div>
+        <div class="header__overview--gender">
+          <input class="header--input" id="{{actor._id}}gender" type="text" name="system.attributes.gender" value="{{system.attributes.gender}}" placeholder="{{localize "SW25.Attributes.Gender"}}" data-dtype="String" data-tooltip="{{localize "SW25.Attributes.Gender"}}"/>
+        </div>
+        <div class="header__overview--age">
+          <input class="header--input" id="{{actor._id}}age" type="number" name="system.attributes.age" value="{{system.attributes.age}}" placeholder="{{localize "SW25.Attributes.Age"}}" data-dtype="Number" data-tooltip="{{localize "SW25.Attributes.Age"}}"/>
+        </div>
+        <div class="header__overview--rank-input">
+          <input class="header--input" id="{{actor._id}}rank" type="text" name="system.attributes.honer.rank" value="{{system.attributes.honer.rank}}" placeholder="{{localize "SW25.Attributes.Honer.Rank"}}" data-dtype="String" data-tooltip="{{localize "SW25.Attributes.Honer.Rank"}}"/>
+        </div>
+        <div class="header__overview--honer">
+          <input class="header--input" id="{{actor._id}}honer" type="number" name="system.attributes.honer.value" value="{{system.attributes.honer.value}}" placeholder="{{localize "SW25.Attributes.Honer.Label"}}" data-dtype="Number" data-tooltip="{{localize "SW25.Attributes.Honer.Label"}}"/>
+        </div>
+      {{else}}
+        <div class="n-ov">
+          {{#if system.race}}<span>{{system.race}}</span>{{/if}}{{#if system.attributes.gender}}<span>{{system.attributes.gender}}</span>{{/if}}{{#if system.attributes.age}}<span>{{localize "SW25.Attributes.AgeLabel" age=system.attributes.age}}</span>{{/if}}{{#if system.attributes.honer.rank}}<span><i class="fa-solid fa-medal"></i> {{system.attributes.honer.rank}}</span>{{/if}}{{#if system.attributes.honer.value}}<span>{{localize "SW25.Attributes.Honer.Label"}} {{system.attributes.honer.value}}</span>{{/if}}
+        </div>
+      {{/if}}
+    </section>
+          </div>
+          <div class="n-quick">
+            <div class="roll-ability-check growth-button rollable"><i class="fa-solid fa-dice"></i>{{localize "SW25.Ability.Growth"}}</div>
+          </div>
+        </div>
+        <div class="n-modes">
+          <label class="n-mode" data-tooltip="{{localize "SW25.Setting"}}"><input type="checkbox" name="system.isEdit" {{#if system.isEdit}}checked{{/if}} data-dtype="Boolean"/><span><i class="fa-solid fa-wrench"></i></span></label>
+          {{#if system.isEdit}}
+          <label class="n-mode" data-tooltip="{{#if system.isToken}}{{localize "SW25.SwitchImage" image=(localize "SW25.ActorImage")}}{{else}}{{localize "SW25.SwitchImage" image=(localize "SW25.TokenImage")}}{{/if}}"><input type="checkbox" name="system.isToken" {{#if system.isToken}}checked{{/if}} data-dtype="Boolean"/><span><i class="fa-solid fa-circle-user"></i></span></label>
+          {{/if}}
+          <label class="n-mode" data-tooltip="{{localize "SW25.Attributes.Grace"}}"><input type="checkbox" name="system.attributes.grace" {{#if system.attributes.grace}}checked{{/if}} data-dtype="Boolean"/><span><i class="fa-solid fa-chess-queen"></i></span></label>
+        </div>
+      </div>
+      <div class="n-classes">
+        {{#each skills as |item id|}}<span class="n-cls">{{item.name}} <b>{{item.system.skilllevel}}</b></span>{{/each}}
+      </div>
+      <div class="n-vitals">
+<div class="hpbar">
+            <div class="hp-progress-bar"><span class="n-vlab">{{localize "SW25.Hp"}}</span>
+              <progress class="hp-bar grid-span-3" value="{{system.hp.value}}" max="{{system.hp.max}}"></progress>
+              {{#if system.isEdit}}
+                <div class="current-max-resource nobreak" style="font-size:0.8em">
+                  <span class="inline-block">{{system.hp.max}} + </span>
+                  <input id="{{actor._id}}hpmod" type="number" name="system.hp.hpmod" value="{{system.hp.hpmod}}" data-dtype="Number"/>
+                  <i class="fa-solid fa-angles-up"></i>
+                </div>
+              {{else}}
+                <div class="current-max-resource nobreak">
+                  <input id="{{actor._id}}hp" type="number" name="system.hp.value" value="{{system.hp.value}}" data-dtype="Number"/>
+                  <span class="inline-block">/ {{system.hp.max}}</span>
+                </div>
+              {{/if}}
+            </div>
+          </div>
+          <div class="mpbar">
+            <div class="mp-progress-bar"><span class="n-vlab">{{localize "SW25.Mp"}}</span>
+              <progress class="mp-bar grid-span-3" value="{{system.mp.value}}" max="{{system.mp.max}}"></progress>
+              {{#if system.isEdit}}
+                <div class="current-max-resource nobreak" style="font-size:0.8em">
+                  <span class="inline-block">{{system.mp.max}} + </span>
+                  <input id="{{actor._id}}mpmod" type="number" name="system.mp.mpmod" value="{{system.mp.mpmod}}" data-dtype="Number"/>
+                  <i class="fa-solid fa-angles-up"></i>
+                </div>
+              {{else}}
+                <div class="current-max-resource nobreak">
+                  <input id="{{actor._id}}mp" type="number" name="system.mp.value" value="{{system.mp.value}}" data-dtype="Number"/>
+                  <span class="inline-block">/ {{system.mp.max}}</span>
+                </div>
+              {{/if}}
+            </div>
+          </div>
+          
+      </div>
+    </div>
+  </header>
+
+  <div class="n-tiles">
+    <div class="n-tile">
+      <div class="n-tile-main"><b>{{system.attributes.protectionpoint}}</b><span>{{localize "SW25.Attributes.Protectionpoint.long"}}</span></div>
+      <details class="n-more"><summary>{{localize "SW25.Details"}}</summary><div class="n-pop">
+        <dl>{{#each armors as |item id|}}{{#if item.system.equip}}<dt>{{item.name}}</dt><dd>{{item.system.pp}}</dd>{{/if}}{{/each}}
+          <dt>{{localize "SW25.Effects"}}</dt><dd>{{system.attributes.efppmod}}</dd>
+          <dt>{{localize "SW25.Effect.Dreduce"}}</dt><dd>{{system.baredreduce}}</dd></dl>
+        <label class="n-adj"><span>{{localize "SW25.Effect.PpMod"}}</span><input type="text" name="system.attributes.ppmod" value="{{system.attributes.ppmod}}" data-dtype="Number"/></label>
+      </div></details>
+    </div>
+    <div class="n-tile">
+      <div class="n-tile-main"><b>{{system.attributes.magicprotection}}</b><span>{{localize "SW25.Attributes.Magicprotection.long"}}</span></div>
+      <details class="n-more"><summary>{{localize "SW25.Details"}}</summary><div class="n-pop">
+        <dl>{{#each armors as |item id|}}{{#if item.system.equip}}{{#if item.system.mpp}}<dt>{{item.name}}</dt><dd>{{item.system.mpp}}</dd>{{/if}}{{/if}}{{/each}}
+          <dt>{{localize "SW25.Effects"}}</dt><dd>{{system.attributes.efmppmod}}</dd>
+          <dt>{{localize "SW25.Effect.Dreduce"}}</dt><dd>{{system.baredreduce}}</dd></dl>
+        <label class="n-adj"><span>{{localize "SW25.Effect.MppMod"}}</span><input type="text" name="system.attributes.mppmod" value="{{system.attributes.mppmod}}" data-dtype="Number"/></label>
+      </div></details>
+    </div>
+    <div class="n-tile n-roll">
+      <span class="rollable n-tile-main" data-roll="2d6+{{system.dodgebase}}" data-label="{{localize "SW25.Item.Armor.Dodge"}}" data-pt=""><b>{{system.dodgebase}}</b><span>{{localize "SW25.Resist.Check.Dodge"}}</span></span>
+      <details class="n-more"><summary>{{localize "SW25.Details"}}</summary><div class="n-pop">
+        <dl><dt>{{system.dodgeskill}}</dt><dd>{{system.skillagidodge}}</dd>
+          <dt>{{localize "SW25.Equip"}}</dt><dd>{{system.itemdodge}}</dd>
+          <dt>{{localize "SW25.Effect.DodgeMod"}}</dt><dd>{{system.attributes.dodgemod}}</dd>
+          <dt>{{localize "SW25.Effects"}}</dt><dd>{{system.attributes.efdodgemod}}</dd></dl>
+      </div></details>
+    </div>
+    {{#if contentItem.vitRes}}{{#with contentItem.vitRes as |item|}}
+      <div class="n-tile n-roll item" data-item-id="{{item._id}}">
+        <span class="rollable n-tile-main" data-roll="{{item.system.formula}}+{{item.system.checkbase}}" data-label="{{item.name}}" data-pt="{{item.system.powertable}}" data-apply="{{item.system.applycheck}}" data-checktype="{{item.system.checkTypesButton}}"><b>{{item.system.checkbase}}</b><span>{{localize "SW25.Config.ResVit"}}</span></span>
+        <details class="n-more"><summary>{{localize "SW25.Modifier"}}</summary><div class="n-pop">
+          <label class="n-adj"><span>{{localize "SW25.Config.ResVit"}}{{localize "SW25.Modifier"}}</span><input class="cm-change" type="text" name="checkmodInput" value="{{item.system.checkmod}}" data-dtype="Number"/></label>
+        </div></details>
+      </div>
+      {{/with}}{{else}}
+      <div class="n-tile"><div class="n-tile-main"><b>–</b><span>{{localize "SW25.Config.ResVit"}}</span></div></div>
+      {{/if}}
+    {{#if contentItem.mndRes}}{{#with contentItem.mndRes as |item|}}
+      <div class="n-tile n-roll item" data-item-id="{{item._id}}">
+        <span class="rollable n-tile-main" data-roll="{{item.system.formula}}+{{item.system.checkbase}}" data-label="{{item.name}}" data-pt="{{item.system.powertable}}" data-apply="{{item.system.applycheck}}" data-checktype="{{item.system.checkTypesButton}}"><b>{{item.system.checkbase}}</b><span>{{localize "SW25.Config.ResMnd"}}</span></span>
+        <details class="n-more"><summary>{{localize "SW25.Modifier"}}</summary><div class="n-pop">
+          <label class="n-adj"><span>{{localize "SW25.Config.ResMnd"}}{{localize "SW25.Modifier"}}</span><input class="cm-change" type="text" name="checkmodInput" value="{{item.system.checkmod}}" data-dtype="Number"/></label>
+        </div></details>
+      </div>
+      {{/with}}{{else}}
+      <div class="n-tile"><div class="n-tile-main"><b>–</b><span>{{localize "SW25.Config.ResMnd"}}</span></div></div>
+      {{/if}}
+    <div class="n-tile">
+      <div class="n-tile-main"><b>{{system.attributes.move.normal}}</b><span>{{localize "SW25.Attributes.Move"}}</span></div>
+      <details class="n-more"><summary>{{localize "SW25.Details"}}</summary><div class="n-pop">
+        <dl><dt>{{localize "SW25.Attributes.Limitedmove"}}</dt><dd>{{system.attributes.move.limited}}</dd>
+          <dt>{{localize "SW25.Attributes.Normalmove"}}</dt><dd>{{system.attributes.move.normal}}</dd>
+          <dt>{{localize "SW25.Attributes.Maxmove"}}</dt><dd>{{system.attributes.move.max}}</dd></dl>
+        <label class="n-adj"><span>{{localize "SW25.Attributes.Movemod"}}</span><input type="text" name="system.attributes.move.movemod" value="{{system.attributes.move.movemod}}" data-dtype="Number"/></label>
+      </div></details>
+    </div>
+    <div class="n-tile n-fumble">
+      <div class="property-col">
+        <label class="property--label-col" for="{{actor._id}}fumble" class="resource-label">{{localize "SW25.Attributes.Fumble"}}</label>
+        <div class="property--value adjustable-container">
+          <a class="adjustment-button" data-action="decrease" data-property="system.attributes.fumble">
+            <i class="fas fa-minus"></i>
+          </a>
+          <input class="textcolor-main" id="{{actor._id}}fumble" type="number" name="system.attributes.fumble" value="{{system.attributes.fumble}}" data-dtype="Number"/>
+          <a class="adjustment-button" data-action="increase" data-property="system.attributes.fumble">
+            <i class="fas fa-plus"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="n-abil">
+    {{#each system.abilities as |ability key|}}
+    <div class="n-ab"><span>{{ability.label}}</span><i>{{ability.value}}</i><b>{{numberFormat ability.mod decimals=0 sign=true}}</b></div>
+    {{/each}}
+  </div>
+
+  <div class="n-fx">
+    <small>{{localize "SW25.Effects"}}</small>
+    {{#each effects as |section sid|}}{{#if (eq section.type "temporary")}}{{#each section.effects as |effect|}}
+    <span class="n-chip" data-tooltip="{{#if effect.flags.sw25.sourceName}}{{effect.flags.sw25.sourceName}}{{else}}{{effect.parent.name}}{{/if}}"><img src="{{effect.img}}" alt=""/>{{effect.name}}{{#if (or effect.duration.rounds effect.duration.seconds effect.duration.turns)}}<i>{{effect.duration.label}}</i>{{/if}}</span>
+    {{/each}}{{/if}}{{/each}}
+    {{#each system.modParams}}<span class="n-chip n-chip-mod">{{label}}: {{value}}</span>{{/each}}
+  </div>
+
+  <nav class="n-tabs sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="battle">{{localize "SW25.Battle"}}</a>
+    <a class="item" data-tab="check">{{localize "SW25.Check"}}</a>
+    <a class="item" data-tab="features">{{localize "SW25.Features"}}</a>
+    <a class="item" data-tab="spells">{{localize "SW25.Spells"}}</a>
+    <a class="item" data-tab="items">{{localize "SW25.Items"}}</a>
+    <a class="item" data-tab="effects">{{localize "SW25.Effects"}}</a>
+    <a class="item" data-tab="description">{{localize "SW25.Description"}}</a>
+  </nav>
+
+  <section class="sheet-body n-body" data-scrollable="true" id="main-contents">
+
+    <div class="tab battle" data-group="primary" data-tab="battle">
+      <div class="n-cols">
+        <div class="n-col">
+          <section class="n-card">
+            <h3>{{localize "TYPES.Item.weapon"}}</h3>
+            <ol class="n-rows">
+            {{#each battleweapons as |item id|}}
+              <li class="item n-row" data-item-id="{{item._id}}">
+                <div class="n-row-main">
+                  <a class="rollable n-row-img" data-roll-type="item"><img src="{{item.img}}" title="{{item.name}}" width="30" height="30"/></a>
+                  <div class="n-row-text">
+                    <h4 class="item-label">{{item.name}}{{#if item.system.dedicated}} ({{localize "SW25.Item.Dedicated"}}){{/if}}</h4>
+                    <div class="n-row-meta">{{#if item.system.showskill}}<span class="n-tag">{{item.system.showskill}}</span>{{/if}}{{#if item.system.range}}<span class="n-tag">{{item.system.range}}</span>{{/if}}</div>
+                  </div>
+                  <div class="n-row-acts">
+                    {{#if item.system.resuse}}<a class="resourcecost n-btn n-btn-res" data-resusequantity={{system.resusequantity}} data-resuse="{{system.resuse}}">{{localize "SW25.Resource"}}</a>{{/if}}
+                    <a class="rollable n-btn" {{#if item.system.autouseres}} data-resusequantity="{{item.system.resusequantity}}" data-resuse="{{item.system.resuse}}"{{/if}} data-roll="{{item.system.checkformula}}+{{item.system.checkbase}}" data-label="{{item.name}} ({{localize "SW25.Item.Weapon.Hit"}})" data-pt="{{item.system.powertable}}" data-apply="{{system.applycheck}}" data-checktype="{{system.checkTypesButton}}" {{resistAttributes type system.resistinfo system.hpresist}}>{{localize "SW25.Item.Weapon.Hit"}}<b>{{numberFormat item.system.checkbase decimals=0 sign=true}}</b></a>
+                    <a class="powerrollable n-btn n-btn-dmg" data-roll="{{item.system.powerformula}}" data-label="{{item.name}} ({{localize "SW25.Item.Power"}})" data-pt="{{item.system.powertable}}" data-apply="{{system.applypower}}" data-powertype="{{system.powerTypesButton}}">{{localize "SW25.Item.Power"}}<b>k{{system.power}}{{#if system.totalcvalue}}@{{system.totalcvalue}}{{/if}}{{#if system.listpowerbase}}+{{system.listpowerbase}}{{/if}}</b></a>
+                  </div>
+                </div>
+                <div class="item-description nogapmargin">
+        <div class="flexrow">
+          <div style="flex: 0 0 60px;"></div>
+          <div style="font-size: 0.8em;">
+            {{{system.description}}}
+          </div>
+          {{#if ../isOwner}}
+            <div class='item-controls' style="flex: 0 0 50px;">
+              <a class='item-control item-edit' title='{{localize "DOCUMENT.Update" type=(localize "TYPES.Item.weapon")}}'>
+                <i class='fas fa-edit'></i>
+              </a>
+              <a class='item-control item-delete' title='{{localize "DOCUMENT.Delete" type=(localize "TYPES.Item.weapon")}}'>
+                <i class='fas fa-trash'></i>
+              </a>
+            </div>
+          {{else}}
+            <div class='item-controls' style="flex: 0 0 50px;">
+              <a class='item-control item-edit' title='{{localize "DOCUMENT.Update" type=(localize "TYPES.Item.weapon")}}'>
+                <i class='fa-solid fa-eye'></i>
+              </a>
+            </div>
+          {{/if}}
+        </div>
+      </div>
+              </li>
+            {{else}}
+              <li class="n-empty">{{localize "TYPES.Item.weapon"}}: —</li>
+            {{/each}}
+            </ol>
+          </section>
+          <section class="n-card n-favs bookmark-drop-area">
+            <h3><i class="fa-solid fa-star"></i> {{localize "SW25.NewSheet.Fav"}}</h3>
+            <ol class="n-rows">
+            {{#each bookmarks as |item id|}}{{#unless (eq item.type "check")}}
+              <li class="item n-row n-fav" data-item-id="{{item._id}}">
+                <div class="n-row-main">
+                  <a class="rollable n-row-img" data-roll-type="item"><img src="{{item.img}}" title="{{item.name}}" width="30" height="30"/></a>
+                  <div class="n-row-text">
+                    <h4 class="item-label">{{item.name}}</h4>
+                    <div class="n-row-meta"><span class="n-tag n-tag-{{item.type}}">{{localize (concat "TYPES.Item." item.type)}}</span>{{#if system.mpcost}}<span class="mpcost n-tag n-tag-mp" data-cost="{{item.system.mpcost}}" data-label="{{item.name}}" data-type="{{item.type}}">{{localize "SW25.Mp"}} {{system.mpcost}}</span>{{/if}}{{#if system.hpcost}}<span class="hpcost n-tag n-tag-hp" data-cost="{{item.system.hpcost}}" data-max="{{item.system.maxhpcost}}" data-label="{{item.name}}" data-type="{{item.type}}">{{localize "SW25.Hp"}} {{system.hpcost}}</span>{{/if}}{{#if system.rangeshape}}<span class="n-tag">{{system.rangeshape}}</span>{{/if}}{{#if system.time}}<span class="n-tag">{{system.time}}</span>{{/if}}</div>
+                  </div>
+                  <div class="n-row-acts">
+                    {{> "systems/sw25-ru/templates/actor/parts/actor-useitems.hbs" item=item}}
+                    <a class="rollable n-btn n-btn-use" data-roll-type="item">{{localize "SW25.Use"}}</a>
+                    <a class="changebookmark n-star on" data-tooltip="{{localize "SW25.NewSheet.Unstar"}}"><i class="fa-solid fa-star"></i></a>
+                  </div>
+                </div>
+                <div class="item-description nogapmargin">{{{system.description}}}</div>
+              </li>
+            {{/unless}}{{/each}}
+              <li class="n-empty">{{localize "SW25.NewSheet.FavHint"}}</li>
+            </ol>
+          </section>
+          <section class="n-card n-res">
+            <h3>{{localize "SW25.Resource"}}</h3>
+            {{> "systems/sw25-ru/templates/actor/parts/actor-resources.hbs"}}
+          </section>
+        </div>
+        <div class="n-col">
+          <section class="n-card">
+            <h3>{{localize "SW25.Deffence"}}</h3>
+            <ol class="n-rows">
+            {{#each battlearmors as |item id|}}
+              <li class="item n-row" data-item-id="{{item._id}}">
+                <div class="n-row-main">
+                  <a class="rollable n-row-img" data-roll-type="item"><img src="{{item.img}}" title="{{item.name}}" width="30" height="30"/></a>
+                  <div class="n-row-text">
+                    <h4 class="item-label">{{item.name}}{{#if item.system.dedicated}} ({{localize "SW25.Item.Dedicated"}}){{/if}}</h4>
+                    <div class="n-row-meta"><span class="n-tag">{{localize "SW25.Attributes.Protectionpoint.abbr"}} {{item.system.pp}}</span><span class="n-tag">{{localize "SW25.Item.Armor.Dodge"}} {{item.system.dodge}}</span>{{#if item.system.mpp}}<span class="n-tag">{{localize "SW25.Attributes.Magicprotection.abbr"}} {{item.system.mpp}}</span>{{/if}}</div>
+                  </div>
+                </div>
+                <div class="item-description nogapmargin">
+        <div class="flexrow">
+          <div style="flex: 0 0 60px;"></div>
+          <div style="font-size: 0.8em;">
+            {{{system.description}}}
+          </div>
+          {{#if ../isOwner}}
+            <div class='item-controls' style="flex: 0 0 50px;">
+              <a class='item-control item-edit' title='{{localize "DOCUMENT.Update" type=(localize "TYPES.Item.armor")}}'>
+                <i class='fas fa-edit'></i>
+              </a>
+              <a class='item-control item-delete' title='{{localize "DOCUMENT.Delete" type=(localize "TYPES.Item.armor")}}'>
+                <i class='fas fa-trash'></i>
+              </a>
+            </div>
+          {{else}}
+            <div class='item-controls' style="flex: 0 0 50px;">
+              <a class='item-control item-edit' title='{{localize "DOCUMENT.Update" type=(localize "TYPES.Item.armor")}}'>
+                <i class='fa-solid fa-eye'></i>
+              </a>
+            </div>
+          {{/if}}
+        </div>
+      </div>
+              </li>
+            {{else}}
+              <li class="n-empty">{{localize "TYPES.Item.armor"}}: —</li>
+            {{/each}}
+            </ol>
+          </section>
+          <section class="n-card n-mods">
+            <h3>{{localize "SW25.Modifier"}}</h3>
+            <fieldset class="target-select grid-span-3" style="padding: 1px;">
+                <legend><i class="fa-solid fa-angles-up"></i></legend>
+                <div class="grid grid-6col nomargin gap-s">
+                  <div>
+                    <span class="tooltip mod-content-battle"><label class="mod-label" for="{{actor._id}}system.attributes.hitmod"><i class="fa-solid fa-bullseye"></i><span class="tooltip-top">{{localize "SW25.Effect.HitMod"}}</span></label>
+                    <input id="{{actor._id}}system.attributes.hitmod" class="mod-input-battle" type="text" name="system.attributes.hitmod" value="{{system.attributes.hitmod}}" data-dtype="Number"/></span>
+                  </div>
+                  <div>
+                    <span class="tooltip mod-content-battle"><label class="mod-label" for="{{actor._id}}system.attributes.dmod"><i class="fa-solid fa-hand-fist"></i><span class="tooltip-top">{{localize "SW25.Effect.DamageMod"}}</span></label>
+                    <input id="{{actor._id}}system.attributes.dmod" class="mod-input-battle" type="text" name="system.attributes.dmod" value="{{system.attributes.dmod}}" data-dtype="Number"/></span>
+                  </div>
+                  <div>
+                    <span class="tooltip mod-content-battle"><label class="mod-label" for="{{actor._id}}system.attributes.ltmod"><i class="fa-solid fa-hashtag"></i><span class="tooltip-top">{{localize "SW25.Effect.LethalTech"}}</span></label>
+                    <input id="{{actor._id}}system.attributes.ltmod" class="mod-input-battle" type="text" name="system.attributes.ltmod" value="{{system.attributes.ltmod}}" data-dtype="Number"/></span>
+                  </div>
+                  <div>
+                    <span class="tooltip mod-content-battle"><label class="mod-label" for="{{actor._id}}system.attributes.crmod"><i class="fa-solid fa-dollar-sign"></i><span class="tooltip-top">{{localize "SW25.Effect.CriticalRay"}}</span></label>
+                    <input id="{{actor._id}}system.attributes.crmod" class="mod-input-battle" type="text" name="system.attributes.crmod" value="{{system.attributes.crmod}}" data-dtype="Number"/></span>
+                  </div>
+                  <div>
+                    <span class="tooltip mod-content-battle"><label class="mod-label" for="{{actor._id}}system.attributes.dodgemod"><i class="fa-solid fa-wind"></i><span class="tooltip-top">{{localize "SW25.Effect.DodgeMod"}}</span></label>
+                    <input id="{{actor._id}}system.attributes.dodgemod" class="mod-input-battle" type="text" name="system.attributes.dodgemod" value="{{system.attributes.dodgemod}}" data-dtype="Number"/></span>
+                  </div>
+                  <div>
+                    <span class="tooltip mod-content-battle"><label class="mod-label" for="{{actor._id}}system.attributes.dreduce"><i class="fa-solid fa-shield-halved"></i><span class="tooltip-top">{{localize "SW25.Effect.Dreduce"}}</span></label>
+                    <input id="{{actor._id}}system.attributes.dreduce" class="mod-input-battle" type="text" name="system.attributes.dreduce" value="{{system.attributes.dreduce}}" data-dtype="Number"/></span>
+                  </div>
+                </div>
+              </fieldset>
+          </section>
+          <section class="n-card n-skillchecks bookmark-drop-area">
+            <h3>{{localize "SW25.Check"}}</h3>
+            <ol class="n-chk">
+            {{#each bookmarks as |item id|}}{{#if (eq item.type "check")}}
+              <li class="item n-chk-row" data-item-id="{{item._id}}">
+                <img src="{{item.img}}" alt="" width="24" height="24"/>
+                <span class="n-chk-name" data-tooltip="{{item.name}}">{{item.name}}</span>
+                {{#if (eq system.checkmethod "power")}}<a class="powerrollable n-btn n-btn-dmg" data-roll="{{item.system.formula}}" data-label="{{item.name}}" data-pt="{{item.system.powertable}}" data-apply="{{item.system.applypower}}" data-powertype="{{item.system.powerTypesButton}}"><b>{{item.system.checkbase}}</b></a>{{else}}<a class="rollable n-btn" data-roll="{{item.system.formula}}+{{item.system.checkbase}}" data-label="{{item.name}}" data-pt="{{item.system.powertable}}" data-apply="{{item.system.applycheck}}" data-checktype="{{item.system.checkTypesButton}}" {{resistAttributes type system.resistinfo}}><b>{{numberFormat item.system.checkbase decimals=0 sign=true}}</b></a>{{/if}}
+                <a class="changebookmark n-chk-x" data-tooltip="{{localize "SW25.NewSheet.UnpinCheck"}}"><i class="fa-solid fa-xmark"></i></a>
+              </li>
+            {{/if}}{{/each}}
+              <li class="n-empty">{{localize "SW25.NewSheet.ChecksHint"}}</li>
+            </ol>
+          </section>
+          <details class="n-card n-setup">
+            <summary>{{localize "SW25.Setting"}}</summary>
+            <div class="n-attack-row">
+              <div class="rollable common-display attack-display" data-resusequantity={{system.resusequantity}} data-resuse="{{system.resuse}}" data-roll="{{system.itemhitformula}}+{{system.itemhitbase}}" data-label="{{system.itemname}} ({{localize "SW25.Item.Weapon.Hit"}})" data-pt="{{system.itempowertable}}" data-apply="{{system.itemapplycheck}}" data-checktype="{{system.itemchecktype}}" data-resist="{{localize "SW25.Resist.Check.Dodge"}}" data-resistkey="Dodge" data-resistresult="disappear" data-itemid="{{system.itemid}}">
+                  <div class="common-label">{{localize "SW25.Item.Weapon.Hit"}}</div>
+                  <div class="common-value">{{system.itemhitbase}}</div>
+                  <div class="common-icon icon-top"><i class="fa-solid fa-dice"></i></div>
+                </div>
+              <div class="powerrollable common-display attack-display" data-roll="{{system.itempowerformula}}" data-label="{{system.itemname}} ({{localize "SW25.Item.Power"}})" data-pt="{{system.itempowertable}}" data-apply="{{system.itemapplypower}}" data-powertype="{{system.itempowertype}}" data-itemid="{{system.itemid}}">
+                  <div class="common-label">{{localize "SW25.Item.Power"}}</div>
+                  <div class="common-value-s">k{{system.itempower}}{{#if system.itemcvalue}}@{{system.itemcvalue}}{{/if}}{{#if system.itempowerbase}}+{{system.itempowerbase}}{{/if}}</div>
+                  <div class="common-icon icon-top"><i class="fa-solid fa-dice"></i></div>
+                </div>
+            </div>
+            <div class="n-selects">
+              <div class="grid-span-3 nobreak">
+                <i class="mgc_knife_fill"></i>
+                <select name="system.hitweapon">
+                  {{#select system.hitweapon}}
+                  <option value="-">{{localize "SW25.Selecthitweapon"}}</option>
+                  {{#each battleweapons as |item id|}}
+                  <option value="{{item.name}}">{{item.name}}</option>
+                  {{/each}}
+                  {{/select}}
+                </select>
+              </div>
+              <div class="grid-span-3 nobreak">
+                <i class="fa-solid fa-bullseye"></i>
+                <select name="system.attackskill">
+                  {{#select system.attackskill}}
+                  <option value="-">{{localize "SW25.Selectattackskill"}}</option>
+                  {{#each skills as |item id|}}
+                  <option value="{{item.name}}">{{item.name}}</option>
+                  {{/each}}
+                  {{/select}}
+                </select>
+              </div>
+              <div class="grid-span-3 nobreak">
+                <i class="fa-solid fa-wind"></i>
+                <select name="system.dodgeskill">
+                  {{#select system.dodgeskill}}
+                  <option value="-">{{localize "SW25.Selectdodgeskill"}}</option>
+                  {{#each skills as |item id|}}
+                  <option value="{{item.name}}">{{item.name}}</option>
+                  {{/each}}
+                  {{/select}}
+                </select>
+              </div>
+            </div>
+            <div class="property grid grid-4col gap-s">
+            <label class="property--label" for="{{actor._id}}system.lootmod">{{localize "SW25.Monster.Loot"}}{{localize "SW25.Modifier"}}</label>
+            <input class="property--value" id="{{actor._id}}system.lootmod" type="text" name="system.lootmod" value="{{system.lootmod}}" data-dtype="Number"/>
+          </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab check" data-group="primary" data-tab="check">
+      <section class="n-card n-abilgrid">
+        <h3>{{localize "SW25.Abilityskill"}}</h3>
+        <div class="n-abg">
+          {{#each system.abilities as |ability key|}}
+          {{#if (isEven @index)}}
+          <div class="n-abg-g">
+            <div class="n-abg-race"><span>{{localizeAbility key}}</span>
+              {{#if ../system.isEdit}}<input type="number" name="system.abilities.{{key}}.racevalue" value="{{ability.racevalue}}" data-dtype="Number"/>{{else}}<b>{{ability.racevalue}}</b>{{/if}}
+            </div>
+          {{/if}}
+            <div class="n-abg-row">
+              <span class="n-abg-die growth-label" data-tooltip="{{localize "SW25.Ability.Growth"}}">{{growth @index}}</span>
+              <span class="n-abg-name" data-label="{{ability.label}}">{{ability.label}}</span>
+              <label class="n-abg-f"><small>{{ability.basename}}</small>{{#if ../system.isEdit}}<input type="number" name="system.abilities.{{key}}.valuebase" value="{{ability.valuebase}}" data-dtype="Number"/>{{else}}<b>{{ability.valuebase}}</b>{{/if}}</label>
+              <label class="n-abg-f"><small>{{localize "SW25.Ability.Growth"}}</small>{{#if ../system.isEdit}}<input type="number" name="system.abilities.{{key}}.valuegrowth" value="{{ability.valuegrowth}}" data-dtype="Number"/>{{else}}<b>{{ability.valuegrowth}}</b>{{/if}}</label>
+              <label class="n-abg-f"><small>{{localize "SW25.Modifier"}}</small><input type="number" name="system.abilities.{{key}}.valuemodify" value="{{ability.valuemodify}}" data-dtype="Number"/></label>
+              <span class="n-abg-total ability-mod" data-label="{{ability.label}}">{{ability.value}}<i>{{numberFormat ability.mod decimals=0 sign=true}}</i></span>
+            </div>
+          {{#unless (isEven @index)}}
+          </div>
+          {{/unless}}
+          {{/each}}
+        </div>
+      </section>
+      <section class="n-card n-classes-card">
+        <h3>{{localize "SW25.Skillname"}}</h3>
+        {{> "systems/sw25-ru/templates/actor/parts/actor-checkskills.hbs"}}
+      </section>
+      <section class="n-card n-checks-card">
+        <h3>{{localize "SW25.Check"}}</h3>
+        {{> "systems/sw25-ru/templates/actor/parts/actor-checks.hbs"}}
+      </section>
+    </div>
+
+    {{!-- Owned Features Tab --}}
+    <div class="tab features" data-group="primary" data-tab="features">
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.raceability"}}<em>{{raceabilities.length}}</em></h3><a class="item-control item-create n-add" data-type="raceability" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.raceability")}}"><i class="fas fa-plus"></i></a>
+        <ol class="n-rows">
+            {{#each raceabilities as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.combatability"}}<em>{{combatabilities.length}}</em></h3><a class="item-control item-create n-add" data-type="combatability" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.combatability")}}"><i class="fas fa-plus"></i></a>
+        <ol class="n-rows">
+            {{#each combatabilities as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{#if eashow}}
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.enhancearts"}}<em>{{enhancearts.length}}</em></h3><a class="item-control item-create n-add" data-type="enhancearts" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.enhancearts")}}"><i class="fas fa-plus"></i></a>
+        <ol class="n-rows">
+            {{#each enhancearts as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{else}}{{#if system.attributes.showfeature}}
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.enhancearts"}}<em>{{enhancearts.length}}</em></h3><a class="item-control item-create n-add" data-type="enhancearts" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.enhancearts")}}"><i class="fas fa-plus"></i></a>
+        <ol class="n-rows">
+            {{#each enhancearts as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{/if}}{{/if}}
+      {{#if msshow}}
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.magicalsong"}}<em>{{magicalsongs.length}}</em></h3><a class="item-control item-create n-add" data-type="magicalsong" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.magicalsong")}}"><i class="fas fa-plus"></i></a>
+        {{#if noteshow}}<div class="n-resbar"><a class="notesreset n-resbar-btn" data-tooltip="{{localize "SW25.Reset" type=(localize "SW25.Item.Resource.Types.Note")}}"><i class="fa-solid fa-arrow-rotate-left"></i></a><span class="n-resbar-cap">{{localize "SW25.Item.Magicalsong.Music"}}</span><ol class="n-qtys">{{#each notes as |item id|}}{{> nqty item=item label=true}}{{/each}}</ol></div>{{/if}}
+        <ol class="n-rows">
+            {{#each magicalsongs as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{else}}{{#if system.attributes.showfeature}}
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.magicalsong"}}<em>{{magicalsongs.length}}</em></h3><a class="item-control item-create n-add" data-type="magicalsong" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.magicalsong")}}"><i class="fas fa-plus"></i></a>
+        {{#if noteshow}}<div class="n-resbar"><a class="notesreset n-resbar-btn" data-tooltip="{{localize "SW25.Reset" type=(localize "SW25.Item.Resource.Types.Note")}}"><i class="fa-solid fa-arrow-rotate-left"></i></a><span class="n-resbar-cap">{{localize "SW25.Item.Magicalsong.Music"}}</span><ol class="n-qtys">{{#each notes as |item id|}}{{> nqty item=item label=true}}{{/each}}</ol></div>{{/if}}
+        <ol class="n-rows">
+            {{#each magicalsongs as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{/if}}{{/if}}
+      {{#if rtshow}}
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.ridingtrick"}}<em>{{ridingtricks.length}}</em></h3><a class="item-control item-create n-add" data-type="ridingtrick" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.ridingtrick")}}"><i class="fas fa-plus"></i></a>
+        <ol class="n-rows">
+            {{#each ridingtricks as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{else}}{{#if system.attributes.showfeature}}
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.ridingtrick"}}<em>{{ridingtricks.length}}</em></h3><a class="item-control item-create n-add" data-type="ridingtrick" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.ridingtrick")}}"><i class="fas fa-plus"></i></a>
+        <ol class="n-rows">
+            {{#each ridingtricks as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{/if}}{{/if}}
+      {{#if atshow}}
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.alchemytech"}}<em>{{alchemytechs.length}}</em></h3><a class="item-control item-create n-add" data-type="alchemytech" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.alchemytech")}}"><i class="fas fa-plus"></i></a>
+        {{#if materialshow.all}}<div class="n-mat"><div class="n-mat-h"><span>{{localize "SW25.Item.Alchemytech.MaterialCard"}}</span><b>B</b><b>A</b><b>S</b><b>SS</b></div>{{#if materialshow.red}}<div class="n-mat-r red"><span><i class="fa-solid fa-paw"></i> {{localize "SW25.Item.Alchemytech.Red"}}</span><ol>{{#each materials.red.b as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.red.a as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.red.s as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.red.ss as |item id|}}{{> nqty item=item}}{{/each}}</ol></div>{{/if}}{{#if materialshow.green}}<div class="n-mat-r green"><span><i class="fa-solid fa-leaf"></i> {{localize "SW25.Item.Alchemytech.Green"}}</span><ol>{{#each materials.green.b as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.green.a as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.green.s as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.green.ss as |item id|}}{{> nqty item=item}}{{/each}}</ol></div>{{/if}}{{#if materialshow.black}}<div class="n-mat-r black"><span><i class="fa-solid fa-gem"></i> {{localize "SW25.Item.Alchemytech.Black"}}</span><ol>{{#each materials.black.b as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.black.a as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.black.s as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.black.ss as |item id|}}{{> nqty item=item}}{{/each}}</ol></div>{{/if}}{{#if materialshow.white}}<div class="n-mat-r white"><span><i class="fa-solid fa-heart"></i> {{localize "SW25.Item.Alchemytech.White"}}</span><ol>{{#each materials.white.b as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.white.a as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.white.s as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.white.ss as |item id|}}{{> nqty item=item}}{{/each}}</ol></div>{{/if}}{{#if materialshow.gold}}<div class="n-mat-r gold"><span><i class="fa-solid fa-sun"></i> {{localize "SW25.Item.Alchemytech.Gold"}}</span><ol>{{#each materials.gold.b as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.gold.a as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.gold.s as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.gold.ss as |item id|}}{{> nqty item=item}}{{/each}}</ol></div>{{/if}}</div>{{/if}}
+        <ol class="n-rows">
+            {{#each alchemytechs as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{else}}{{#if system.attributes.showfeature}}
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.alchemytech"}}<em>{{alchemytechs.length}}</em></h3><a class="item-control item-create n-add" data-type="alchemytech" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.alchemytech")}}"><i class="fas fa-plus"></i></a>
+        {{#if materialshow.all}}<div class="n-mat"><div class="n-mat-h"><span>{{localize "SW25.Item.Alchemytech.MaterialCard"}}</span><b>B</b><b>A</b><b>S</b><b>SS</b></div>{{#if materialshow.red}}<div class="n-mat-r red"><span><i class="fa-solid fa-paw"></i> {{localize "SW25.Item.Alchemytech.Red"}}</span><ol>{{#each materials.red.b as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.red.a as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.red.s as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.red.ss as |item id|}}{{> nqty item=item}}{{/each}}</ol></div>{{/if}}{{#if materialshow.green}}<div class="n-mat-r green"><span><i class="fa-solid fa-leaf"></i> {{localize "SW25.Item.Alchemytech.Green"}}</span><ol>{{#each materials.green.b as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.green.a as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.green.s as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.green.ss as |item id|}}{{> nqty item=item}}{{/each}}</ol></div>{{/if}}{{#if materialshow.black}}<div class="n-mat-r black"><span><i class="fa-solid fa-gem"></i> {{localize "SW25.Item.Alchemytech.Black"}}</span><ol>{{#each materials.black.b as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.black.a as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.black.s as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.black.ss as |item id|}}{{> nqty item=item}}{{/each}}</ol></div>{{/if}}{{#if materialshow.white}}<div class="n-mat-r white"><span><i class="fa-solid fa-heart"></i> {{localize "SW25.Item.Alchemytech.White"}}</span><ol>{{#each materials.white.b as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.white.a as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.white.s as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.white.ss as |item id|}}{{> nqty item=item}}{{/each}}</ol></div>{{/if}}{{#if materialshow.gold}}<div class="n-mat-r gold"><span><i class="fa-solid fa-sun"></i> {{localize "SW25.Item.Alchemytech.Gold"}}</span><ol>{{#each materials.gold.b as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.gold.a as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.gold.s as |item id|}}{{> nqty item=item}}{{/each}}</ol><ol>{{#each materials.gold.ss as |item id|}}{{> nqty item=item}}{{/each}}</ol></div>{{/if}}</div>{{/if}}
+        <ol class="n-rows">
+            {{#each alchemytechs as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{/if}}{{/if}}
+      {{#if pashow}}
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.phasearea"}}<em>{{phaseareas.length}}</em></h3><a class="item-control item-create n-add" data-type="phasearea" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.phasearea")}}"><i class="fas fa-plus"></i></a>
+        {{#if lifelineshow}}<div class="n-resbar"><a class="lifelinereset n-resbar-btn" data-tooltip="{{localize "SW25.Reset" type=(localize "SW25.Item.Resource.Types.Lifeline")}}"><i class="fa-solid fa-arrow-rotate-left"></i></a><a class="lifelineadd n-resbar-btn" data-tooltip="{{localize "SW25.Add" type=(localize "SW25.Item.Resource.Types.Lifeline")}}"><i class="fa-solid fa-arrow-rotate-right"></i></a><span class="n-resbar-cap">{{localize "SW25.Item.Phasearea.Lifeline"}}</span><ol class="n-qtys">{{#each lifelines as |item id|}}{{> nqty item=item label=true showmax=true}}{{/each}}</ol></div>{{/if}}
+        <ol class="n-rows">
+            {{#each phaseareas as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{else}}{{#if system.attributes.showfeature}}
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.phasearea"}}<em>{{phaseareas.length}}</em></h3><a class="item-control item-create n-add" data-type="phasearea" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.phasearea")}}"><i class="fas fa-plus"></i></a>
+        {{#if lifelineshow}}<div class="n-resbar"><a class="lifelinereset n-resbar-btn" data-tooltip="{{localize "SW25.Reset" type=(localize "SW25.Item.Resource.Types.Lifeline")}}"><i class="fa-solid fa-arrow-rotate-left"></i></a><a class="lifelineadd n-resbar-btn" data-tooltip="{{localize "SW25.Add" type=(localize "SW25.Item.Resource.Types.Lifeline")}}"><i class="fa-solid fa-arrow-rotate-right"></i></a><span class="n-resbar-cap">{{localize "SW25.Item.Phasearea.Lifeline"}}</span><ol class="n-qtys">{{#each lifelines as |item id|}}{{> nqty item=item label=true showmax=true}}{{/each}}</ol></div>{{/if}}
+        <ol class="n-rows">
+            {{#each phaseareas as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{/if}}{{/if}}
+      {{#if tcshow}}
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.tactics"}}<em>{{tactics.length}}</em></h3><a class="item-control item-create n-add" data-type="tactics" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.tactics")}}"><i class="fas fa-plus"></i></a>
+        {{#if tacspowershow}}<div class="n-resbar"><a class="tacspowerreset n-resbar-btn" data-tooltip="{{localize "SW25.Reset" type=(localize "SW25.Item.Resource.Types.Tacspower")}}"><i class="fa-solid fa-arrow-rotate-left"></i></a><span class="n-resbar-cap">{{localize "SW25.Item.Tactics.Tacspower"}}</span><ol class="n-qtys">{{#each tacspowers as |item id|}}{{> nqty item=item label=true}}{{/each}}</ol></div>{{/if}}
+        <ol class="n-rows">
+            {{#each tactics as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{else}}{{#if system.attributes.showfeature}}
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.tactics"}}<em>{{tactics.length}}</em></h3><a class="item-control item-create n-add" data-type="tactics" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.tactics")}}"><i class="fas fa-plus"></i></a>
+        {{#if tacspowershow}}<div class="n-resbar"><a class="tacspowerreset n-resbar-btn" data-tooltip="{{localize "SW25.Reset" type=(localize "SW25.Item.Resource.Types.Tacspower")}}"><i class="fa-solid fa-arrow-rotate-left"></i></a><span class="n-resbar-cap">{{localize "SW25.Item.Tactics.Tacspower"}}</span><ol class="n-qtys">{{#each tacspowers as |item id|}}{{> nqty item=item label=true}}{{/each}}</ol></div>{{/if}}
+        <ol class="n-rows">
+            {{#each tactics as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{/if}}{{/if}}
+      {{#if ifshow}}
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.infusion"}}<em>{{infusion.length}}</em></h3><a class="item-control item-create n-add" data-type="infusion" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.infusion")}}"><i class="fas fa-plus"></i></a>
+        <ol class="n-rows">
+            {{#each infusion as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{else}}{{#if system.attributes.showfeature}}
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.infusion"}}<em>{{infusion.length}}</em></h3><a class="item-control item-create n-add" data-type="infusion" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.infusion")}}"><i class="fas fa-plus"></i></a>
+        <ol class="n-rows">
+            {{#each infusion as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{/if}}{{/if}}
+      {{#if bsshow}}
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.barbarousskill"}}<em>{{barbarousskill.length}}</em></h3><a class="item-control item-create n-add" data-type="barbarousskill" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.barbarousskill")}}"><i class="fas fa-plus"></i></a>
+        <ol class="n-rows">
+            {{#each barbarousskill as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{else}}{{#if system.attributes.showfeature}}
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.barbarousskill"}}<em>{{barbarousskill.length}}</em></h3><a class="item-control item-create n-add" data-type="barbarousskill" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.barbarousskill")}}"><i class="fas fa-plus"></i></a>
+        <ol class="n-rows">
+            {{#each barbarousskill as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{/if}}{{/if}}
+      {{#if ewshow}}
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.essenceweave"}}<em>{{essenceweave.length}}</em></h3><a class="item-control item-create n-add" data-type="essenceweave" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.essenceweave")}}"><i class="fas fa-plus"></i></a>
+        <ol class="n-rows">
+            {{#each essenceweave as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{else}}{{#if system.attributes.showfeature}}
+      <div>
+        <h3 class="n-h3">{{localize "TYPES.Item.essenceweave"}}<em>{{essenceweave.length}}</em></h3><a class="item-control item-create n-add" data-type="essenceweave" title="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.essenceweave")}}"><i class="fas fa-plus"></i></a>
+        <ol class="n-rows">
+            {{#each essenceweave as |item id|}}{{> nrow item=item}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+      </div>
+      {{/if}}{{/if}}
+      {{#if ofshow}}
+      <div>
+        {{> "systems/sw25-ru/templates/actor/parts/actor-otherfeature.hbs"}}
+      </div>
+      {{else}}{{#if system.attributes.showfeature}}
+      <div>
+        {{> "systems/sw25-ru/templates/actor/parts/actor-otherfeature.hbs"}}
+      </div>
+      {{/if}}{{/if}}
+      {{!-- [Round 58] UI/UX audit finding 1: if none of the 9 optional
+           categories above are showing, don't leave the player looking at
+           blank space above a plain checkbox — say so, with a button.
+           Banner only while showfeature is still off; once the player
+           turns it on (even if every category is still individually
+           empty), fall back to the plain small checkbox so the banner text
+           ("categories are hidden") doesn't contradict what's on screen. --}}
+      {{#if anyFeatureVisible}}
+      <div class="margin-m" style="display: flex; align-items: center;">
+        <input type="checkbox" id="{{actor._id}}system.attributes.showfeature" name="system.attributes.showfeature" data-dtype="Boolean" {{#if system.attributes.showfeature}} checked {{/if}}/>
+        <label for="{{actor._id}}system.attributes.showfeature">{{localize "SW25.Attributes.Showfeature"}}</label>
+      </div>
+      {{else}}{{#if system.attributes.showfeature}}
+      <div class="margin-m" style="display: flex; align-items: center;">
+        <input type="checkbox" id="{{actor._id}}system.attributes.showfeature" name="system.attributes.showfeature" data-dtype="Boolean" {{#if system.attributes.showfeature}} checked {{/if}}/>
+        <label for="{{actor._id}}system.attributes.showfeature">{{localize "SW25.Attributes.Showfeature"}}</label>
+      </div>
+      {{else}}
+      <div class="empty-state-banner">
+        <i class="fa-solid fa-circle-info"></i>
+        <span class="empty-state-banner__text">{{localize "SW25.Attributes.FeaturesEmptyHint"}}</span>
+        <label class="empty-state-banner__toggle" for="{{actor._id}}system.attributes.showfeature">
+          <input type="checkbox" id="{{actor._id}}system.attributes.showfeature" name="system.attributes.showfeature" data-dtype="Boolean" {{#if system.attributes.showfeature}} checked {{/if}}/>
+          {{localize "SW25.Attributes.Showfeature"}}
+        </label>
+      </div>
+      {{/if}}{{/if}}
+    </div>
+
+    {{!-- Owned Spells Tab --}}
+    <div class="tab spells" data-group="primary" data-tab="spells">
+      {{#if scshow}}
+      <div class="item">
+        <div class="grid grid-12col">
+          <span class="spelllist-label resource-label-l grid-span-2">{{localize "SW25.Item.Spell.Sorcerer"}}</span>
+          <span class="rollable resource-label-l grid-span-2" data-roll="2d6+{{system.attributes.sccast}}" data-label="{{localize "SW25.Item.Spell.Sorcerer"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="" data-apply="-" data-checktype="">{{localize "SW25.Attributes.Magicpower"}} : {{system.attributes.scpower}}</span>
+          <span class="grid-span-2"></span>
+          <span class="grid-span-4" style="text-align: right;">
+            <select name="system.scskill">
+              {{#select system.scskill}}
+              <option value="-">{{localize "SW25.Selectspellskill"}}</option>
+              {{#each skills as |item id|}}
+              <option value="{{item.name}}">{{item.name}}</option>
+              {{/each}}
+              {{/select}}
+            </select>
+          </span>
+          <span class="grid-span-2" style="text-align: right;"><label for="{{actor._id}}system.attributes.scmod"><i class="fa-solid fa-angles-up"></i></label><input id="{{actor._id}}system.attributes.scmod" style="max-width: calc(70% - 7px); text-align: center;" type="text" name="system.attributes.scmod" value="{{system.attributes.scmod}}" data-dtype="Number"/></span>
+        </div>
+        <div class="spelllist-description">
+          <div>
+            <ol class="n-rows">
+            {{#each sorcerer as |item id|}}{{> nrow item=item spell=true}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+          </div>
+        </div>
+      </div>
+      {{/if}}
+      {{#if cnshow}}
+      <div class="item">
+        <div class="grid grid-12col">
+          <span class="spelllist-label resource-label-l grid-span-2">{{localize "SW25.Item.Spell.Conjurer"}}</span>
+          <span class="rollable resource-label-l grid-span-2" data-roll="2d6+{{system.attributes.cncast}}" data-label="{{localize "SW25.Item.Spell.Conjurer"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="">{{localize "SW25.Attributes.Magicpower"}} : {{system.attributes.cnpower}}</span>
+          <span class="grid-span-2"></span>
+          <span class="grid-span-4" style="text-align: right;">
+            <select name="system.cnskill">
+              {{#select system.cnskill}}
+              <option value="-">{{localize "SW25.Selectspellskill"}}</option>
+              {{#each skills as |item id|}}
+              <option value="{{item.name}}">{{item.name}}</option>
+              {{/each}}
+              {{/select}}
+            </select>
+          </span>
+          <span class="grid-span-2" style="text-align: right;"><label for="{{actor._id}}system.attributes.cnmod"><i class="fa-solid fa-angles-up"></i></label><input id="{{actor._id}}system.attributes.cnmod" style="max-width: calc(70% - 7px); text-align: center;" type="text" name="system.attributes.cnmod" value="{{system.attributes.cnmod}}" data-dtype="Number"/></span>
+        </div>
+        <div class="spelllist-description">
+          <div>
+            <ol class="n-rows">
+            {{#each conjurer as |item id|}}{{> nrow item=item spell=true}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+          </div>
+        </div>
+      </div>
+      {{/if}}
+      {{#if wzshow}}
+      <div class="item">
+        <div class="grid grid-12col">
+          <span class="spelllist-label resource-label-l grid-span-2">{{localize "SW25.Item.Spell.Wizard"}}</span>
+          <span class="rollable resource-label-l grid-span-2" data-roll="2d6+{{system.attributes.wzcast}}" data-label="{{localize "SW25.Item.Spell.Wizard"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="">{{localize "SW25.Attributes.Magicpower"}} : {{system.attributes.wzpower}}</span>
+          <span class="grid-span-2"></span>
+          <span class="grid-span-4" style="text-align: right;">
+            <select name="system.wzskill">
+              {{selectOptions skills selected=system.wzskill valueAttr="name" labelAttr="name" localize=true blank="SW25.Selectspellskill"}}
+            </select>
+          </span>
+          <span class="grid-span-2" style="text-align: right;"><label for="{{actor._id}}system.attributes.wzmod"><i class="fa-solid fa-angles-up"></i></label><input id="{{actor._id}}system.attributes.wzmod" style="max-width: calc(70% - 7px); text-align: center;" type="text" name="system.attributes.wzmod" value="{{system.attributes.wzmod}}" data-dtype="Number"/></span>
+        </div>
+        <div class="spelllist-description">
+          <div>
+            <ol class="n-rows">
+            {{#each wizard as |item id|}}{{> nrow item=item spell=true}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+          </div>
+        </div>
+      </div>
+      {{/if}}
+      {{#if prshow}}
+      <div class="item">
+        <div class="grid grid-12col">
+          <span class="spelllist-label resource-label-l grid-span-2">{{localize "SW25.Item.Spell.Priest"}}</span>
+          <span class="rollable resource-label-l grid-span-2" data-roll="2d6+{{system.attributes.prcast}}" data-label="{{localize "SW25.Item.Spell.Priest"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="">{{localize "SW25.Attributes.Magicpower"}} : {{system.attributes.prpower}}</span>
+          <span class="grid-span-2"></span>
+          <span class="grid-span-4" style="text-align: right;">
+            <select name="system.prskill">
+              {{selectOptions skills selected=system.prskill valueAttr="name" labelAttr="name" localize=true blank="SW25.Selectspellskill"}}
+            </select>
+          </span>
+          <span class="grid-span-2" style="text-align: right;"><label for="{{actor._id}}system.attributes.prmod"><i class="fa-solid fa-angles-up"></i></label><input id="{{actor._id}}system.attributes.prmod" style="max-width: calc(70% - 7px); text-align: center;" type="text" name="system.attributes.prmod" value="{{system.attributes.prmod}}" data-dtype="Number"/></span>
+        </div>
+        <div class="spelllist-description">
+          <div>
+            <ol class="n-rows">
+            {{#each priest as |item id|}}{{> nrow item=item spell=true}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+          </div>
+        </div>
+      </div>
+      {{/if}}
+      {{#if mtshow}}
+      <div class="item">
+        <div class="grid grid-12col">
+          <span class="spelllist-label resource-label-l grid-span-2">{{localize "SW25.Item.Spell.Magitech"}}</span>
+          <span class="rollable resource-label-l grid-span-2" data-roll="2d6+{{system.attributes.mtcast}}" data-label="{{localize "SW25.Item.Spell.Magitech"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="">{{localize "SW25.Attributes.Magicpower"}} : {{system.attributes.mtpower}}</span>
+          <span class="rollable resource-label-l grid-span-2" style="text-align: center;" data-resusequantity={{system.resusequantity}} data-resuse="{{system.resuse}}" data-roll="{{system.itemhitformula}}+{{system.itemhitbase}}" data-label="{{system.itemname}} ({{localize "SW25.Item.Weapon.Hit"}})" data-pt="{{system.itempowertable}}" data-apply="{{system.itemapplycheck}}" data-checktype="{{system.itemchecktype}}" data-resist="{{localize "SW25.Resist.Check.Dodge"}}" data-resistkey="Dodge" data-resistresult="disappear" data-itemid="{{system.itemid}}">{{localize "SW25.Item.Weapon.Hit"}} : {{system.itemhitbase}}</span>
+          <span class="grid-span-4" style="text-align: right;">
+            <select name="system.mtskill">
+              {{selectOptions skills selected=system.mtskill valueAttr="name" labelAttr="name" localize=true blank="SW25.Selectspellskill"}}
+            </select>
+          </span>
+          <span class="grid-span-2" style="text-align: right;"><label for="{{actor._id}}system.attributes.mtmod"><i class="fa-solid fa-angles-up"></i></label><input id="{{actor._id}}system.attributes.mtmod" style="max-width: calc(70% - 7px); text-align: center;" type="text" name="system.attributes.mtmod" value="{{system.attributes.mtmod}}" data-dtype="Number"/></span>
+        </div>
+        <div class="spelllist-description">
+          <div>
+            {{#if magitechrshow}}<div class="n-resbar"><span class="n-resbar-cap">{{localize "SW25.Item.Resource.Types.Magitech"}}</span><ol class="n-qtys">{{#each magitechrs as |item id|}}{{> nqty item=item label=true}}{{/each}}</ol></div>{{/if}}
+            <ol class="n-rows">
+            {{#each magitech as |item id|}}{{> nrow item=item spell=true}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+          </div>
+        </div>
+      </div>
+      {{/if}}
+      {{#if frshow}}
+      <div class="item">
+        <div class="grid grid-12col">
+          <span class="spelllist-label resource-label-l grid-span-2">{{localize "SW25.Item.Spell.Fairy"}}</span>
+          <span class="rollable resource-label-l grid-span-2" data-roll="2d6+{{system.attributes.frcast}}" data-label="{{localize "SW25.Item.Spell.Fairy"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="">{{localize "SW25.Attributes.Magicpower"}} : {{system.attributes.frpower}}</span>
+          <span class="grid-span-2">
+            <div class="fairy-checkbox">
+              <label class="fairy-contract f-earth {{#if system.attributes.fairy.earth}}checked{{/if}}" data-path="system.attributes.fairy.earth">{{localize "SW25.Item.Spell.FairyContract.Earth"}}</label>
+              <label class="fairy-contract f-water {{#if system.attributes.fairy.water}}checked{{/if}}" data-path="system.attributes.fairy.water">{{localize "SW25.Item.Spell.FairyContract.Water"}}</label>
+              <label class="fairy-contract f-fire {{#if system.attributes.fairy.fire}}checked{{/if}}" data-path="system.attributes.fairy.fire">{{localize "SW25.Item.Spell.FairyContract.Fire"}}</label>
+              <label class="fairy-contract f-wind {{#if system.attributes.fairy.wind}}checked{{/if}}" data-path="system.attributes.fairy.wind">{{localize "SW25.Item.Spell.FairyContract.Wind"}}</label>
+              <label class="fairy-contract f-light {{#if system.attributes.fairy.light}}checked{{/if}}" data-path="system.attributes.fairy.light">{{localize "SW25.Item.Spell.FairyContract.Light"}}</label>
+              <label class="fairy-contract f-dark {{#if system.attributes.fairy.dark}}checked{{/if}}" data-path="system.attributes.fairy.dark">{{localize "SW25.Item.Spell.FairyContract.Dark"}}</label>
+            </div>
+            <span class="fairy-rank">{{localize "SW25.Item.Spell.FairyContract.Rank"}}:{{system.frRank}}</span>
+          </span>
+          <span class="grid-span-4" style="text-align: right;">
+            <select name="system.frskill">
+              {{selectOptions skills selected=system.frskill valueAttr="name" labelAttr="name" localize=true blank="SW25.Selectspellskill"}}
+            </select>
+          </span>
+          <span class="grid-span-2" style="text-align: right;"><label for="{{actor._id}}system.attributes.frmod"><i class="fa-solid fa-angles-up"></i></label><input id="{{actor._id}}system.attributes.frmod" style="max-width: calc(70% - 7px); text-align: center;" type="text" name="system.attributes.frmod" value="{{system.attributes.frmod}}" data-dtype="Number"/></span>
+        </div>
+        <div class="spelllist-description">
+          <div>
+            <ol class="n-rows">
+            {{#each fairy as |item id|}}{{> nrow item=item spell=true}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+          </div>
+        </div>
+      </div>
+      {{/if}}
+      {{#if drshow}}
+      <div class="item">
+        <div class="grid grid-12col">
+          <span class="spelllist-label resource-label-l grid-span-2">{{localize "SW25.Item.Spell.Druid"}}</span>
+          <span class="rollable resource-label-l grid-span-2" data-roll="2d6+{{system.attributes.drcast}}" data-label="{{localize "SW25.Item.Spell.Druid"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="">{{localize "SW25.Attributes.Magicpower"}} : {{system.attributes.drpower}}</span>
+          <span class="grid-span-2"></span>
+          <span class="grid-span-4" style="text-align: right;">
+            <select name="system.drskill">
+              {{selectOptions skills selected=system.drskill valueAttr="name" labelAttr="name" localize=true blank="SW25.Selectspellskill"}}
+            </select>
+          </span>
+          <span class="grid-span-2" style="text-align: right;"><label for="{{actor._id}}system.attributes.drmod"><i class="fa-solid fa-angles-up"></i></label><input id="{{actor._id}}system.attributes.drmod" style="max-width: calc(70% - 7px); text-align: center;" type="text" name="system.attributes.drmod" value="{{system.attributes.drmod}}" data-dtype="Number"/></span>
+        </div>
+        <div class="spelllist-description">
+          <div>
+            <ol class="n-rows">
+            {{#each druid as |item id|}}{{> nrow item=item spell=true}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+          </div>
+        </div>
+      </div>
+      {{/if}}
+      {{#if dmshow}}
+      <div class="item">
+        <div class="grid grid-12col">
+          <span class="spelllist-label resource-label-l grid-span-2">{{localize "SW25.Item.Spell.Daemon"}}</span>
+          <span class="rollable resource-label-l grid-span-2" data-roll="2d6+{{system.attributes.dmcast}}" data-label="{{localize "SW25.Item.Spell.Daemon"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="">{{localize "SW25.Attributes.Magicpower"}} : {{system.attributes.dmpower}}</span>
+          <span class="grid-span-2"></span>
+          <span class="grid-span-4" style="text-align: right;">
+            <select name="system.dmskill">
+              {{selectOptions skills selected=system.dmskill valueAttr="name" labelAttr="name" localize=true blank="SW25.Selectspellskill"}}
+            </select>
+          </span>
+          <span class="grid-span-2" style="text-align: right;"><label for="{{actor._id}}system.attributes.dmmod"><i class="fa-solid fa-angles-up"></i></label><input id="{{actor._id}}system.attributes.dmmod" style="max-width: calc(70% - 7px); text-align: center;" type="text" name="system.attributes.dmmod" value="{{system.attributes.dmmod}}" data-dtype="Number"/></span>
+        </div>
+        <div class="spelllist-description">
+          <div>
+            <ol class="n-rows">
+            {{#each daemon as |item id|}}{{> nrow item=item spell=true}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+          </div>
+        </div>
+      </div>
+      {{/if}}
+      {{#if abshow}}
+      <div class="item">
+        <div class="grid grid-12col">
+          <span class="spelllist-label resource-label-l grid-span-2">{{localize "SW25.Item.Spell.Abyssal"}}</span>
+          <span class="rollable resource-label-l grid-span-2" data-roll="2d6+{{system.attributes.abcast}}" data-label="{{localize "SW25.Item.Spell.Abyssal"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="">{{localize "SW25.Attributes.Magicpower"}} : {{system.attributes.abpower}}</span>
+          <span class="grid-span-2"></span>
+          <span class="grid-span-4" style="text-align: right;">
+            <select name="system.abskill">
+              {{selectOptions skills selected=system.abskill valueAttr="name" labelAttr="name" localize=true blank="SW25.Selectspellskill"}}
+            </select>
+          </span>
+          <span class="grid-span-2" style="text-align: right;"><label for="{{actor._id}}system.attributes.abmod"><i class="fa-solid fa-angles-up"></i></label><input id="{{actor._id}}system.attributes.abmod" style="max-width: calc(70% - 7px); text-align: center;" type="text" name="system.attributes.abmod" value="{{system.attributes.abmod}}" data-dtype="Number"/></span>
+        </div>
+        <div class="spelllist-description">
+          <div>
+            {{#if abyssexshow}}<div class="n-resbar"><span class="n-resbar-cap">{{localize "SW25.Item.Resource.Types.AbyssEx"}}</span><ol class="n-qtys">{{#each abyssexs as |item id|}}{{> nqty item=item label=true}}{{/each}}</ol></div>{{/if}}
+            <ol class="n-rows">
+            {{#each abyssal as |item id|}}{{> nrow item=item spell=true}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+          </div>
+        </div>
+      </div>
+      {{/if}}
+      {{#if bmshow}}
+      <div class="item">
+        <div class="grid grid-12col">
+          <span class="spelllist-label resource-label-l grid-span-2">{{localize "SW25.Item.Spell.Bibliomancer"}}</span>
+          <span class="rollable resource-label-l grid-span-2" data-roll="2d6+{{system.attributes.bmcast}}" data-label="{{localize "SW25.Item.Spell.Bibliomancer"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="" data-apply="-" data-checktype="">{{localize "SW25.Attributes.Magicpower"}} : {{system.attributes.bmpower}}</span>
+          <span class="grid-span-2">
+            {{#if system.attributes.bibRankEquip}}
+            <div class="biblio-ready">
+              <label class="biblio-rank">R1<br>{{lookup system.attributes.bibRankEquip 1}}/{{lookup system.attributes.bibRankMax 1}}</label>
+              <label class="biblio-rank">R2<br>{{lookup system.attributes.bibRankEquip 2}}/{{lookup system.attributes.bibRankMax 2}}</label>
+              <label class="biblio-rank">R3<br>{{lookup system.attributes.bibRankEquip 3}}/{{lookup system.attributes.bibRankMax 3}}</label>
+              <label class="biblio-rank">R4<br>{{lookup system.attributes.bibRankEquip 4}}/{{lookup system.attributes.bibRankMax 4}}</label>
+              <label class="biblio-rank">R5<br>{{lookup system.attributes.bibRankEquip 5}}/{{lookup system.attributes.bibRankMax 5}}</label>
+            </div>
+            {{/if}}
+          </span>
+          <span class="grid-span-4" style="text-align: right;">
+            <select name="system.bmskill">
+              {{#select system.bmskill}}
+              <option value="-">{{localize "SW25.Selectspellskill"}}</option>
+              {{#each skills as |item id|}}
+              <option value="{{item.name}}">{{item.name}}</option>
+              {{/each}}
+              {{/select}}
+            </select>
+          </span>
+          <span class="grid-span-2" style="text-align: right;"><label for="{{actor._id}}system.attributes.bmmod"><i class="fa-solid fa-angles-up"></i></label><input id="{{actor._id}}system.attributes.bmmod" style="max-width: calc(70% - 7px); text-align: center;" type="text" name="system.attributes.bmmod" value="{{system.attributes.bmmod}}" data-dtype="Number"/></span>
+        </div>
+        <div class="spelllist-description">
+          <div>
+            <ol class="n-rows">
+            {{#each bibliomancer as |item id|}}{{> nrow item=item spell=true}}{{else}}<li class="n-empty">—</li>{{/each}}
+            </ol>
+          </div>
+        </div>
+      </div>
+      {{/if}}
+      {{!-- [Round 58] same empty-state banner treatment as the Features tab
+           above (audit finding 1) — spells has no school-block fallback at
+           all, so an actor with no caster items renders literally nothing
+           here besides this control. Banner only while showspell is still
+           off, same reasoning as the Features tab above. --}}
+      {{#if anySpellVisible}}
+      <div class="margin-m" style="display: flex; align-items: center;">
+        <input type="checkbox" id="{{actor._id}}system.attributes.showspell" name="system.attributes.showspell" data-dtype="Boolean" {{#if system.attributes.showspell}} checked {{/if}}/>
+        <label for="{{actor._id}}system.attributes.showspell">{{localize "SW25.Attributes.Showspell"}}</label>
+      </div>
+      {{else}}{{#if system.attributes.showspell}}
+      <div class="margin-m" style="display: flex; align-items: center;">
+        <input type="checkbox" id="{{actor._id}}system.attributes.showspell" name="system.attributes.showspell" data-dtype="Boolean" {{#if system.attributes.showspell}} checked {{/if}}/>
+        <label for="{{actor._id}}system.attributes.showspell">{{localize "SW25.Attributes.Showspell"}}</label>
+      </div>
+      {{else}}
+      <div class="empty-state-banner">
+        <i class="fa-solid fa-circle-info"></i>
+        <span class="empty-state-banner__text">{{localize "SW25.Attributes.SpellsEmptyHint"}}</span>
+        <label class="empty-state-banner__toggle" for="{{actor._id}}system.attributes.showspell">
+          <input type="checkbox" id="{{actor._id}}system.attributes.showspell" name="system.attributes.showspell" data-dtype="Boolean" {{#if system.attributes.showspell}} checked {{/if}}/>
+          {{localize "SW25.Attributes.Showspell"}}
+        </label>
+      </div>
+      {{/if}}{{/if}}
+      {{#if system.attributes.showspell}}
+      <div>
+        {{> "systems/sw25-ru/templates/actor/parts/actor-spells.hbs"}}
+      </div>
+      {{/if}}
+    </div>
+
+    {{!-- Owned Items Tab --}}
+    <div class="tab items" data-group="primary" data-tab="items">
+      <div class="flexcol margin-s">
+        <div class="grid grid-4col nogapmargin">
+          <div class="grid-span-3"></div>
+          <div class="resource-label flex-group-right tooltip"><label for="{{actor._id}}system.money"><i class="fa-solid fa-coins"></i><span class="tooltip-text">{{localize "SW25.Mymoney"}}</span></label> <input id="{{actor._id}}system.money" style="max-width: calc(60% - 7px);" type="text" name="system.money" value="{{system.money}}" data-dtype="Number"/> G</div>
+        </div>
+        <div>
+          {{> "systems/sw25-ru/templates/actor/parts/actor-items.hbs"}}
+        </div>
+        <div>
+          {{> "systems/sw25-ru/templates/actor/parts/actor-weapons.hbs"}}
+        </div>
+        <div>
+          {{> "systems/sw25-ru/templates/actor/parts/actor-armors.hbs"}}
+        </div>
+        <div>
+          {{> "systems/sw25-ru/templates/actor/parts/actor-accessories.hbs"}}
+        </div>
+      </div>
+    </div>
+
+    {{!-- Active Effects Tab --}}
+    <div class="tab effects flexcol" data-group="primary" data-tab="effects">
+      <div class="effective flexcol margin-l gap-m">
+        <div class="resource-label-l">{{localize "SW25.Effect.TotalEffects"}}</div>
+        <div class="grid {{#if system.isSidebar}}grid-4col{{else}}grid-3col{{/if}}">
+        {{#each system.modParams}}
+          <div class="effective--label">{{label}}: {{value}}</div>
+        {{/each}}
+        </div>
+      </div>
+      <div>
+        <ol class="items-list effects-list">
+  {{#each effects as |section sid|}}
+    <li class="items-header flexrow" data-effect-type="{{section.type}}" data-parent-id="{{@root.actor.id}}" >
+      <h3 class="item-name effect-name flexrow">{{localize section.label}}</h3>
+      <div class="effect-source">{{localize "SW25.Effect.Source"}}</div>
+      <div class="effect-source">{{localize "SW25.Time"}}</div>
+      <div class="item-controls effect-controls flexrow" style="flex: 0 0 70px;">
+        <a class="effect-control" data-action="create" title="{{localize 'DOCUMENT.Create' type=(localize "SW25.Effects")}}">
+          <i class="fas fa-plus"></i> {{localize "DOCUMENT.New" type=""}}
+        </a>
+      </div>
+    </li>
+
+    <ol class="item-list">
+    {{#each section.effects as |effect|}}
+      <li class="item effect flexrow" data-effect-id="{{effect.id}}" data-parent-id="{{effect.parent.id}}">
+        <div class="item-name effect-name flexrow">
+          <img class="item-image" src="{{effect.img}}"/>
+          <h4>{{effect.name}}</h4>
+        </div>
+        <div class="effect-source">{{#if effect.flags.sw25.sourceName}}{{effect.flags.sw25.sourceName}}{{else}}{{effect.parent.name}}{{/if}}</div>
+        <div class="effect-duration">{{effect.duration.label}}</div>
+        {{#if ../../isOwner}}
+          <div class="item-controls effect-controls flexrow" style="flex: 0 0 70px;">
+            <a class="effect-control" data-action="toggle" title="{{localize 'SW25.Effect.Toggle'}}">
+              <i class="fas {{#if effect.disabled}}fa-check{{else}}fa-times{{/if}}"></i>
+            </a>
+            <a class="effect-control" data-action="edit" title="{{localize 'DOCUMENT.Update' type=(localize "SW25.Effects")}}">
+              <i class="fas fa-edit"></i>
+            </a>
+            <a class="effect-control" data-action="delete" title="{{localize 'DOCUMENT.Delete' type=(localize "SW25.Effects")}}">
+              <i class="fas fa-trash"></i>
+            </a>
+          </div>
+        {{else}}
+          <div class="item-controls effect-controls flexrow" style="flex: 0 0 70px;">
+            <a class="effect-control" data-action="edit" title="{{localize 'DOCUMENT.Update' type=(localize "SW25.Effects")}}">
+              <i class='fa-solid fa-eye'></i>
+            </a>
+          </div>
+        {{/if}}
+      </li>
+    {{/each}}
+    </ol>
+  {{/each}}
+</ol>
+
+      </div>
+    </div>
+
+    {{!-- Biography Tab --}}
+    <div class="tab description flexcol" data-group="primary" data-tab="description">
+      <div class="grid grid-5col margin-s">
+        <div class="grid-span-2">
+          {{> "systems/sw25-ru/templates/actor/parts/actor-languages.hbs"}}
+        </div>
+        <div class="flexcol grid-span-3">
+          <div class="grid {{#if system.isSidebar}}grid-8col{{else}}grid-4col{{/if}} nogapmargin">
+            <div class="grid-span-2 property-col">
+              <label class="property--label-col" for="{{actor._id}}system.attributes.born">{{localize "SW25.Attributes.Born"}}</label>
+              <input class="property--value" id="{{actor._id}}system.attributes.born" type="text" name="system.attributes.born" value="{{system.attributes.born}}" data-dtype="String"{{#unless system.isEdit}} disabled{{/unless}}/>
+            </div>
+            <div class="grid-span-2 property-col">
+              <label class="property--label-col" for="{{actor._id}}system.attributes.faith">{{localize "SW25.Attributes.Faith"}}</label>
+              <input class="property--value" id="{{actor._id}}system.attributes.faith" type="text" name="system.attributes.faith" value="{{system.attributes.faith}}" data-dtype="String"{{#unless system.isEdit}} disabled{{/unless}}/>
+            </div>
+            <div class="grid-span-2 property-col">
+              <label class="property--label-col" for="system.classType">{{localize "SW25.Actor.Type"}}</label>
+              <select class="property--value" name="system.classType"{{#unless system.isEdit}} disabled{{/unless}}>
+                {{selectOptions config.actorClasses selected=system.classType localize=true blank="SW25.Item.None"}}
+              </select>
+            </div>
+            <div class="grid-span-2" style="text-align: center;">
+              <label for="{{actor._id}}impurity" class="resource-label">{{localize "SW25.Attributes.Impurity"}}</label>
+              <div class="adjustable-container">
+                <a class="adjustment-button" data-action="decrease" data-property="system.attributes.impurity">
+                  <i class="fas fa-minus"></i>
+                </a>
+                <input id="{{actor._id}}impurity" type="number" name="system.attributes.impurity" value="{{system.attributes.impurity}}" data-dtype="Number"{{#unless system.isEdit}} disabled{{/unless}}/>
+                <a class="adjustment-button" data-action="increase" data-property="system.attributes.impurity">
+                  <i class="fas fa-plus"></i>
+                </a>
+              </div>
+            </div>
+            </div>
+          <fieldset class="category itemselect">
+            <legend class="category__title">{{localize "SW25.Defaultitemskill"}}</legend>
+            <div class="property align-right">
+              <label class="property--label">
+                <i class="fa-solid fa-leaf" style="display:{{#if system.isSidebar}}none{{else}}block{{/if}};"></i>
+                <span class="sidebar-hidden">{{localize "SW25.Selectherbskill"}}</span>
+              </label>
+            </div>
+            <div class="property tooltip">
+              <select class="property--value" name="system.herbskill">
+                {{selectOptions skills selected=system.herbskill valueAttr="name" labelAttr="name" localize=true blank="SW25.Item.None"}}
+              </select>
+              <span class="tooltip-top">{{localize "SW25.Selectherbskill"}}</span>
+            </div>
+            <div class="property align-right">
+              <label class="property--label">
+                <i class="fa-solid fa-flask" style="display:{{#if system.isSidebar}}none{{else}}block{{/if}};"></i>
+                <span class="sidebar-hidden">{{localize "SW25.Selectpotionskill"}}</span>
+              </label>
+            </div>
+            <div class="property tooltip">
+              <select class="property--value" name="system.potionskill">
+                {{selectOptions skills selected=system.potionskill valueAttr="name" labelAttr="name" localize=true blank="SW25.Item.None"}}
+              </select>
+              <span class="tooltip-top">{{localize "SW25.Selectpotionskill"}}</span>
+            </div>
+            <div class="property align-right">
+              <label class="property--label">
+                <i class="fa-solid fa-screwdriver-wrench" style="display:{{#if system.isSidebar}}none{{else}}block{{/if}};"></i>
+                <span class="sidebar-hidden">{{localize "SW25.Selectrepairskill"}}</span>
+              </label>
+            </div>
+            <div class="property tooltip">
+              <select class="property--value" name="system.repairskill">
+                {{selectOptions skills selected=system.repairskill valueAttr="name" labelAttr="name" localize=true blank="SW25.Item.None"}}
+              </select>
+              <span class="tooltip-top">{{localize "SW25.Selectrepairskill"}}</span>
+            </div>
+          </fieldset>
+          {{#if system.isEdit}}
+          <fieldset class="category grid grid-6col nogapmargin">
+            <legend class="category__title">{{localize "SW25.Actor.ColorSetting.Title"}}</legend>
+
+              <fieldset class="subcategory grid-span-6 grid grid-6col nogapmargin">
+                <legend class="category__title">{{localize "SW25.Actor.ColorSetting.Main"}}</legend>
+                <div class="grid-span-3">
+                  <label for="system.color.main.bg">{{localize "SW25.Actor.ColorSetting.Background"}}</label>
+                  <input type="color" name="system.color.main.bg" value="{{system.color.main.bg}}" />
+                </div>
+                <div class="grid-span-3">
+                  <label for="system.color.main.text">{{localize "SW25.Actor.ColorSetting.Text"}}</label>
+                  <input type="color" name="system.color.main.text" value="{{system.color.main.text}}" />
+                </div>
+              </fieldset>
+              <fieldset class="subcategory grid-span-6 grid grid-6col nogapmargin">
+                <legend class="category__title">{{localize "SW25.Actor.ColorSetting.Sub"}}</legend>
+                <div class="grid-span-3">
+                  <label for="system.color.sub.bg">{{localize "SW25.Actor.ColorSetting.Background"}}</label>
+                  <input type="color" name="system.color.sub.bg" value="{{system.color.sub.bg}}" />
+                </div>
+                <div class="grid-span-3">
+                  <label for="system.color.sub.text">{{localize "SW25.Actor.ColorSetting.Text"}}</label>
+                  <input type="color" name="system.color.sub.text" value="{{system.color.sub.text}}" />
+                </div>
+              </fieldset>
+          </fieldset>
+          {{/if}}
+          <div class="grid grid-6col nogapmargin flex-blank"></div>
+        </div>
+      </div>
+
+      <div class="property-bio">
+        <label class="property--label">{{localize "SW25.Biography"}}</label>
+        {{editor system.biography target="system.biography" rollData=rollData button=true owner=owner editable=editable}}
+      </div>
+    </div>
+
+  </section>
+
+</section>
+</form>

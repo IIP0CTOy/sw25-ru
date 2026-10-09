@@ -1,0 +1,91 @@
+{
+  "id": "sw25-ru",
+  "title": "Sword World 2.5 (RU)",
+  "description": "Unofficial fan-made system for Sword World 2.5 (SW25) on Foundry VTT v13–v14: rules automation, character and monster sheets, item and monster constructors, ytsheet JSON import; English/Russian/Japanese/Korean interface. No rulebook text is included. Based on sw25-fvtt (jeannjeann) 2.4.1. / Неофициальная фанатская система Sword World 2.5 для Foundry VTT без текста книг.",
+  "authors": [
+    {
+      "name": "IIP0CTOy",
+      "url": "https://github.com/IIP0CTOy"
+    },
+    {
+      "name": "Jean.N",
+      "url": "https://github.com/jeannjeann"
+    }
+  ],
+  "url": "https://github.com/IIP0CTOy/sw25-ru",
+  "manifest": "https://github.com/IIP0CTOy/sw25-ru/releases/latest/download/system.json",
+  "download": "https://github.com/IIP0CTOy/sw25-ru/releases/download/v2.4.1-ru.7/sw25-ru.zip",
+  "bugs": "https://github.com/IIP0CTOy/sw25-ru/issues",
+  "license": "LICENSE.txt",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "media": [
+    {
+      "type": "setup",
+      "url": "systems/sw25-ru/assets/sw25fvtt.png",
+      "thumbnail": "systems/sw25-ru/assets/sw25fvtt.png"
+    }
+  ],
+  "version": "2.4.1-ru.7",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "14",
+    "maximum": "14"
+  },
+  "esmodules": [
+    "module/sw25.mjs"
+  ],
+  "styles": [
+    "css/sw25.css",
+    "fonts/MingCute/MingCute.css"
+  ],
+  "languages": [
+    {
+      "lang": "ru",
+      "name": "Русский",
+      "path": "lang/ru.json"
+    },
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "ja",
+      "name": "日本語(Japanese)",
+      "path": "lang/ja.json"
+    },
+    {
+      "lang": "ko",
+      "name": "한국어(Korean)",
+      "path": "lang/ko.json"
+    }
+  ],
+  "packs": [
+    {
+      "name": "macro",
+      "label": "Macros",
+      "type": "Macro",
+      "path": "packs/macro"
+    }
+  ],
+  "packFolders": [
+    {
+      "name": "Sword World 2.5",
+      "sorting": "m",
+      "color": "#6b2d1f",
+      "packs": [
+        "macro"
+      ],
+      "folders": []
+    }
+  ],
+  "socket": true,
+  "background": "systems/sw25-ru/assets/sw25fvtt.png",
+  "grid": {
+    "distance": 1,
+    "units": "m"
+  },
+  "primaryTokenAttribute": "hp",
+  "secondaryTokenAttribute": "mp"
+}

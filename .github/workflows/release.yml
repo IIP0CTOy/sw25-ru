@@ -1,0 +1,35 @@
+# Push a tag like v2.4.1-ru.8 -> GitHub builds sw25-ru.zip and publishes a release
+# with system.json + the zip. The manifest URL in system.json always points at the latest release.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set version and download URL from the tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/sw25-ru.zip"
+          jq --arg v "$VERSION" --arg u "$URL" '.version = $v | .download = $u' system.json > system.tmp
+          mv system.tmp system.json
+
+      - name: Build the zip
+        run: |
+          zip -r sw25-ru.zip . -x ".git/*" ".github/*" "*.zip" "packs/*/LOCK" "packs/*/LOG" "packs/*/LOG.old"
+
+      - name: Publish the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            system.json
+            sw25-ru.zip
+          generate_release_notes: true
