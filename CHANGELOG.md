@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 2.4.1-ru.9
+- Japanese interface: the new windows, chat cards and settings of this fork are translated (about 900 strings); the built-in guide has a Japanese version.
+- Starter compendiums in Japanese (classes, checks, racial abilities, Enhancer techniques): the language button 日本語, or automatically for a Japanese GM. Check names match the default names of the original system (生命抵抗力, 精神抵抗力, 先制, 魔物知識, 生死判定).
+- Character creation wizard: Japanese race, background and ability names; Japanese check names are recognised.
+- Checks accept Japanese class lists (「スカウト、レンジャー」, 「…または…」) and 戦士系技能 / 魔法使い系技能（魔力）.
+- Monster generator: in Japanese, ytsheet fields (intelligence, perception, habitat, languages…) keep their original wording.
+- System title: «Sword World 2.5 Plus» (id stays sw25-ru — worlds, modules and the manifest URL are unchanged).
+- Readme in Japanese; the fan-work notice uses the exact wording of the publisher's guideline.
+
 ## 2.4.1-ru.8
 - Item Piles integration (quantity, price, money; non-loot item types filtered).
 - Licence: `module/helpers/sections.mjs` (multi-section monsters) is no longer under MIT — all rights reserved, see LICENSE-SECTIONS.txt. Versions up to 2.4.1-ru.7 remain under MIT.

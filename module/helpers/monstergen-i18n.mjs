@@ -4,6 +4,7 @@
  *  - Japanese ytsheet vocabulary (intelligence, perception, habitat, languages, schools of magic …) is turned into that language.
  * Nothing here is book text: only game terms.
  */
+import { JA_STATIC, JA_TPL } from "./ja-strings.mjs";
 
 /**
  * "ru" or "en". During the `init` hook game.i18n is not initialised yet (it still says "en"),
@@ -15,8 +16,46 @@ export const lang = () => {
   try { l = g?.settings?.get("core", "language"); } catch (e) { /* settings not ready */ }
   return String(l || g?.i18n?.lang || "en").toLowerCase().startsWith("ru") ? "ru" : "en";
 };
-/** inline choice: L2("по-русски", "in English") */
-export const L2 = (ru, en) => (lang() === "ru" ? ru : en);
+/** True for a Japanese client (the data language stays English, the interface becomes Japanese). */
+export const isJa = () => {
+  const g = globalThis.game;
+  let l;
+  try { l = g?.settings?.get("core", "language"); } catch (e) { /* settings not ready */ }
+  return String(l || g?.i18n?.lang || "").toLowerCase().startsWith("ja");
+};
+/** Interface language: "ru" | "ja" | "en". */
+export const uiLang = () => (lang() === "ru" ? "ru" : isJa() ? "ja" : "en");
+
+/* Japanese layer: the English string of L2 / tr is looked up in ja-strings.mjs. */
+const SLOT = /\$\{(?:m\[(\d+)\]|(\d*))\}/g;
+const reEsc = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+let _jaTpl = null;
+const jaTpl = () => _jaTpl ??= JA_TPL.map(([en, ja]) => {
+  const parts = en.split(/\$\{(?:m\[\d+\]|\d*)\}/);
+  return { re: new RegExp("^" + parts.map(reEsc).join("([\\s\\S]*?)") + "$"), ja, w: parts.join("").length };
+}).sort((x, y) => y.w - x.w); // the most specific template first
+const _jaCache = new Map();
+/** English UI string -> Japanese (unknown strings come back unchanged). */
+export function jaOf(en) {
+  if (typeof en !== "string" || !en) return en;
+  const hit = JA_STATIC.get(en) ?? _jaCache.get(en);
+  if (hit !== undefined) return hit;
+  const k = en.trim();
+  if (k !== en && JA_STATIC.has(k)) return en.replace(k, JA_STATIC.get(k));
+  let out = en;
+  for (const t of jaTpl()) {
+    const m = en.match(t.re);
+    if (!m) continue;
+    let i = 0;
+    out = t.ja.replace(SLOT, (_, a, b) => m[Number(a || b) || ++i] ?? "");
+    break;
+  }
+  if (_jaCache.size > 2000) _jaCache.clear();
+  _jaCache.set(en, out);
+  return out;
+}
+/** inline choice: L2("по-русски", "in English") — Japanese clients get the Japanese of the English string */
+export const L2 = (ru, en) => (lang() === "ru" ? ru : isJa() ? jaOf(en) : en);
 
 const EN = new Map(Object.entries({"1. Откуда брать": "1. Source", "Разобрать текст": "Parse text", "выбрать всех": "select all", "снять": "clear", "Найдено монстров:": "Monsters found:", "2. Монстр": "2. Monster", "Слабость:": "Weakness:", "3. Способности": "3. Abilities", "4. Описание / трофеи": "4. Description / loot", "+ секция": "+ section", "+ добавить из шаблона": "+ add from template", "Генератор монстров": "Monster generator", " из ": " of ", "отмечено": "selected", "ур.": "lv.", "(без названия)": "(unnamed)", "Название": "Name", "Уровень": "Level", "Инициатива": "Initiative", "Скорость": "Speed", "Интеллект": "Intelligence", "Восприятие": "Perception", "Реакция": "Disposition", "Загрязнение": "Soulscars", "Язык": "Language", "Среда обитания": "Habitat", "Известность": "Reputation", "Слабое место (порог)": "Weak point (threshold)", "Слабое место (текст)": "Weak point (text)", "Стойкость (бонус)": "Fortitude (bonus)", "Воля (бонус)": "Willpower (bonus)", "Основная секция": "Main section", "Секция / бой. стиль": "Section / fight. style", "Точн.": "Acc.", "Урон +N": "Dmg +N", "Уклон.": "Eva.", "Защ.": "Def.", "ОЖ": "HP", "ОМ": "MP", "Базовые числа (без скобок). «Урон +N» — это N из «2d+N». Больше одной строки = многочастный монстр.": "Base numbers (without the bracketed values). “Dmg +N” is the N from “2d+N”. More than one row = multi-section monster.", "создаётся выключенный эффект «Слабое место…», включается при опознании монстра. Распознаётся из текста автоматически.": "creates a disabled “Weak point…” effect that turns on when the monster is identified. Detected from the text automatically.", "— нет / только текстом —": "— none / text only —", "Магический урон (любой) +N": "Any magic damage +N", "Физический урон (любой) +N": "Any physical damage +N", "Огонь +N": "Fire +N", "Лёд/Вода +N": "Ice/Water +N", "Ветер +N": "Wind +N", "Земля +N": "Earth +N", "Молния +N": "Thunder +N", "Энергия +N": "Energy +N", "Особая атака (Уклонение)": "Special attack (Evasion)", "Удар со спасброском (Стойкость, половина)": "Hit with save (Fortitude, half)", "Ментальное (Воля, отрицает)": "Mental (Willpower, negates)", "Область вокруг себя": "Area around self", "Область в точке (выбор на карте)": "Area at a point (pick on map)", "Линия": "Line", "Постоянная (◯, текст)": "Passive (◯, text)", "Самоусиление (текст)": "Self-buff (text)", "Регенерация (текст)": "Regeneration (text)", "Пустая": "Blank", "Способностей нет — импортируй текст или добавь из шаблона.": "No abilities — import text or add from a template.", "Бросок": "Check", "— без броска —": "— no roll —", "Стойкость": "Fortitude", "Воля": "Willpower", "Уклонение": "Evasion", "Половина": "Half", "Отриц.": "Negate", "Невозможно": "Can't", "На выбор": "Optional", "Сокращ.": "Shorten", "Снимается": "Disappears", "Урон": "Damage", "фикс.": "flat", "нет": "none", "физ.": "phys.", "маг.": "magic", "цель(и)": "target(s)", "область": "area", "радиус": "radius", "макс. целей": "max targets", "дальность": "range", "вокруг себя": "around self", "► основное": "► main", "◯ постоянное": "◯ passive", "≫ вспомогательное": "≫ auxiliary", "△ подготовка": "△ preparation", "🗨 заявляемое": "🗨 declared", "секция": "section", "Описание (необязательно)": "Description (optional)", "Трофеи": "Loot", "Описание": "Description", "поиск по названию": "search by name", "язык: авто": "language: auto", "русский": "Russian", "...или вставь сюда текст с одним или несколькими монстрами": "...or paste text with one or more monsters here", "Разобрано: монстров": "Parsed monsters:", "Никто не выбран.": "Nobody selected.", "Вставь текст.": "Paste some text.", "Способности": "Abilities", "по": "to", "ссылки или ID листов ytsheet (по одной в строке) — монстры": "ytsheet links or sheet IDs (one per line) — monsters", "Загрузить по ссылкам": "Load from links", "Открыть ytsheet": "Open ytsheet", "Листы читаются по одному, не чаще раза в секунду. Если сайт не разрешит запрос из браузера, открой ссылку с «&mode=json» и вставь JSON в поле ниже.": "Sheets are fetched one at a time, at most once a second. If the site refuses the request from the browser, open the link with “&mode=json” and paste the JSON into the field below.", "...или вставь сюда текст с одним или несколькими монстрами (или JSON с ytsheet)": "...or paste text with one or more monsters here (or ytsheet JSON)", "English": "English", "Класс:": "Class:", "Использует заклинания": "Uses spells", "Варвары": "Barbarians", "Животные": "Animals", "Растения": "Plants", "Нежить": "Undead", "Конструкты": "Constructs", "Магитехи": "Magitech", "Мифозвери": "Mythical beasts", "Феи": "Fairies", "Демоны": "Daemons", "Гуманоиды": "Humanoids", "Прочее": "Other", "Магия (уйдёт в текст «Магия» в GM-информации): ": "Magic (goes into the “Magic” text of the GM info): ", "Создать выбранных": "Create selected", "Закрыть": "Close", "Удалить": "Delete", "секция (для многочастных)": "section (for multi-part monsters)", "Особая атака": "Special attack", "Удар": "Strike", "Взгляд": "Gaze", "Взрыв": "Blast", "Огненный шар": "Fireball", "Луч": "Beam", "Пассивка": "Passive", "Усиление": "Buff", "Регенерация": "Regeneration", "Новая способность": "New ability", "Цель делает спасбросок Воли.": "The target makes a Willpower save.", "Накладывается вручную на N раундов.": "Applied manually for N rounds.", "В начале хода монстр восстанавливает N ОЖ (вручную).": "At the start of its turn the monster recovers N HP (manually).", "Новый монстр": "New monster", "Оружие": "Weapon", "Секция": "Section", "Магия": "Magic", "Слабое место": "Weak point", "Магический урон": "Magic damage", "Физический урон": "Physical damage", "Огонь": "Fire", "Лёд/Вода": "Ice/Water", "Ветер": "Wind", "Земля": "Earth", "Молния": "Thunder", "Энергия": "Energy", "Информация / перевод": "Info / translation", "Тексты для перевода (необязательно)": "Texts for translation (optional)", "Скопировать тексты на перевод": "Copy texts for translation", "Применить перевод": "Apply translation", "Вставь сюда переведённые строки (нумерация «N|» должна сохраниться)": "Paste the translated lines here (keep the “N|” numbering)", "Названия, описания и тексты способностей можно прогнать через любой переводчик: структура и числа при этом не затрагиваются.": "Names, descriptions and ability texts can go through any translator: structure and numbers are not affected."}).map(([k, v]) => [k.trim(), v]));
 
@@ -56,8 +95,9 @@ export function tr(s) {
   if (lang() === "ru" || typeof s !== "string") return s;
   const k = s.trim();
   if (!k) return s;
-  if (EN.has(k)) return s.replace(k, EN.get(k));
-  for (const [re, f] of RX) { const m = k.match(re); if (m) return s.replace(k, f(m)); }
+  const J = isJa() ? jaOf : (x) => x;
+  if (EN.has(k)) return s.replace(k, J(EN.get(k)));
+  for (const [re, f] of RX) { const m = k.match(re); if (m) return s.replace(k, J(f(m))); }
   return s;
 }
 
@@ -91,7 +131,7 @@ export function watchDom(root) {
 const pickL = (o) => (lang() === "ru" ? o.ru : o.en);
 const NFKC = (s) => String(s ?? "").normalize("NFKC");
 const split = (s) => NFKC(s).split(/[、,，・]/).map((x) => x.trim()).filter(Boolean);
-const mapList = (s, table) => split(s).map((x) => (table[x] ? pickL(table[x]) : x)).join(", ");
+const mapList = (s, table) => split(s).map((x) => (table[x] && !isJa() ? pickL(table[x]) : x)).join(isJa() ? "、" : ", ");
 const T = (ru, en) => ({ ru, en });
 
 const INTEL = { "なし": T("Нет", "None"), "動物並み": T("Животный", "Animal-like"), "命令に従う": T("Слуга", "Follows orders"), "低い": T("Низкий", "Low"), "人間並み": T("Средний", "Human-like"), "高い": T("Высокий", "High") };
@@ -187,3 +227,8 @@ export const ja = {
     return L2(`${schools}${lv}${note} / Мощность магии ${power}`, `${schools}${lv}${note} / Magic Power ${power}`);
   },
 };
+// a Japanese client keeps the original ytsheet wording of these fields
+for (const k of ["intellect", "disposition", "perception", "habitat", "languages"]) {
+  const f = ja[k];
+  ja[k] = (v, ...a) => (isJa() ? NFKC(v).trim() : f(v, ...a));
+}

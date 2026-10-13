@@ -413,7 +413,7 @@ export class SW25Item extends Item {
     // alternatives applies — RAW says "or", meaning whichever you have,
     // the higher one if you have both, not any class whatsoever.
     const checkSkillAlternatives = String(systemData.checkskill || "")
-      .split(/\s*,\s*|\s+(?:или|or)\s+/i)
+      .split(/\s*[,、]\s*|\s+(?:или|or)\s+|\s*または\s*/i)
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
     actoritemData.forEach((item) => {
@@ -430,12 +430,12 @@ export class SW25Item extends Item {
           if (item.system.skilllevel > levelmod)
             levelmod = item.system.skilllevel;
         }
-      } else if (["Боевой тип", "Fighter type", "Warrior type"].includes(systemData.checkskill)) {
+      } else if (["Боевой тип", "Fighter type", "Warrior type", "戦士系技能"].includes(systemData.checkskill)) {
         if (item.system.skilltype == "fighterskill") {
           if (item.system.skilllevel > levelmod)
             levelmod = item.system.skilllevel;
         }
-      } else if (["Магический тип (Мощность магии)", "Magic type (Magic Power)", "Magic-user type"].includes(systemData.checkskill)) {
+      } else if (["Магический тип (Мощность магии)", "Magic type (Magic Power)", "Magic-user type", "魔法使い系技能（魔力）"].includes(systemData.checkskill)) {
         if (item.system.skilltype == "magicuserskill") {
           if (item.system.skilllevel > levelmod)
             levelmod = item.system.skilllevel;

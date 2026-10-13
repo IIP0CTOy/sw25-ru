@@ -3,17 +3,18 @@
  * The public system ships without rulebook content, but the character wizard and the sheets need
  * a few reference items: classes, skill checks, racial abilities and Enhancer techniques.
  * `module/data/starter.json` holds them as bare mechanics (names, numbers, one-line summaries in
- * our own words — no book text) in Russian and English; this module turns that file into WORLD
+ * our own words — no book text) in Russian, English and Japanese; this module turns that file into WORLD
  * compendiums in the language of the GM who builds them.
  */
-import { L2, lang } from "./monstergen-i18n.mjs";
+import { L2, uiLang } from "./monstergen-i18n.mjs";
 import { GUIDE, GUIDE_TITLE } from "./guide.mjs";
+import { GUIDE_JA, GUIDE_TITLE_JA } from "./guide-ja.mjs";
 
 const KINDS = {
-  classes: { name: "sw25-classes", label: ["Классы", "Classes"], legacy: "ru-classes" },
-  checks: { name: "sw25-checks", label: ["Проверки умений", "Skill checks"], legacy: "ru-checks" },
-  races: { name: "sw25-races", label: ["Расовые способности", "Racial abilities"], legacy: "ru-races" },
-  techniques: { name: "sw25-techniques", label: ["Техники Усилителя", "Enhancer techniques"], legacy: "ru-enhancearts" },
+  classes: { name: "sw25-classes", label: ["Классы", "Classes", "技能"], legacy: "ru-classes" },
+  checks: { name: "sw25-checks", label: ["Проверки умений", "Skill checks", "判定"], legacy: "ru-checks" },
+  races: { name: "sw25-races", label: ["Расовые способности", "Racial abilities", "種族特徴"], legacy: "ru-races" },
+  techniques: { name: "sw25-techniques", label: ["Техники Усилителя", "Enhancer techniques", "練技"], legacy: "ru-enhancearts" },
 };
 const FOLDER = "SW25 — Starter";
 const hasContent = (p) => !!p && (p.index?.size ?? 0) > 0;
@@ -41,7 +42,7 @@ async function loadData() {
   return (_data = await r.json());
 }
 
-/** One entry of starter.json -> Item data in language `L` ("ru" | "en"). */
+/** One entry of starter.json -> Item data in language `L` ("ru" | "en" | "ja"). */
 function toItem(e, L, folderId) {
   const system = foundry.utils.deepClone(e.system ?? {});
   for (const [k, v] of Object.entries(e.loc ?? {})) system[k] = v[L] ?? v.en ?? v.ru ?? "";
@@ -49,7 +50,7 @@ function toItem(e, L, folderId) {
   const name = e.name[L] ?? e.name.en ?? e.name.ru;
   const effects = (e.effects ?? []).map((f) => ({
     name, img: f.img, transfer: !!f.transfer, disabled: !!f.disabled,
-    system: { changes: (f.changes[L] ?? f.changes.ru).map(([key, value]) => ({ key, type: "add", value, phase: "initial" })) },
+    system: { changes: (f.changes[L] ?? f.changes.en ?? f.changes.ru).map(([key, value]) => ({ key, type: "add", value, phase: "initial" })) },
   }));
   return { name, type: e.type, img: e.img, system, effects, flags: foundry.utils.mergeObject({ sw25: { starter: true } }, e.flags ?? {}), folder: folderId ?? null };
 }
@@ -57,20 +58,23 @@ function toItem(e, L, folderId) {
 /**
  * Create (or refill) the starter compendiums of this world.
  * @param {object} [o]
- * @param {"ru"|"en"} [o.language]  language of the items; default: the language of this client
+ * @param {"ru"|"en"|"ja"} [o.language]  language of the items; default: the language of this client
  * @param {boolean} [o.force]       rebuild packs that already have content (their items are replaced)
  * @returns {Promise<{created: Record<string, number>, skipped: string[]}>}
  */
-export async function buildStarter({ language = lang(), force = false } = {}) {
+export async function buildStarter({ language = uiLang(), force = false } = {}) {
   if (!game.user.isGM) { ui.notifications.warn(L2("Стартовые компендиумы создаёт ГМ.", "Only the GM can build the starter compendiums.")); return null; }
-  const L = language === "ru" ? "ru" : "en";
+  const L = ["ru", "ja"].includes(language) ? language : "en";
   const data = await loadData();
   const CC = foundry.documents?.collections?.CompendiumCollection ?? globalThis.CompendiumCollection;
   const out = { created: {}, skipped: [] };
   for (const [kind, k] of Object.entries(KINDS)) {
     let pack = game.packs.get(`world.${k.name}`);
     if (hasContent(pack) && !force) { out.skipped.push(kind); continue; }
-    if (!pack) pack = await CC.createCompendium({ name: k.name, label: `SW25: ${k.label[L === "ru" ? 0 : 1]}`, type: "Item", system: game.system.id });
+    const label = `SW25: ${k.label[{ ru: 0, en: 1, ja: 2 }[L]]}`;
+    // a compendium label cannot be changed after creation: a pack in another language is recreated
+    if (pack && pack.metadata.label !== label) { if (pack.locked) await pack.configure({ locked: false }); await pack.deleteCompendium(); pack = null; }
+    if (!pack) pack = await CC.createCompendium({ name: k.name, label, type: "Item", system: game.system.id });
     if (pack.locked) await pack.configure({ locked: false });
     if (hasContent(pack)) {
       await pack.getIndex();
@@ -103,23 +107,28 @@ export async function buildStarter({ language = lang(), force = false } = {}) {
 /**
  * [2026-10-07] The built-in guide as a Journal compendium of the world ("SW25: Руководство").
  * @param {object} [o]
- * @param {"ru"|"en"} [o.language]
+ * @param {"ru"|"en"|"ja"} [o.language]
  * @param {boolean} [o.force]  rebuild an existing guide
  */
 const GUIDE_PACK = "sw25-guide";
-export async function buildGuide({ language = lang(), force = false } = {}) {
+export async function buildGuide({ language = uiLang(), force = false } = {}) {
   if (!game.user.isGM) return null;
   const i = language === "ru" ? 0 : 1;
+  const jp = language === "ja";
+  const title = jp ? GUIDE_TITLE_JA : GUIDE_TITLE[i];
+  const pages = jp ? GUIDE_JA.map((p) => ({ title: p.title, html: p.html })) : GUIDE.map((p) => ({ title: p.title[i], html: p.html[i] }));
   const CC = foundry.documents?.collections?.CompendiumCollection ?? globalThis.CompendiumCollection;
   let pack = game.packs.get(`world.${GUIDE_PACK}`);
   if (hasContent(pack) && !force) return pack;
-  if (!pack) pack = await CC.createCompendium({ name: GUIDE_PACK, label: i === 0 ? "SW25: Руководство" : "SW25: Guide", type: "JournalEntry" });
+  const label = jp ? "SW25: ガイド" : i === 0 ? "SW25: Руководство" : "SW25: Guide";
+  if (pack && pack.metadata.label !== label) { if (pack.locked) await pack.configure({ locked: false }); await pack.deleteCompendium(); pack = null; }
+  if (!pack) pack = await CC.createCompendium({ name: GUIDE_PACK, label, type: "JournalEntry" });
   if (pack.locked) await pack.configure({ locked: false });
   await pack.getIndex();
   if (pack.index.size) await JournalEntry.implementation.deleteDocuments(pack.index.map((e) => e._id), { pack: pack.collection });
   await JournalEntry.implementation.create({
-    name: GUIDE_TITLE[i],
-    pages: GUIDE.map((p, n) => ({ name: p.title[i], type: "text", sort: (n + 1) * 100000, title: { show: true, level: 1 }, text: { content: p.html[i], format: 1 } })),
+    name: title,
+    pages: pages.map((p, n) => ({ name: p.title, type: "text", sort: (n + 1) * 100000, title: { show: true, level: 1 }, text: { content: p.html, format: 1 } })),
     flags: { sw25: { guide: true } },
   }, { pack: pack.collection });
   await pack.configure({ locked: true, ownership: { PLAYER: "OBSERVER", ASSISTANT: "OWNER" } }).catch(() => {});
@@ -141,13 +150,14 @@ async function askAndBuild() {
     buttons: [
       { action: "ru", label: "Русский", callback: () => "ru" },
       { action: "en", label: "English", callback: () => "en" },
+      { action: "ja", label: "日本語", callback: () => "ja" },
       { action: "samples", label: L2("Примеры: персонажи и монстры", "Samples: characters and monsters"), callback: () => "samples" },
       { action: "cancel", label: L2("Отмена", "Cancel"), callback: () => null },
     ],
   }).catch(() => null);
   // rebuilt in the language of this client (samples keep the language they were made in)
   if (choice === "samples") return game.sw25?.samples?.build?.({ force: true });
-  if (choice === "ru" || choice === "en") return buildStarter({ language: choice, force: true });
+  if (["ru", "en", "ja"].includes(choice)) return buildStarter({ language: choice, force: true });
   return null;
 }
 

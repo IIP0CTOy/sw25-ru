@@ -1,5 +1,7 @@
 # Sword World 2.5 for Foundry VTT v14 (sw25-ru)
 
+[日本語](README-JA.md) · [Русский](README-RU.md)
+
 An unofficial, fan-made game system that automates Sword World 2.5 play in Foundry Virtual Tabletop (v13–v14): character and monster sheets, dice rolls, combat, spells and effects. Interface in English, Russian
 
 > **Beta.** The system is playable, but it has been tested by one group. Please report bugs: [Issues](https://github.com/IIP0CTOy/sw25-ru/issues).
@@ -10,7 +12,8 @@ It is a fork of [sw25-fvtt](https://github.com/jeannjeann/sw25-fvtt) by Jean.N a
 
 Sword World 2.5 is © GroupSNE and © KADOKAWA. This is an unofficial fan work, free of charge and not for profit; it is not affiliated with or endorsed by GroupSNE or KADOKAWA.
 
-本作は、「グループSNE」および「株式会社KADOKAWA」が権利を有する『ソード・ワールド2.0/2.5』の、二次創作です。 (C)GroupSNE (C)KADOKAWA
+本作は、「グループＳＮＥ」及び「株式会社ＫＡＤＯＫＡＷＡ」が権利を有する『ソード・ワールド2.0／2.5』の、二次創作です。  
+(C)GroupSNE (C)KADOKAWA
 
 The system is not a replacement for the rulebooks. It contains no rulebook text, no setting text, no monster entries, no spell or item descriptions, and no illustrations or maps from the books. You need the rulebooks to play.
 
@@ -55,6 +58,10 @@ https://github.com/IIP0CTOy/sw25-ru/releases/latest/download/system.json
 ```
 
 For the Russian interface of Foundry itself, install the `ru-ru` core translation module.
+
+## Support
+
+The system is free. If you want to support the author, you can do it on [Boosty](https://boosty.to/iipoctoy_foundry_vvt) (cards from any country, including Japan). Thank you!
 
 ## Credits
 

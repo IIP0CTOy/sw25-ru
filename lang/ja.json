@@ -149,7 +149,9 @@
       "Showfeature": "空欄グループ表示",
       "Showspell": "全魔法リスト表示",
       "Showaction": "全行動リスト表示",
-      "Magicpower": "魔力"
+      "Magicpower": "魔力",
+      "FeaturesEmptyHint": "まだ何もありません — このキャラクターが該当する能力を持っていないか、非表示のカテゴリ（練技・呪歌・騎芸・賦術・鼓咆・蛮族特殊能力・相域など）がオフになっています。",
+      "SpellsEmptyHint": "まだ何もありません — このキャラクターは10系統のどの魔法も持っていません。想定外なら「特殊能力」タブを確認してください。"
     },
     "Ability": {
       "Dex": { "long": "器用度", "abbr": "器用", "die": "⚀" },
@@ -163,7 +165,9 @@
       "Technique": "技",
       "Body": "体",
       "Heart": "心",
-      "Bonus": "ボーナス"
+      "Bonus": "ボーナス",
+      "GrowthAlreadyUsed": "このロールの成長は使用済みです — 1回のロールで成長できる能力値は1つだけです。",
+      "GrowthNotOwner": "成長を適用できるのはキャラクターの所有者だけです。"
     },
     "Npc": {
       "Unidentifiednpc": "不明のNPC"
@@ -198,7 +202,8 @@
     "SheetLabels": {
       "Actor": "SW25キャラクターシート",
       "Item": "SW25アイテムシート",
-      "ActiveEffect": "SW25バフデバフシート"
+      "ActiveEffect": "SW25バフデバフシート",
+      "ActorNew": "SW25 — 新シート（ベータ）"
     },
     "Actor": {
       "ColorSetting": {
@@ -1052,7 +1057,156 @@
         "disappear": "消滅",
         "halving": "半減",
         "shortening": "短縮"
-      }
+      },
+      "SelectDefender": "回避／抵抗は防御側が振ります：対象トークンを選択してこのボタンを押してください（または攻撃前にターゲットしてください）。"
+    },
+    "Cast": {
+      "TooManyTargets": "範囲内に{n}体いますが、対象は最大{max}体です — 超過分は除外しました。",
+      "AreaLine": "範囲{r}m：対象 {n}/{max}",
+      "All": "全員",
+      "AreaEmpty": "範囲内に誰もいません。",
+      "PickArea": "{name}：範囲の中心をクリック（半径{r}m）。右クリックまたはEscでキャンセル。",
+      "LineLine": "射線{r}m：対象 {n}",
+      "PickLine": "{name}：射線の向きをクリック（最大{r}m）。右クリックまたはEscでキャンセル。",
+      "Label": "行使判定",
+      "NoMP": "{name}：MPが足りません — 必要{cost}、現在{mp}。魔法は行使されませんでした。",
+      "MpLine": "MP −{cost}（{before} → {after}）",
+      "Fumble": "自動失敗 — 魔法は不発（MPは消費）",
+      "FumblePaid": "自動失敗 — 不発（コストは消費）",
+      "PickEffect": "効果を選択",
+      "PickEffectHint": "術者が効果を選びます：",
+      "NoSchoolSpells": "ワールドにこの系統・レベルの魔法がありません",
+      "Circle": "{n}レベル",
+      "MonsterMagicHint": "魔力 {power}。魔法を選んでください："
+    },
+    "Contest": {
+      "Hit": "命中！",
+      "Miss": "回避 — 外れ",
+      "ResistFailed": "抵抗失敗",
+      "ResistHalf": "抵抗成功 — ダメージ半減",
+      "ResistNegated": "抵抗成功 — 効果消滅",
+      "Resisted": "抵抗成功",
+      "Damage": "ダメージ",
+      "DamageHalf": "ダメージ（½）",
+      "AlreadyDone": "この結果のダメージは適用済みです。",
+      "AttackerOnly": "ダメージは攻撃側（またはGM）が振ります。",
+      "Undo": "取り消し",
+      "Rolled": "ロール済み",
+      "TagHalf": "½ — クリティカルなし",
+      "TagFumble": "1ゾロ — 0",
+      "TagCrit": "クリティカル",
+      "NoItem": "攻撃アイテムが見つかりません — シートからダメージを振ってください。",
+      "TargetNotOnScene": "現在のシーンに対象がいません — 戦闘シーンに切り替えてください。",
+      "Atk": "攻撃",
+      "DefDodge": "回避",
+      "DefSave": "抵抗",
+      "DirectRoll": "直接ロール"
+    },
+    "Socket": {
+      "NoGM": "GMがオンラインではないため、所有していないトークンへの適用は行われませんでした。GMの参加後にやり直してください。"
+    },
+    "Status": {
+      "Stunned": "気絶（スタン）",
+      "Confused": "混乱",
+      "Restrained": "拘束",
+      "Silenced": "沈黙",
+      "Unconscious": "気絶"
+    },
+    "DeathCheck": {
+      "Roll": "生死判定",
+      "Tooltip": "生死判定を行います。目標値は現在HPの絶対値です。カウンターは連続成功数（6回中）を示し、6回目の成功でHP1で目覚めます。"
+    },
+    "Class": {
+      "Rhythm": "楽素",
+      "Perform": "演奏",
+      "Finale": "終律",
+      "Evocation": "賦術",
+      "SongFumble": "1ゾロ — 楽素なし",
+      "RhythmGain": "獲得した楽素：{gain}",
+      "Flourish": "達成値{v}以上 — 楽素追加",
+      "NoFlourish": "達成値{v}に届かず",
+      "RhythmNow": "楽素：{before} → {after}",
+      "CondOk": "効果条件 {cond}：達成",
+      "CondFail": "効果条件 {cond} 未達 — 効果なし",
+      "NoRhythm": "{name}：楽素{cost}が必要、現在{have}",
+      "RhythmSpent": "楽素 −{cost}（{before} → {after}）",
+      "Uses": "{n}回分",
+      "PickRank": "カードランク",
+      "CardCost": "1回あたりのカード：{cost}",
+      "NoCards": "{name}：ランク{rank}のカードが足りません：{cards}",
+      "CardsSpent": "カード {rank}：{cards}",
+      "RankValue": "ランクの値：{v}",
+      "HP": "HP",
+      "MP": "MP",
+      "Capped": "{v}中、最大値で打ち止め",
+      "SongHits": "{r}m以内で呪歌を聞いた{side}：{n}",
+      "SongNobody": "{r}m以内に{side}がいません",
+      "Foes": "敵",
+      "Allies": "味方",
+      "ShowEmptyCards": "空のカード",
+      "HideEmptyCards": "空を隠す",
+      "EmptyCardsHint": "枚数0のカードは隠れています。クリックで表示し、新しいカードを入力できます。"
+    },
+    "Init": {
+      "Title": "陣営の先制判定",
+      "PartyFirst": "PC側が先攻",
+      "EnemyFirst": "敵側が先攻",
+      "Compare": "PC側の最高値 {party} 対 敵の先制値 {enemy}",
+      "Direct": "PC側（スカウトなし、平目）",
+      "Fumble": "1ゾロ",
+      "NoScout": "スカウト技能の持ち主がいません：平目で2d6を1回。",
+      "Order": "各ラウンド：勝った陣営が全員好きな順番で行動し、その後もう一方の陣営。トラッカーの旗で手番を渡します。",
+      "TakeTurn": "このキャラクターが今行動する"
+    },
+    "Session": {
+      "Title": "セッション終了",
+      "GMOnly": "セッションを終了できるのはGMだけです",
+      "Goal": "セッションの目的：",
+      "GoalYes": "達成（1000）",
+      "GoalNo": "失敗（500）",
+      "Monsters": "倒した魔物：",
+      "XP": "経験点",
+      "NoMonsters": "戦闘の記録がありません — 魔物レベル×10を手入力してください",
+      "Gold": "戦利品：",
+      "NoLoot": "戦利品ロールの記録がありません",
+      "Shards": "剣のかけら：",
+      "ShardsHint": "各キャラクターがその数だけd6を振り、名誉点を得ます",
+      "Growth": "全員の成長ロール",
+      "Pc": "キャラクター",
+      "Fumbles": "このセッションの1ゾロ",
+      "Apply": "付与",
+      "Cancel": "キャンセル",
+      "Rep": "名誉点",
+      "FreeXP": "未使用経験点",
+      "Summary": "基本 {base} + 魔物 各{mxp}点；戦利品 {gold}G → 各{share}G；剣のかけら {shards}個。",
+      "LevelHint": "未使用経験点はキャラクターシートで技能レベルに使ってください（A/Bテーブルは自動計算）。",
+      "NoXP": "{name} → {lvl}：経験点{need}が必要、未使用{free}",
+      "NewTalent": "{name}：冒険者レベル{adv} — 新しい戦闘特技を習得"
+    },
+    "Know": {
+      "Title": "魔物知識判定",
+      "Vs": "知名度 {rep} / 弱点値 {weak}",
+      "Nobody": "セージ／ライダーなし",
+      "Unknown": "未識別",
+      "Known": "識別済み",
+      "Weak": "識別済み、弱点判明（効果オン）"
+    },
+    "NewSheet": {
+      "Fav": "お気に入り",
+      "Star": "お気に入りに追加",
+      "Unstar": "お気に入りから外す",
+      "FavHint": "魔法・練技・能力の☆をクリックするとここに表示されます。ドラッグでも追加できます。",
+      "ChecksHint": "判定の辞典からここに判定をドラッグするか、「判定」タブで判定の☆をクリックしてください。",
+      "UnpinCheck": "戦闘タブから外す",
+      "Cast": "行使",
+      "NoMp": "{name}：MPが足りません — 必要{cost}、現在{mp}。",
+      "MpSpent": "MP −{cost}（{from} → <b>{to}</b>）",
+      "HpHealed": "HP +{n}（{from} → <b>{to}</b>）",
+      "NoEnhancer": "<em>エンハンサー技能がありません — 手動で回復してください。</em>",
+      "Marker": "{n}ラウンドのマーカー — 数値なし、記述どおりに処理します。",
+      "Applied": "効果を{n}ラウンド適用しました。",
+      "AppliedNoTime": "効果を適用しました — 終了時に手動で外してください。",
+      "Manual": "<em>効果は手動で適用します。</em>"
     }
   },
 
@@ -1194,7 +1348,27 @@
       "name": "アクター行動の標準設定",
       "hint": "ロール等の標準設定。オンの場合、キャラクターの非選択時にユーザーに設定されたキャラクターを標準使用します。デフォルト：オン、要リロード"
     },
-    "rollRequest": "ロール要求"
+    "rollRequest": "ロール要求",
+    "compactCards": {
+      "name": "行動カードをまとめる",
+      "hint": "抵抗・ダメージロール・対象ごとの適用を、攻撃／魔法カードの1行にまとめます（隠したメッセージはログに残ります）。オフにすると途中のカードとボタンがすべて表示されます。"
+    },
+    "autoCastSpells": {
+      "name": "ワンクリック魔法",
+      "hint": "魔法のアイコンをクリックすると：MPを消費（足りなければ行使しない）、行使判定、魔物の抵抗を自動で振り、ダメージを即座に振って適用します。Shift+クリックで従来のカード。"
+    },
+    "autoResistNonPC": {
+      "name": "魔物の回避／抵抗を自動化",
+      "hint": "キャラクターがターゲットしたトークンを攻撃（または抵抗のある魔法を行使）すると、アクティブなGMが魔物・NPCの回避／抵抗を自動で振り、カードに命中／外れとダメージボタンを表示します。PCは自分の防御をカードのボタンで振ります。"
+    },
+    "sideInitiative": {
+      "name": "陣営の先制判定（ルールどおり）",
+      "hint": "1回の戦闘で先制判定は1回：PC側のスカウト対魔物の最高先制値。オフ：従来のキャラクターごとのロール。"
+    },
+    "sectionTokens": {
+      "name": "複数部位の魔物に部位トークンを出す（別トークン）",
+      "hint": "複数部位の魔物を配置すると、その隣に各部位のトークンが現れます（部位ごとにターゲットとダメージ）。"
+    }
   },
   "DIALOG": {
     "rollMethod": "複数ターゲットへのロール方法を選択",
