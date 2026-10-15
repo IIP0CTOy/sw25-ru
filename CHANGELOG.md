@@ -4,6 +4,9 @@
 - Character wizard: the Russian Monster Knowledge check («Знания о монстрах») is found again; Tabbits and Runefolk cannot take Priest; a Nightmare starts with 1 Soulscar; Leprechaun «Hobbyist» (CR III extra table) gives Sage & Bard for 2000 exp, as in the book.
 - Weapons made with the item builder or imported from ytsheet: accuracy and damage now use the attack class of the sheet (or the highest warrior class) with Dex / Str. Before, damage got no class + Strength bonus and accuracy used the adventurer level.
 - Foundry VTT v14 only (minimum version 14).
+- Weapons: an attack class left as «-» on the sheet no longer zeroes accuracy and damage; the highest warrior class is used.
+- Multi-section monsters: when the targeted section is destroyed, attacks go to the main section (or another one still standing) instead of the dead one.
+- Enhancer techniques with a Japanese duration (「30秒（3ラウンド）」) now expire after their rounds instead of staying on.
 
 ## 2.4.1-ru.9
 - Japanese interface: the new windows, chat cards and settings of this fork are translated (about 900 strings); the built-in guide has a Japanese version.

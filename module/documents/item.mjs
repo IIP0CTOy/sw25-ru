@@ -2160,7 +2160,10 @@ export class SW25Item extends Item {
       // [2026-10-15] builder/ytsheet weapons used to be saved with checkskill "adv" (adventurer level, magic classes included)
       if (sys.checkskill === "adv" && (itemData.flags?.sw25?.builder || itemData.flags?.sw25?.ytsheet)) sys.checkskill = "";
       // no attack class chosen on the sheet: the highest warrior-type class (Fighter, Grappler, Fencer, Marksman)
-      const warrior = a.attackskill || itemData.actor.items
+      const chosen = a.attackskill && a.attackskill !== "-" ? a.attackskill : "";   // "-" = nothing picked on the sheet
+      if (sys.checkskill === "-") sys.checkskill = "";
+      if (sys.powerskill === "-") sys.powerskill = "";
+      const warrior = chosen || itemData.actor.items
         .filter((i) => i.type === "skill" && i.system.skilltype === "fighterskill")
         .sort((x, y) => Number(y.system.skilllevel) - Number(x.system.skilllevel))[0]?.name;
       fill(warrior, "dex", "str");
@@ -2219,7 +2222,7 @@ export class SW25Item extends Item {
       const actoritemData = itemData.actor.items;
 
       // Set default skill and ability
-      if (actorData.attackskill != "") {
+      if (actorData.attackskill != "" && actorData.attackskill != "-") {
         if (systemData.checkskill == "")
           systemData.checkskill = actorData.attackskill;
         if (systemData.checkabi == "") systemData.checkabi = "dex";

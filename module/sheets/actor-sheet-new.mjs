@@ -46,14 +46,14 @@ const T = (k, d) => (d ? game.i18n.format(`SW25.NewSheet.${k}`, d) : game.i18n.l
 
 /** "30 секунд (3 р.)" -> 3, "3 минуты (18 р.)" -> 18, "1 час" -> 360, instant/unknown -> null */
 function techniqueRounds(time) {
-  const t = String(time ?? "").toLowerCase();
-  let m = t.match(/\((\d+)\s*(?:р|r)/);
+  const t = String(time ?? "").normalize("NFKC").toLowerCase();   // 「30秒（3ラウンド）」 -> "(3ラウンド)"
+  let m = t.match(/\((\d+)\s*(?:р|r|ラウンド)/);
   if (m) return Number(m[1]);
-  m = t.match(/(\d+)\s*(?:раунд|round)/);
+  m = t.match(/(\d+)\s*(?:раунд|round|ラウンド)/);
   if (m) return Number(m[1]);
-  m = t.match(/(\d+)\s*(?:час|hour)/);
+  m = t.match(/(\d+)\s*(?:час|hour|時間)/);
   if (m) return Number(m[1]) * 360;
-  m = t.match(/(\d+)\s*(?:мин|min)/);
+  m = t.match(/(\d+)\s*(?:мин|min|分)/);
   if (m) return Number(m[1]) * 6;
   return null;
 }

@@ -45,7 +45,13 @@ export function activeSectionOf(actor) {
   const fl = (mainActorOf(actor) ?? actor).flags[FLAG];
   const mine = game.user?.isGM ? undefined : fl.activeSectionBy?.[game.user?.id];
   const id = sectionIdOfToken(actor) ?? mine ?? fl.activeSection;
-  return secs.find((s) => s.id === id) ?? secs.find((s) => s.core) ?? secs[0];
+  const pick = secs.find((s) => s.id === id) ?? secs.find((s) => s.core) ?? secs[0];
+  if (sectionIdOfToken(actor)) return pick;
+  // [2026-10-15] a destroyed section is no longer a target: fall back to the core, else any section still standing
+  const main = mainActorOf(actor) ?? actor;
+  const alive = (s) => !s.down && (s.core ? Number(main.system?.hp?.value ?? 1) : Number(s.hp?.value ?? 1)) > 0;
+  if (alive(pick)) return pick;
+  return secs.find((s) => s.core && alive(s)) ?? secs.find(alive) ?? pick;
 }
 const coreOf = (secs) => secs.find((s) => s.core) ?? secs[0];
 const norm = (s) => String(s ?? "").toLowerCase().replace(/ё/g, "е").trim();
