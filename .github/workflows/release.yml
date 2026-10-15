@@ -33,3 +33,19 @@ jobs:
             system.json
             sw25-ru.zip
           generate_release_notes: true
+
+      # Publishes the version on foundryvtt.com. Works only after the package page exists there
+      # and the repository secret FOUNDRY_RELEASE_TOKEN is set; without the secret the step is skipped.
+      - name: Publish on foundryvtt.com
+        env:
+          FOUNDRY_TOKEN: ${{ secrets.FOUNDRY_RELEASE_TOKEN }}
+        run: |
+          if [ -z "$FOUNDRY_TOKEN" ]; then echo "No FOUNDRY_RELEASE_TOKEN — skipped"; exit 0; fi
+          VERSION="${GITHUB_REF_NAME#v}"
+          MANIFEST="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/system.json"
+          NOTES="https://github.com/${GITHUB_REPOSITORY}/releases/tag/${GITHUB_REF_NAME}"
+          BODY=$(jq -n --arg v "$VERSION" --arg m "$MANIFEST" --arg n "$NOTES" \
+            --argjson c "$(jq '.compatibility' system.json)" \
+            '{id: "sw25-ru", release: {version: $v, manifest: $m, notes: $n, compatibility: $c}}')
+          curl -sS --fail-with-body -X POST https://api.foundryvtt.com/_api/packages/release_version/ \
+            -H "Content-Type: application/json" -H "Authorization: ${FOUNDRY_TOKEN}" -d "$BODY"
