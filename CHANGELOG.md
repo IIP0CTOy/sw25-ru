@@ -1,9 +1,13 @@
 # CHANGELOG
 
+## 2.4.1-ru.10
+- Character wizard: the Russian Monster Knowledge check («Знания о монстрах») is found again; Tabbits and Runefolk cannot take Priest; a Nightmare starts with 1 Soulscar; Leprechaun «Hobbyist» (CR III extra table) gives Sage & Bard for 2000 exp, as in the book.
+- Weapons made with the item builder or imported from ytsheet: accuracy and damage now use the attack class of the sheet (or the highest warrior class) with Dex / Str. Before, damage got no class + Strength bonus and accuracy used the adventurer level.
+- Foundry VTT v14 only (minimum version 14).
+
 ## 2.4.1-ru.9
 - Japanese interface: the new windows, chat cards and settings of this fork are translated (about 900 strings); the built-in guide has a Japanese version.
 - Starter compendiums in Japanese (classes, checks, racial abilities, Enhancer techniques): the language button 日本語, or automatically for a Japanese GM. Check names match the default names of the original system (生命抵抗力, 精神抵抗力, 先制, 魔物知識, 生死判定).
-- Character wizard: the Russian Monster Knowledge check («Знания о монстрах») is found again; Tabbits and Runefolk cannot take Priest, Runefolk cannot take Fairy Tamer; a Nightmare starts with 1 Soulscar.
 - Character creation wizard: Japanese race, background and ability names; Japanese check names are recognised.
 - Checks accept Japanese class lists (「スカウト、レンジャー」, 「…または…」) and 戦士系技能 / 魔法使い系技能（魔力）.
 - Monster generator: in Japanese, ytsheet fields (intelligence, perception, habitat, languages…) keep their original wording.

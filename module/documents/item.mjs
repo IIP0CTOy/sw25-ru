@@ -2156,7 +2156,15 @@ export class SW25Item extends Item {
       if (!sys.powerskill) sys.powerskill = skill;
       if (!sys.powerabi) sys.powerabi = powerabi;
     };
-    if (itemData.type === "weapon") fill(a.attackskill, "dex", "str");
+    if (itemData.type === "weapon") {
+      // [2026-10-15] builder/ytsheet weapons used to be saved with checkskill "adv" (adventurer level, magic classes included)
+      if (sys.checkskill === "adv" && (itemData.flags?.sw25?.builder || itemData.flags?.sw25?.ytsheet)) sys.checkskill = "";
+      // no attack class chosen on the sheet: the highest warrior-type class (Fighter, Grappler, Fencer, Marksman)
+      const warrior = a.attackskill || itemData.actor.items
+        .filter((i) => i.type === "skill" && i.system.skilltype === "fighterskill")
+        .sort((x, y) => Number(y.system.skilllevel) - Number(x.system.skilllevel))[0]?.name;
+      fill(warrior, "dex", "str");
+    }
     // [2026-10-07] an evocation made by hand has no check class: Alchemist + Intelligence
     else if (itemData.type === "alchemytech") fill(findClassItem(itemData.actor, "alchemist")?.name, "int", "int");
     else if (itemData.type === "magicalsong") fill(findClassItem(itemData.actor, "bard")?.name, "mnd", "mnd");

@@ -203,7 +203,7 @@ export function buildItem(kind, f, rows = []) {
     const wtype = f.wtype || WEAPON_TYPE_BY_CAT[category] || "blade";
     const power = f.power === "" ? null : N(f.power);
     system = { ...base, category, rank: rankOf(f), type: wtype, usage: f.usage ?? "", reqstr: Math.max(1, N(f.reqstr, 1)), hit: N(f.hit), dmod: N(f.dmod), range: String(f.wrange ?? "").trim(),
-      usepower: power !== null, power: power ?? 0, cvalue: N(f.cvalue, 10) || 10, applypower: "on", checkskill: "adv", checkabi: "dex" };
+      usepower: power !== null, power: power ?? 0, cvalue: N(f.cvalue, 10) || 10, applypower: "on" };   // check/damage class + Dex/Str: from the sheet's attack class (item.mjs _applyDefaultRollSkills)
     folder = [L2("Оружие", "Weapons"), category ? loc(C.weaponCategories[category]) : L2("Прочее", "Other"), rankFolder(system.rank)];
     effects = buildEffects(name, "weapon", fxRows, { transfer: true });
   } else if (kind === "armor") {

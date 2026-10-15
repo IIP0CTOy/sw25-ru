@@ -211,7 +211,7 @@ export function parseYtItem(o) {
     return { name, type: "weapon", flags, warnings, effects: ytEffects(name, "weapon", fxText, "", warnings, [hit ? "hit" : "", dmod ? "dmg" : ""]), system: {
       ...base, description: itemHtml(o, extra), type, category, rank: (m?.[2] ?? "").replace(/Ｓ/g, "S").replace(/Ａ/g, "A").replace(/Ｂ/g, "B"),
       usage, reqstr: num(o.weapon1Reqd) ?? 1, hit: hit ?? 0, dmod: dmod ?? 0, range: String(o.weapon1Range ?? ""),
-      usepower: rate !== null, power: rate ?? 0, cvalue: crit ?? 10, applypower: "on", checkskill: "adv", checkabi: "dex",
+      usepower: rate !== null, power: rate ?? 0, cvalue: crit ?? 10, applypower: "on",
     } };
   }
   if (isArmor) {

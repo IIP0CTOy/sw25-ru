@@ -2,7 +2,7 @@
 
 [日本語](README-JA.md) · [Русский](README-RU.md)
 
-An unofficial, fan-made game system that automates Sword World 2.5 play in Foundry Virtual Tabletop (v13–v14): character and monster sheets, dice rolls, combat, spells and effects. Interface in English, Russian
+An unofficial, fan-made game system that automates Sword World 2.5 play in Foundry Virtual Tabletop (v14): character and monster sheets, dice rolls, combat, spells and effects. Interface in English, Russian
 
 > **Beta.** The system is playable, but it has been tested by one group. Please report bugs: [Issues](https://github.com/IIP0CTOy/sw25-ru/issues).
 

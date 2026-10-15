@@ -1,7 +1,7 @@
 {
   "id": "sw25-ru",
   "title": "Sword World 2.5 Plus",
-  "description": "Unofficial fan-made system for Sword World 2.5 (SW25) on Foundry VTT v13–v14: rules automation, character and monster sheets, item and monster constructors, ytsheet JSON import; English/Russian/Japanese/Korean interface. No rulebook text is included. Based on sw25-fvtt (jeannjeann) 2.4.1. / ソード・ワールド2.5の非公式二次創作システム（ルールブックの文章は含みません）。 / Неофициальная фанатская система Sword World 2.5 для Foundry VTT без текста книг.",
+  "description": "Unofficial fan-made system for Sword World 2.5 (SW25) on Foundry VTT v14: rules automation, character and monster sheets, item and monster constructors, ytsheet JSON import; English/Russian/Japanese/Korean interface. No rulebook text is included. Based on sw25-fvtt (jeannjeann) 2.4.1. / ソード・ワールド2.5の非公式二次創作システム（ルールブックの文章は含みません）。 / Неофициальная фанатская система Sword World 2.5 для Foundry VTT без текста книг.",
   "authors": [
     {
       "name": "IIP0CTOy",
@@ -28,7 +28,7 @@
   ],
   "version": "2.4.1-ru.7",
   "compatibility": {
-    "minimum": "13",
+    "minimum": "14",
     "verified": "14",
     "maximum": "14"
   },
