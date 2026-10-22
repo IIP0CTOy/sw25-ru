@@ -99,6 +99,8 @@
     "Deffence": "Defense",
     "Other": "Other",
     "Selecthitweapon": "Select Attack Weapon",
+    "DualAttack": "Dual attack",
+    "DualAttackHint": "Two attacks with -2 Accuracy against one target ([Dual Wielding])",
     "Selectattackskill": "Select Attack Class",
     "Selectdodgeskill": "Select Evasion Class",
     "Selectherbskill": "Herb Class",
@@ -1187,7 +1189,7 @@
       "NoMonsters": "no fights recorded — enter 10 × monster level by hand",
       "Gold": "Loot:",
       "NoLoot": "no loot rolls recorded",
-      "Shards": "Sword shards:",
+      "Shards": "Sword Shards:",
       "ShardsHint": "every character rolls that many d6 for reputation",
       "Growth": "Growth roll for everyone",
       "Pc": "Character",
@@ -1384,6 +1386,10 @@
     "sectionTokens": {
       "name": "Section tokens for multi-section monsters (separate tokens)",
       "hint": "When a multi-section monster is placed, tokens of its sections appear next to it (targeting and damage per section)."
+    },
+    "sectionTextScale": {
+      "name": "Sections: text size",
+      "hint": "Size of the section labels and bars above multi-section monsters (this client only)."
     }
   },
   "DIALOG": {

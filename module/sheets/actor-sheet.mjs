@@ -18,6 +18,8 @@ import { castSpell, showResistButton, castMonsterMagic, castMonsterAbility } fro
 import { performSong, useAlchemy, useTactics, useAspect, useWeave } from "../helpers/classcast.mjs";
 import { dailyCheck, dailyMark } from "../helpers/rest.mjs";
 import { L2 } from "../helpers/monstergen-i18n.mjs";
+import { dualWeapons, dualAttack } from "../helpers/dualattack.mjs";
+import { attackMods, featOf, useFeat } from "../helpers/feats.mjs";
 
 /**
  * Extend the basic ActorSheet with some very simple modifications
@@ -550,7 +552,9 @@ export class SW25ActorSheet extends ActorSheet {
       else if (i.type === "monsterability") {
         monsterabilities.push(i);
         if (isLabel(i.name, "MonRes")) {
-          contentItem.monRes = i;
+          // the one with numbers wins over an empty duplicate (imported «Resistance» + auto «Resist»)
+          const empty = (x) => !Number(x?.system?.checkbasemod1) && !Number(x?.system?.checkbasemod2);
+          if (!contentItem.monRes || (empty(contentItem.monRes) && !empty(i))) contentItem.monRes = i;
         }
         if (
           contentItem.monAtk == null &&
@@ -757,6 +761,7 @@ export class SW25ActorSheet extends ActorSheet {
     context.showEmptyCards = !!this._showEmptyCards;
     context.weapons = weapons;
     context.battleweapons = battleweapons;
+    context.dualReady = !!dualWeapons(this.actor);
     context.armors = armors;
     context.battlearmors = battlearmors;
     context.accessories = accessories;
@@ -919,6 +924,7 @@ export class SW25ActorSheet extends ActorSheet {
     
     // Rollable abilities.
     html.on("click", ".rollable", this._onRoll.bind(this));
+    html.on("click", ".sw25-dualattack", (ev) => { ev.preventDefault(); dualAttack(this.actor); });
 
     // Rollable abilities for Power Roll.
     html.on("click", ".powerrollable", this._onPowerRoll.bind(this));
@@ -1112,14 +1118,30 @@ export class SW25ActorSheet extends ActorSheet {
     event = freezeEvent(event);
     const element = event.currentTarget;
     const dataset = element.dataset;
-    const targetTokens = game.user.targets;
+    // a copy: the targets must not change while the talent dialog is open
+    const targetTokens = new Set(game.user.targets);
+    // talents: declared / conditional bonuses for a weapon attack (asked once, before the roll)
+    let featCtx = null;
+    {
+      const wid = dataset.itemid ?? element.closest("[data-item-id]")?.dataset.itemId;
+      const w = wid ? this.actor.items.get(wid) : null;
+      if (w?.type === "weapon" && dataset.resist) {
+        featCtx = await attackMods(this.actor, w);
+        if (!featCtx) return;
+        if (featCtx.form === "multi" && featCtx.formN && targetTokens.size > featCtx.formN) {
+          ui.notifications.warn(L2(`Не больше ${featCtx.formN} целей.`, `No more than ${featCtx.formN} targets.`));
+          return;
+        }
+      }
+    }
     if (dataset.apply == "-" || !dataset.apply || targetTokens.size === 0) {
       // [Round 66] keep the targets on the card when the roll has a resist
       // (attack vs evasion, spell vs save) even if nothing is "applied" by
       // the check itself — the contest/auto-damage flow needs them.
       await this._onRollExec(
         event,
-        dataset.resist && targetTokens.size > 0 ? targetTokens : undefined
+        dataset.resist && targetTokens.size > 0 ? targetTokens : undefined,
+        featCtx
       );
       return;
     } else {
@@ -1128,13 +1150,13 @@ export class SW25ActorSheet extends ActorSheet {
       if (targetRoll == "cancel") {
         return;
       } else if (targetRoll == "once") {
-        await this._onRollExec(event, targetTokens);
+        await this._onRollExec(event, targetTokens, featCtx);
         return;
       } else if (targetRoll == "individual") {
         let chatMessageId = [];
         for (const [index, token] of Array.from(targetTokens).entries()) {
           const targetToken = new Set([token]);
-          await this._onRollExec(event, targetToken).then((result) => {
+          await this._onRollExec(event, targetToken, featCtx).then((result) => {
             chatMessageId.push(result.chatMessageId);
           });
         }
@@ -1164,9 +1186,9 @@ export class SW25ActorSheet extends ActorSheet {
       }
     }
 
-    await this._onRollExec(event);
+    await this._onRollExec(event, undefined, featCtx);
   }
-  async _onRollExec(event, targetTokens) {
+  async _onRollExec(event, targetTokens, featCtx = null) {
     event.preventDefault();
     const element = event.currentTarget;
     const dataset = element.dataset;
@@ -1219,6 +1241,11 @@ export class SW25ActorSheet extends ActorSheet {
             const r = await castMonsterAbility(this.actor, item);
             if (r !== "fallback") return r;
           }
+          // talents made in the talent constructor: toggles, uses, the dual attack
+          if ((item?.type === "raceability" || item?.type === "combatability") && featOf(item) && !event.shiftKey) {
+            const r = await useFeat(this.actor, item);
+            if (r !== "fallback") return r;
+          }
           if (item) return item.roll();
         };
         const used = await use();
@@ -1234,7 +1261,7 @@ export class SW25ActorSheet extends ActorSheet {
 
       let roll;
       try {
-        roll = new Roll(dataset.roll, rollData);
+        roll = new Roll(featCtx?.hit ? `${dataset.roll}+${featCtx.hit}` : dataset.roll, rollData);
         await roll.evaluate();
       } catch (err) {
         // v14: a malformed/blank formula (e.g. a modifier that wasn't
@@ -1254,6 +1281,7 @@ export class SW25ActorSheet extends ActorSheet {
       }
 
       let label = dataset.label ? `${dataset.label}` : "";
+      if (featCtx?.label) label += ` [${featCtx.label}]`;
 
       let chatresuse;
       if (dataset.resuse) {
@@ -1349,6 +1377,7 @@ export class SW25ActorSheet extends ActorSheet {
           // [Round 66] for contest resolution / one-click damage
           kind: "check",
           itemid: itemId,
+          featMods: featCtx && (featCtx.dmg || featCtx.form !== "none") ? { dmg: featCtx.dmg, form: featCtx.form, names: featCtx.names } : null,
           critical: chatCritical,
           fumble: chatFumble,
         },

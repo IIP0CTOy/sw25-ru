@@ -1,5 +1,7 @@
 // Chat button handler
-import { sectionOrder, sectionsOf, hitsAllSections, applyToSections, undoSectionDeltas } from "./sections.mjs";
+import { sectionOrder, sectionsOf, hitsAllSections, applyToSections, undoSectionDeltas, mainActorOf, activeSectionOf } from "./sections.mjs";
+import { shardResist, shardsOf } from "./shards.mjs";
+import { familiarResistBase } from "./summons.mjs";
 import { powerRoll } from "./powerroll.mjs";
 import { mpCost, hpCost } from "./mpcost.mjs";
 import { targetRollDialog, targetSelectDialog } from "../helpers/dialogs.mjs";
@@ -18,6 +20,20 @@ import { isItem } from "./names.mjs";
 // tagged flags.sw25.allSections: on a multi-section monster they hit every section.
 let _allSecCtx = false;
 const _resistLock = new Set();
+// a button still being processed («in flight»): a second CLICK on the same button of the same card
+// is ignored until the first one is done (double damage, loot given twice…). Only for clicks:
+// the automation may call chatButton() for one card several times on purpose.
+const _inFlight = new Set();
+export async function chatButtonClick(chatMessage, buttonType) {
+  const key = `${chatMessage?.id}|${buttonType}`;
+  if (!chatMessage || _inFlight.has(key)) return null;
+  _inFlight.add(key);
+  try {
+    return await chatButton(chatMessage, buttonType);
+  } finally {
+    _inFlight.delete(key);
+  }
+}
 export async function chatButton(chatMessage, buttonType, opts = {}) {
   if (!/^button(check\d?|power)$/.test(String(buttonType))) return _chatButton(chatMessage, buttonType, opts);
   const a = ChatMessage.getSpeakerActor(chatMessage.speaker) ?? game.actors.get(chatMessage.speaker?.actor);
@@ -269,7 +285,8 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
         item.system.pt10,
         item.system.pt11,
         item.system.pt12,
-        item.system.powerbase,
+        // declared / conditional talents of the attack this damage belongs to
+        Number(item.system.powerbase) + (Number(chatMessage.flags?.sw25?.featMods?.dmg) || 0),
         halfpow,
         halfpowmod,
         lethaltech,
@@ -1368,6 +1385,8 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
     let chatFumble = null;
     if (rollTotal == 12) chatCritical = 1;
     if (rollTotal == 2) chatFumble = 1;
+    // «Luck» flipped the dice: its 6-6 / 1-1 stands, not the one of the original roll
+    if (chatMessage.flags.sw25.flipped) { chatCritical = chatMessage.flags.sw25.critical ?? null; chatFumble = chatMessage.flags.sw25.fumble ?? null; }
     let halfdone = chatMessage.flags.sw25.dohalf
       ? chatMessage.flags.sw25.dohalf
       : false;
@@ -1522,6 +1541,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
       // section, or every standing section when the roll came from an area attack
       if (sectionsOf(targetActor) && ["buttonpd", "buttonmd", "buttoncd", "buttonhr"].includes(buttonType)) {
         const out = await applyToSections(targetToken, buttonType, resultValue, {
+          section: targetSectionFor(chatMessage, targetTokenId, targetActor),
           all: !!chatMessage.flags.sw25.allSections,
           healReverseBonus: Number(targetActor.system.attributes?.healreversebonus) || 0,
         });
@@ -1598,11 +1618,12 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
         differenceValue = resultMP - targetMP;
       }
 
+      const section = targetSectionFor(chatMessage, targetTokenId, targetActor);
       if (game.user.isGM || targetActor.isOwner) {
         targetActor.update({
           "system.hp.value": resultHP,
           "system.mp.value": resultMP,
-        });
+        }, section ? { sw25Section: section } : {});
       } else {
         emitToGM({
           method: "applyRoll",
@@ -1611,6 +1632,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
           resultMP: resultMP,
           beforeHP: targetHP,
           beforeMP: targetMP,
+          section,
         });
       }
 
@@ -2074,8 +2096,8 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
     // line, plus the «Всегда» lines on the first roll for this monster
     const lootFrom = chatMessage.flags?.sw25?.name ?? "";
     const lootGrants = [];
-    if (!chatMessage.flags.sw25.lootCount)
-      for (const li of lootItems) if (li.always) { const g = await grantLoot(lootActor, li.item, lootFrom); if (g) lootGrants.push(g); }
+    // «Всегда / Always / 自動» lines come with every roll: one roll = the loot of one monster
+    for (const li of lootItems) if (li.always) { const g = await grantLoot(lootActor, li.item, lootFrom); if (g) lootGrants.push(g); }
     if (chatLootItem) { const g = await grantLoot(lootActor, chatLootItem, lootFrom); if (g) lootGrants.push(g); }
     if (lootGrants.length) {
       const escL = (v) => Handlebars.escapeExpression(String(v ?? ""));
@@ -2228,6 +2250,9 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
           }
         }
       } else if (selectActor.type == "monster") {
+        // an empty resist item next to a filled one (imported «Resistance» + auto «Resist») is skipped
+        const resEmpty = (x) => !Number(x?.system?.checkbasemod1) && !Number(x?.system?.checkbasemod2);
+        const resFilled = selectActor.items.some((x) => x.type === "monsterability" && isLabel(x.name, "MonRes") && !resEmpty(x));
         // [Round 77] multi-section monsters: the targeted section's attack item first
         for (const item of sectionOrder(selectActor, selectActor.items.filter(
           (i) => i.type === "monsterability"
@@ -2246,7 +2271,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
           } else if (
             checkName == game.i18n.localize("SW25.Resist.Check.Vitres")
           ) {
-            if (isLabel(item.name, "MonRes")) {
+            if (isLabel(item.name, "MonRes") && !(resFilled && resEmpty(item))) {
               checkItem = item;
               checkbase = item.system.checkbase1;
               if (item.system.usefix1 == true) checkformula = 7;
@@ -2255,13 +2280,22 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
           } else if (
             checkName == game.i18n.localize("SW25.Resist.Check.Mndres")
           ) {
-            if (isLabel(item.name, "MonRes")) {
+            if (isLabel(item.name, "MonRes") && !(resFilled && resEmpty(item))) {
               checkItem = item;
               checkbase = item.system.checkbase2;
               if (item.system.usefix2 == true) checkformula = 7;
               break;
             }
           }
+        }
+        // a familiar resists with its master's Fortitude / Willpower (CR I p. 433)
+        const fmKey = checkName == game.i18n.localize("SW25.Resist.Check.Vitres") ? "Vitres" : checkName == game.i18n.localize("SW25.Resist.Check.Mndres") ? "Mndres" : null;
+        const fmBase = fmKey ? familiarResistBase(selectActor, fmKey) : null;
+        if (fmBase !== null) { checkbase = fmBase; checkformula = "2d6"; checkItem ||= { system: {} }; }
+        // sword shards (CR I p.384): Fortitude / Willpower bonus for a boosted monster
+        if (checkbase !== undefined && checkName != game.i18n.localize("SW25.Resist.Check.Dodge")) {
+          const sh = shardResist(shardsOf(mainActorOf(selectActor) ?? selectActor));
+          if (sh) checkbase = Number(checkbase) + sh;
         }
         if (checkbase) {
           if (checkbase >= 0) checkbase = `+ ${checkbase}`;
@@ -2470,7 +2504,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
         const srcActor = ChatMessage.getSpeakerActor(chatMessage.speaker);
         const srcItem = srcActor?.items.get(af.itemid);
         const tok = canvas.tokens.get(token.id) ?? token;
-        if (srcItem) await applyItemEffects(srcActor, srcItem, [tok], { shortened: !!outcome.flags.defenderWins });
+        if (srcItem) await applyItemEffects(srcActor, srcItem, [tok], { shortened: !!outcome.flags.defenderWins, choice: af.choice ?? null });
       }
       // spells cast with auto-cast: damage follows immediately, no button
       if (outcome?.flags?.damageMode && chatMessage.flags?.sw25?.autoDamage && contestMsg) {
@@ -2499,6 +2533,27 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
     return;
   }
 
+  // talents: «another attack» after a miss / hit (from the contest card or its summary row)
+  if (buttonType == "followup" || buttonType.startsWith("childfollowup:")) {
+    const contest = buttonType == "followup" ? chatMessage : game.messages.get(buttonType.split(":")[1]);
+    const { followupAttack } = await import("./dualattack.mjs");
+    if (contest) await followupAttack(contest);
+    return;
+  }
+
+  // [Dual Wielding] one damage button for both attacks (each hit applied on its own)
+  if (buttonType == "dualdamage") {
+    const atk = game.messages.get(chatMessage.flags?.sw25?.dualOf?.[0]);
+    const atkActor = atk ? ChatMessage.getSpeakerActor(atk.speaker) : null;
+    if (!(game.user.isGM || atkActor?.isOwner)) {
+      ui.notifications.warn(game.i18n.localize("SW25.Contest.AttackerOnly"));
+      return;
+    }
+    const { dualDamage } = await import("./dualattack.mjs");
+    await dualDamage(chatMessage, autoDamage);
+    return;
+  }
+
   // [Round 66] "Урон" button on a resolved contest card
   if (buttonType == "autodamage") {
     await autoDamage(chatMessage);
@@ -2514,7 +2569,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
       const content = actor.system.canceldialog;
       let chatData = {
         speaker: ChatMessage.getSpeaker({ actor: actor }),
-        type: CONST.CHAT_MESSAGE_STYLES.IC,
+        style: CONST.CHAT_MESSAGE_STYLES.IC,   // v14: «type» is the document subtype
         content: content,
       };
       ChatMessage.create(chatData);
@@ -2523,7 +2578,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
         const content = item.system.dialog;
         let chatData = {
           speaker: ChatMessage.getSpeaker({ actor: actor }),
-          type: CONST.CHAT_MESSAGE_STYLES.IC,
+          style: CONST.CHAT_MESSAGE_STYLES.IC,   // v14: «type» is the document subtype
           content: content,
         };
         ChatMessage.create(chatData);
@@ -2579,8 +2634,17 @@ async function resolveContest(attackMsg, defRoll, defToken) {
   const attackFumble = f.fumble == 1 || (a1 === 1 && a2 === 1);
   const defCrit = d1 === 6 && d2 === 6;
   const defFumble = d1 === 1 && d2 === 1;
-  const atk = Number(f.total) || 0;
-  const def = Number(defRoll.total) || 0;
+  let atk = Number(f.total) || 0;
+  let def = Number(defRoll.total) || 0;
+  // invisibility (CR II p.69): −4 to accuracy against an invisible target, −4 to evasion against an invisible
+  // attacker; a blind character treats everyone as invisible. Only for accuracy vs evasion.
+  const visNotes = [];
+  if (key === "Dodge") {
+    const st = (a) => a?.statuses ?? new Set();
+    const atkA = ChatMessage.getSpeakerActor(attackMsg.speaker), defA = defToken?.actor;
+    if (st(defA).has("invisible") || st(atkA).has("blind")) { atk -= 4; visNotes.push(L2("не видит цель −4", "can't see the target −4")); }
+    if (st(atkA).has("invisible") || st(defA).has("blind")) { def -= 4; visNotes.push(L2("не видит атакующего −4", "can't see the attacker −4")); }
+  }
 
   let defenderWins;
   if (attackFumble) defenderWins = true;
@@ -2613,7 +2677,12 @@ async function resolveContest(attackMsg, defRoll, defToken) {
   const item = atkActor?.items.get(f.itemid);
   const hasPower = !!item && (item.type === "weapon" || !!item.system.usepower || !!monsterDamageLine(item));
   const vs = `${L("Atk")} ${attackCrit ? "6-6" : attackFumble ? "1-1" : atk} · ${L(key === "Dodge" ? "DefDodge" : "DefSave")} ${defCrit ? "6-6" : defFumble ? "1-1" : def}`;
-  let html = `<div class="sw25-contest ${defenderWins ? "sw25-contest-miss" : "sw25-contest-hit"}"><b>${label}</b> <span class="sw25-contest-vs">(${vs})</span></div>`;
+  const vsFull = visNotes.length ? `${vs} · ${visNotes.join(", ")}` : vs;
+  let html = `<div class="sw25-contest ${defenderWins ? "sw25-contest-miss" : "sw25-contest-hit"}"><b>${label}</b> <span class="sw25-contest-vs">(${vsFull})</span></div>`;
+  // talents: another attack after a miss / after a hit
+  const fform = f.featMods?.form;
+  const followup = (fform === "miss" && defenderWins) || (fform === "hit" && !defenderWins);
+  if (followup) html += `<div class="flexrow"><button class="buttonclick" data-buttontype="followup"><i class="fa-solid fa-rotate-right"></i>&nbsp;${L2("Ещё атака", "Another attack")}</button></div>`;
   if (damageMode && hasPower) {
     html += `<div class="flexrow"><button class="buttonclick sw25-autodamage" data-buttontype="autodamage"><i class="fa-solid fa-burst"></i>&nbsp;${
       damageMode === "half" ? L("DamageHalf") : L("Damage")
@@ -2628,6 +2697,7 @@ async function resolveContest(attackMsg, defRoll, defToken) {
       targetTokenId: defToken.id,
       defenderWins,
       damageMode: hasPower ? damageMode : null,
+      followup: followup || undefined,
     },
   };
 }
@@ -2699,7 +2769,15 @@ async function _rollAndApplyDamage(atkMsg, tok, mode, applyType) {
   return pmId;
 }
 
-async function autoDamage(contestMsg, { auto = false } = {}) {
+// damage runs one at a time on this client: the parent-card context (_parentCtx) is shared,
+// and several damage buttons clicked quickly lost each other's power / apply cards
+let _dmgQueue = Promise.resolve();
+function autoDamage(contestMsg, opts = {}) {
+  const run = _dmgQueue.then(() => _autoDamage(contestMsg, opts));
+  _dmgQueue = run.catch((err) => console.error("SW25 | damage", err));
+  return run;
+}
+async function _autoDamage(contestMsg, { auto = false } = {}) {
   const f = contestMsg.flags?.sw25 ?? {};
   if (!f.attackMessageId || !f.damageMode) return;
   if (f.damageDone || _damageDone.has(contestMsg.id)) {
@@ -2719,12 +2797,12 @@ async function autoDamage(contestMsg, { auto = false } = {}) {
     return;
   }
   _damageDone.add(contestMsg.id);
-  await rollAndApplyDamage(atkMsg, tok, f.damageMode);
-
-  // lock the button for everyone
+  // lock the button for everyone BEFORE the damage: the GM and a player clicking at the same
+  // time (or the GM's auto damage and a click) must not both apply it
   const lockFlags = { sw25: { ...f, damageDone: true } };
   if (contestMsg.isOwner) await contestMsg.update({ "flags.sw25.damageDone": true });
   else emitToGM({ method: "updateChat", id: contestMsg.id, flags: lockFlags });
+  await rollAndApplyDamage(atkMsg, tok, f.damageMode);
 }
 
 /** Disable the damage button once used (bound from renderChatMessage). */
@@ -2741,7 +2819,9 @@ export function markContestButtons(message, html) {
  * directly, otherwise the active GM does it via the socket.
  */
 export async function applyItemEffects(sourceActor, item, tokens, opts = {}) {
-  const templates = (item?.effects?.contents ?? []).filter((e) => e.transfer !== true && !e.flags?.sw25?.choiceOff);
+  // a variant picked at cast time (card flag) wins over the item's last pick
+  const off = (e) => (opts.choice && e.flags?.sw25?.choice ? e.id !== opts.choice : !!e.flags?.sw25?.choiceOff);
+  const templates = (item?.effects?.contents ?? []).filter((e) => e.transfer !== true && !off(e));
   // [Round 88] Ядовитая игла: the poison depends on the card rank chosen at cast time (flags.sw25.lastPoison)
   const poison = isItem(item?.name, "poisonneedle") ? Number(sourceActor?.flags?.sw25?.lastPoison) || 0 : 0;
   if ((!templates.length && !poison) || !tokens?.length) return 0;
@@ -2813,6 +2893,15 @@ export async function withParent(parentId, fn) {
 }
 
 export function tagChildMessage(doc) {
+  // the section each target is aimed at is written on the card by the attacker's client
+  // (a player's own pick), so the GM applying the damage later hits the same section
+  const tg = doc.flags?.sw25?.target;
+  // only on the action card itself: its power / apply cards (made later, maybe by the GM) inherit it
+  if (Array.isArray(tg) && tg.length && !doc.flags.sw25.targetSections && !_parentCtx && !doc.flags.sw25.parentId) {
+    const map = {};
+    for (const id of tg) { const a = canvas.tokens?.get(id)?.actor; const s = a && sectionsOf(a) ? activeSectionOf(a) : null; if (s) map[id] = s.id; }
+    if (Object.keys(map).length) doc.updateSource({ "flags.sw25.targetSections": map });
+  }
   if (_allSecCtx && doc.flags?.sw25?.allSections === undefined) {
     doc.updateSource({ "flags.sw25.allSections": true });
   }
@@ -2823,13 +2912,32 @@ export function tagChildMessage(doc) {
 
 const _rowsCache = new Map();
 
+/** Section of a multi-section target this damage goes to: the card (or its parent cards) recorded it, else this client's pick. */
+function targetSectionFor(msg, tokenId, actor) {
+  if (!actor || !sectionsOf(actor)) return null;
+  for (let m = msg, i = 0; m && i < 4; m = game.messages.get(m.flags?.sw25?.parentId ?? m.flags?.sw25?.attackMessageId), i++) {
+    const s = m.flags?.sw25?.targetSections?.[tokenId];
+    if (s) return s;
+  }
+  return activeSectionOf(actor)?.id ?? null;
+}
+
 function rowKeyOf(child) {
   const f = child.flags.sw25;
   return f.targetTokenId ?? f.targetToken ?? f.target?.[0] ?? child.id;
 }
 
-/** Called on the creating client for each child message. */
-export async function summarizeChild(child) {
+/** Called on one client (the active GM) for each child message; updates of one parent are queued. */
+const _sumQueue = new Map();
+export function summarizeChild(child) {
+  const pid = child.flags?.sw25?.parentId;
+  if (!pid) return Promise.resolve();
+  const next = (_sumQueue.get(pid) ?? Promise.resolve()).then(() => _summarizeChild(child)).catch((err) => console.error("SW25 | summary", err));
+  _sumQueue.set(pid, next);
+  next.then(() => { if (_sumQueue.get(pid) === next) _sumQueue.delete(pid); });
+  return next;
+}
+async function _summarizeChild(child) {
   const f = child.flags?.sw25;
   if (!f?.parentId) return;
   const parent = game.messages.get(f.parentId);
@@ -2849,6 +2957,7 @@ export async function summarizeChild(child) {
     row.outcome = child.content.match(/<div class="sw25-contest[^"]*"><b>([^<]*)<\/b>/)?.[1] ?? "";
     row.contestId = child.id;
     row.damageMode = f.damageMode ?? null;
+    row.followup = f.followup && !f.followupDone ? true : undefined;
   } else if (f.type && f.beforeValue !== undefined && f.afterValue !== undefined) {
     row.applyType = f.type.replace(/^button/, "");
     row.before = f.beforeValue;
@@ -2869,6 +2978,16 @@ export async function summarizeChild(child) {
   const flags = { sw25: { ...pf, rows, baseContent: base } };
   if (parent.isOwner) await parent.update({ content, flags });
   else emitToGM({ method: "updateChat", id: parent.id, content, flags });
+}
+/** Re-draw the summary from the parent's flags (each viewer in their own language). */
+export function renderSummaryFromFlags(message, root) {
+  const pf = message.flags?.sw25;
+  if (!pf?.rows || !pf.baseContent || !root) return;
+  const box = root.querySelector(".sw25-summary");
+  if (!box) return;
+  const tmp = document.createElement("div");
+  tmp.innerHTML = renderSummary(pf.rows);
+  if (tmp.firstElementChild) box.replaceWith(tmp.firstElementChild);
 }
 
 function renderSummary(rows) {
@@ -2907,6 +3026,7 @@ function renderSummary(rows) {
         r.damageMode === "half" ? L("DamageHalf") : L("Damage")
       )}</button>`;
     }
+    if (r.followup && r.contestId && !game.messages.get(r.contestId)?.flags?.sw25?.followupDone) res += ` <button class="buttonclick" data-buttontype="childfollowup:${r.contestId}"><i class="fa-solid fa-rotate-right"></i>&nbsp;${esc(L2("Ещё атака", "Another attack"))}</button>`;
     return `<div class="sw25-sum-row">
       <div class="sw25-sum-line"><span class="sw25-sum-name">${esc(r.name)}</span>${outcome}</div>
       <div class="sw25-sum-line sw25-sum-sub">${defVal}<span class="sw25-sum-res">${res}</span></div>

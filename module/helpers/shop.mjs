@@ -5,6 +5,7 @@
  * Replaces the Japanese «買い物» macro. UI follows the system language (ru / en).
  */
 import { L2 } from "./monstergen-i18n.mjs";
+import { priceFactor, disgraceEffect } from "./ranks.mjs";
 
 const esc = (s) => foundry.utils.escapeHTML?.(String(s ?? "")) ?? String(s ?? "");
 /** «1,660G», "570 G", 570 -> number (0 when unknown). */
@@ -26,7 +27,12 @@ async function giveItems(actor, lines) {
   const create = [];
   for (const l of lines) {
     const src = l.item;
-    const has = actor.items.find((i) => i.type === src.type && i.name === src.name && "quantity" in (i.system ?? {}) && !i.system.equip);
+    // stack only onto a plain copy of the same thing: not equipped, not upgraded, not in a golem,
+    // and from the same source when both know theirs
+    const srcOf = (i) => i._stats?.compendiumSource ?? i.flags?.core?.sourceId ?? null;
+    const from = src.uuid?.startsWith("Compendium.") ? src.uuid : srcOf(src);
+    const has = actor.items.find((i) => i.type === src.type && i.name === src.name && "quantity" in (i.system ?? {}) && !i.system.equip
+      && !i.flags?.sw25?.upg && !i.flags?.sw25?.inGolem && (!from || !srcOf(i) || srcOf(i) === from));
     if (has && "quantity" in (src.system ?? {})) {
       await has.update({ "system.quantity": (Number(has.system.quantity) || 0) + l.qty });
       continue;
@@ -54,13 +60,18 @@ export async function openShop() {
       <select class="shop-buyer" style="flex:1">${list.map((a) => `<option value="${a.id}"${a.id === buyerId ? " selected" : ""}>${esc(a.name)}</option>`).join("")}</select>
       <b>${L2("Деньги", "Money")}: <span class="shop-money"></span> G</b>
     </div>
+    <label style="display:flex;gap:6px;align-items:center;margin-bottom:6px" title="${L2("Позор повышает цены Гильдии (CR II стр. 119)", "Disgrace raises the Guild's prices (CR II p. 119)")}"><input type="checkbox" class="shop-guild" checked> ${L2("Покупка в Гильдии (наценка за позор)", "Buying at the Guild (disgrace surcharge)")}</label>
     <div class="shop-drop" style="border:2px dashed #888;border-radius:6px;padding:14px;text-align:center;margin-bottom:6px">${L2("Перетащите сюда предметы (из компендиума, списка предметов или листа)", "Drag items here (from a compendium, the Items directory or a sheet)")}</div>
     <table style="width:100%"><thead><tr><th style="text-align:left">${L2("Предмет", "Item")}</th><th>${L2("Цена, G", "Price, G")}</th><th>${L2("Кол-во", "Qty")}</th><th>${L2("Сумма", "Sum")}</th><th></th></tr></thead><tbody class="shop-rows"></tbody></table>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><button type="button" class="shop-buy" style="width:auto"><i class="fa-solid fa-coins"></i> ${L2("Купить", "Buy")}</button><b>${L2("Итого", "Total")}: <span class="shop-total">0</span> G</b></div>
   </div>`;
 
   let root = null;
-  const total = () => cart.reduce((s, l) => s + l.price * l.qty, 0);
+  const base = () => cart.reduce((s, l) => s + l.price * l.qty, 0);
+  // disgrace (CR II p. 119): Guild prices go up unless the rank prevents it
+  let guild = true;   // the surcharge / refusal is the Guild's; another merchant sells at the price
+  const factor = () => (guild ? priceFactor(actor()) : 1);
+  const total = () => Math.ceil(base() * (factor() ?? 1));
   const paint = () => {
     if (!root) return;
     const q = (sel) => root.querySelector(sel);
@@ -72,7 +83,9 @@ export async function openShop() {
           <td style="text-align:center">${l.price * l.qty}</td>
           <td><button type="button" data-del="${i}" style="width:auto" title="${L2("Убрать", "Remove")}"><i class="fa-solid fa-xmark"></i></button></td></tr>`).join("")
       : `<tr><td colspan="5" style="text-align:center;opacity:.6">${L2("Корзина пуста", "The cart is empty")}</td></tr>`;
-    q(".shop-total").textContent = total();
+    const f = factor(), e = disgraceEffect(actor());
+    q(".shop-total").textContent = f === 1 ? total() : f == null ? "—" : `${total()} (${base()} ×${f})`;
+    q(".shop-total").title = e && !e.prevented ? L2("Позор: наценка Гильдии", "Disgrace: Guild surcharge") : "";
   };
 
   const addItem = async (data) => {
@@ -97,6 +110,7 @@ export async function openShop() {
     if (!a) return false;
     if (!cart.length) { ui.notifications.warn(L2("Корзина пуста.", "The cart is empty.")); return false; }
     const sum = total(), gold = Number(a.system.money) || 0;
+    if (factor() == null) { ui.notifications.warn(L2(`${a.name}: из-за позора Гильдия не обслуживает.`, `${a.name}: the Guild refuses service because of the disgrace.`)); return false; }
     if (cart.some((l) => !l.price)) { ui.notifications.warn(L2("У некоторых предметов не указана цена.", "Some items have no price.")); return false; }
     if (gold < sum) { ui.notifications.error(L2(`${a.name}: не хватает денег (${gold} G из ${sum} G).`, `${a.name} cannot afford it (${gold} G of ${sum} G).`)); return false; }
     await a.update({ "system.money": gold - sum });
@@ -140,6 +154,7 @@ export async function openShop() {
   root.addEventListener("change", (e) => {
     const t = e.target;
     if (t.classList.contains("shop-buyer")) { buyerId = t.value; return paint(); }
+    if (t.classList.contains("shop-guild")) { guild = t.checked; return paint(); }
     const tr = t.closest("tr[data-i]"); if (!tr || !t.dataset.f) return;
     const l = cart[Number(tr.dataset.i)]; if (!l) return;
     if (t.dataset.f === "price" && l.fixed && !game.user.isGM) return paint();

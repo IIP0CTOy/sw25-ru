@@ -15,7 +15,7 @@ export const CLASS = {
   fighter: ["Боец", "Fighter", "ファイター"],
   grappler: ["Громила", "Grappler", "グラップラー"],
   fencer: ["Фехтовальщик", "Fencer", "フェンサー"],
-  shooter: ["Стрелок", "Shooter", "Marksman", "シューター"],
+  shooter: ["Стрелок", "Marksman", "Shooter", "シューター"],
   battledancer: ["Боевой танцор", "Battle Dancer", "バトルダンサー"],
   sorcerer: ["Чародей", "Sorcerer", "ソーサラー"],
   conjurer: ["Призыватель", "Conjurer", "コンジャラー"],
@@ -32,7 +32,7 @@ export const CLASS = {
   rider: ["Всадник", "Rider", "ライダー"],
   alchemist: ["Алхимик", "Alchemist", "アルケミスト"],
   geomancer: ["Геомант", "Geomancer", "ジオマンサー"],
-  warleader: ["Тактик", "Warleader", "War Leader", "Tactician", "ウォーリーダー"],
+  warleader: ["Тактик", "Tactician", "Warleader", "War Leader", "ウォーリーダー"],
   darkhunter: ["Тёмный охотник", "Dark Hunter", "Darkhunter", "ダークハンター"],
 };
 /** Other items the engine looks up by name. */

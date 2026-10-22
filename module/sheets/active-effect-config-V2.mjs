@@ -11,8 +11,10 @@ export class SW25ActiveEffectConfigV2 extends ActiveEffectConfig {
       scrollable: [""],
     },
     duration: { template: "templates/sheets/active-effect/duration.hbs" },
+    // [ru.11] v14: core «Changes» template (fields under system.changes, «type» instead of «mode»);
+    // the key column of each row is swapped for the system's list in _preparePartContext.
     changes: {
-      template: "systems/sw25-ru/templates/effect/changes.hbs",
+      template: "templates/sheets/active-effect/changes.hbs",
       scrollable: ["ol[data-changes]"],
     },
     footer: { template: "templates/generic/form-footer.hbs" },
@@ -66,6 +68,19 @@ export class SW25ActiveEffectConfigV2 extends ActiveEffectConfig {
     }
 
     return context;
+  }
+
+  /** [ru.11] Core rows (v14) with the system's key list in place of the plain key input. */
+  async _preparePartContext(partId, context, options) {
+    const part = await super._preparePartContext(partId, context, options);
+    if (partId !== "changes" || !Array.isArray(part.changes)) return part;
+    const render = foundry.applications.handlebars.renderTemplate;
+    const src = context.source?.changes ?? [];
+    part.changes = await Promise.all(part.changes.map(async (row, i) => {
+      const key = await render("systems/sw25-ru/templates/effect/changes.hbs", { i, change: src[i] ?? {}, effectOptions: context.effectOptions });
+      return String(row).replace(/<div class="key">[\s\S]*?<\/div>/, key);
+    }));
+    return part;
   }
 
   /**

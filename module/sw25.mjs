@@ -14,7 +14,7 @@ let SW25ActiveEffectConfig;
 // Import helper/utility classes and constants.
 import { preloadHandlebarsTemplates } from "./helpers/templates.mjs";
 import { SW25 } from "./helpers/config.mjs";
-import { chatButton, resistKeyOf, markContestButtons, tagChildMessage, summarizeChild, filterViewerOnly } from "./helpers/chatbutton.mjs";
+import { chatButton, chatButtonClick, renderSummaryFromFlags, resistKeyOf, markContestButtons, tagChildMessage, summarizeChild, filterViewerOnly } from "./helpers/chatbutton.mjs";
 import { customCommand } from "./helpers/customcommand.mjs";
 import { powerRoll } from "./helpers/powerroll.mjs";
 import { lootRoll, registerCardButton } from "./helpers/lootroll.mjs";
@@ -24,7 +24,7 @@ import { rollreq } from "./helpers/rollrequest.mjs";
 import { targetRollDialog, targetSelectDialog } from "./helpers/dialogs.mjs";
 import { preparePolyglot } from "./helpers/sw25languageprovider.mjs";
 import { Migrator } from "./helpers/migrator.mjs";
-import { isLabel } from "./helpers/utils.mjs";
+import { isLabel, emptyResDupes } from "./helpers/utils.mjs";
 import { registerSessionSettings, registerSessionHooks, sessionEnd } from "./helpers/session.mjs";
 import { rollDeathCheck } from "./helpers/deathcheck.mjs";
 import { grantAutoClassFeatures, registerAutoGrant } from "./helpers/classfeatures.mjs";
@@ -35,6 +35,11 @@ import { registerShop } from "./helpers/shop.mjs";
 import { registerEffectText } from "./helpers/effecttext.mjs";
 import { registerStarter } from "./helpers/starter.mjs";
 import { registerItemBuilder } from "./helpers/itembuilder.mjs";
+import { registerFeats } from "./helpers/feats.mjs";
+import { registerShards } from "./helpers/shards.mjs";
+import { registerUpgrades } from "./helpers/upgrades.mjs";
+import { registerRanks } from "./helpers/ranks.mjs";
+import { registerSummons } from "./helpers/summons.mjs";
 import { registerSamples } from "./helpers/samples.mjs";
 import { isClass, className, findClassItem } from "./helpers/names.mjs";
 import { L2, lang as i18nLang } from "./helpers/monstergen-i18n.mjs";
@@ -572,6 +577,11 @@ Hooks.once("setup", () => {
   registerMonsterGenerator(); // [Round 91] GM monster generator / importer
   registerShop(); // [Round 92] drag-and-drop shop (price -> money)
   registerEffectText(); // [Round 93] effects from text + manual fix dialog (item sheet header)
+  registerShards(); // monsters boosted with sword shards
+  registerUpgrades(); // weapon / armour upgrades, Abyss enhancement
+  registerRanks(); // adventurer rank and disgrace
+  registerSummons(); // golems, undead, familiars
+  registerFeats(); // talent constructor (combat feats, racial abilities)
   registerItemBuilder(); // [Round 97] item constructor (weapons, armour, accessories, gear, spells)
   registerAutoGrant(); // [2026-10-07] «выдавать автоматически» on talent sheets
   registerSamples(); // [Round 99] built-in sample characters and monsters
@@ -579,6 +589,57 @@ Hooks.once("setup", () => {
   registerEquipRequirement(); // minimum Strength to equip (book I p.151/153), GM may override
   registerCardButton(); // [Round 87] «+» in the material card table
   readSystemSettings();
+});
+
+// [ru.11] a dialog that grows after it was placed (content added later, a constructor switching tabs) is moved
+// up so its buttons stay on screen; a dialog taller than the screen scrolls inside (css/sw25.css)
+// [ru.11] the system's own tool windows (constructors, wizard, shop, creations…) get one look: .sw25-tool (css/sw25.css)
+const SW25_TOOL = '[class*="sw25"], [class^="sm-"], [class*=" sm-"], [class^="gp-"], [class*=" gp-"], .sh-n, .mg-wrap, .mg';
+Hooks.on("renderDialogV2", (app) => {
+  const el = app.element;
+  if (el && !el.classList.contains("sw25-tool") && ((app.options?.classes ?? []).some((c) => String(c).startsWith("sw25")) || el.querySelector(`.dialog-content :is(${SW25_TOOL})`))) el.classList.add("sw25-tool");
+  if (!el || el._sw25Fit) return;
+  const fit = () => {
+    if (app.minimized || !el.isConnected) return;
+    const h = el.offsetHeight, top = el.getBoundingClientRect().top;
+    if (top + h > window.innerHeight - 5) app.setPosition({ top: Math.max(5, window.innerHeight - h - 5) });
+  };
+  el._sw25Fit = new ResizeObserver(() => requestAnimationFrame(fit));
+  el._sw25Fit.observe(el);
+});
+
+// [ru.11] header labels that come untranslated from elsewhere: Item Piles' «Configure» (renamed in the
+// buttons hook, registered on ready so it runs after the module's own), and the core AppV1 «Token» on a
+// token actor's sheet (core adds that button after the hook, so its text is fixed on render).
+Hooks.once("ready", () => {
+  Hooks.on("getActorSheetHeaderButtons", (app, buttons) => {
+    for (const b of buttons) {
+      if (String(b.class ?? "").includes("item-piles") && /Configure$/.test(String(b.label ?? ""))) b.label = "Item Piles";
+    }
+  });
+});
+Hooks.on("renderActorSheet", (app) => {
+  const root = app.element?.[0] ?? app.element;
+  const btn = root?.querySelector?.(".window-header .configure-token");
+  if (!btn) return;
+  for (const n of btn.childNodes) if (n.nodeType === Node.TEXT_NODE && n.textContent.trim() === "Token") n.textContent = ` ${game.i18n.localize("DOCUMENT.Token")}`;
+});
+
+// imported monsters had «Resistance» (with numbers) plus an empty «Resist» added on creation:
+// the active GM removes the empty duplicate from world monsters once (only when a filled one exists)
+Hooks.once("ready", async () => {
+  try {
+    if (game.user !== game.users.activeGM) return;
+    if (!game.settings.settings.has("sw25.resDupesFixed")) game.settings.register("sw25", "resDupesFixed", { scope: "world", config: false, type: Boolean, default: false });
+    if (game.settings.get("sw25", "resDupesFixed")) return;
+    let n = 0;
+    for (const a of game.actors.filter((x) => x.type === "monster")) {
+      const ids = emptyResDupes(a).map((i) => i.id);
+      if (ids.length) { await a.deleteEmbeddedDocuments("Item", ids); n += ids.length; }
+    }
+    await game.settings.set("sw25", "resDupesFixed", true);
+    if (n) console.log(`SW25 | removed ${n} empty duplicate resist item(s) from monsters`);
+  } catch (err) { console.error("SW25 | resist duplicates:", err); }
 });
 
 Hooks.once("ready", async () => {
@@ -651,6 +712,16 @@ async function restampPreCombatEffects(combat, actor, again = true) {
       updates.push({ _id: e.id, "duration.expired": false });
     }
   }
+  for (const it of actor.items) {
+    const up = [];
+    for (const e of it.effects) {
+      if (!e.flags?.sw25?.featToggle || e.disabled) continue;
+      const d = e._source?.duration ?? {}, st = e._source?.start ?? {};
+      if (Number(d.value) > 0 && (st.round === null || st.round === undefined))
+        up.push({ _id: e.id, start: { combat: combat.id, combatant: combat.combatant?.id ?? null, round: combat.round, turn: combat.turn ?? 0, time: game.time.worldTime }, "duration.expired": false });
+    }
+    if (up.length) try { await it.updateEmbeddedDocuments("ActiveEffect", up); } catch (err) { console.error(`SW25 | toggle start on "${actor.name}":`, err); }
+  }
   try {
     if (updates.length) await actor.updateEmbeddedDocuments("ActiveEffect", updates);
   } catch (err) {
@@ -715,6 +786,14 @@ Hooks.on("updateCombat", async (combat, changes, options, userId) => {
     for (const c of combat.combatants) {
       const combatActor = c.actor;
       if (!combatActor) continue;
+      // racial toggles with a round budget live on the item: switch them off when the rounds are up
+      for (const it of combatActor.items) {
+        const off = it.effects.filter((e) => e.flags?.sw25?.featToggle && !e.disabled && isExpired(e));
+        if (off.length) {
+          try { await it.updateEmbeddedDocuments("ActiveEffect", off.map((e) => ({ _id: e.id, disabled: true, duration: { value: null, units: "", expired: false } }))); }
+          catch (err) { console.error(`SW25 | toggle expiry on "${combatActor.name}":`, err); }
+        }
+      }
       const expired = combatActor.effects.filter(isExpired);
       if (expired?.length) {
         try {
@@ -865,11 +944,12 @@ Hooks.on("updateCombat", async (combat, changes, options, userId) => {
  */
 async function syncEquipEffects(item, equip) {
   if (!item.effects?.size) return;
-  const transferEffects = item.effects.filter((e) => e.transfer === true);
+  const transferEffects = item.effects.filter((e) => e.transfer === true && !e.flags?.sw25?.carried);   // Abyss curses «while carried» stay on
   if (!transferEffects.length) return;
+  const off = (e) => (e.flags?.sw25?.whenOff ? !!equip : !equip);   // whenOff: an Abyss curse that works only while the item is not in use
   const updates = transferEffects
-    .filter((e) => e.disabled !== !equip)
-    .map((e) => ({ _id: e.id, disabled: !equip }));
+    .filter((e) => e.disabled !== off(e))
+    .map((e) => ({ _id: e.id, disabled: off(e) }));
   if (!updates.length) return;
   try {
     await item.updateEmbeddedDocuments("ActiveEffect", updates);
@@ -1365,7 +1445,10 @@ Hooks.once("ready", async function () {
   // parent card and hidden from the log
   Hooks.on("preCreateChatMessage", (doc) => tagChildMessage(doc));
   Hooks.on("createChatMessage", async (message, options, userId) => {
-    if (userId !== game.user.id) return;
+    // one writer for the summary: the active GM (the creator when no GM is online), otherwise
+    // the player's and the GM's cards overwrote each other's rows
+    const gm = game.users.activeGM;
+    if (gm ? game.user.id !== gm.id : userId !== game.user.id) return;
     try {
       await summarizeChild(message);
     } catch (err) {
@@ -1385,6 +1468,8 @@ Hooks.once("ready", async function () {
   });
 
   Hooks.on("renderChatMessage", (chatMessage, html, data) => {
+    // the summary rows are drawn from the card's flags in this viewer's language (before the buttons are bound)
+    try { renderSummaryFromFlags(chatMessage, html?.[0] ?? html); } catch (err) { console.error("SW25 | summary render", err); }
     bindGrowthButtons(chatMessage, html);
     markContestButtons(chatMessage, html);
     filterViewerOnly(html);
@@ -1394,7 +1479,7 @@ Hooks.once("ready", async function () {
     html.find(".buttonclick").click(function () {
       const button = $(this);
       const buttonType = button.data("buttontype");
-      chatButton(chatMessage, buttonType);
+      chatButtonClick(chatMessage, buttonType);
     });
     html.find(".flavor-text").on("click", async function (event) {
       event.preventDefault();
@@ -1412,7 +1497,7 @@ Hooks.once("ready", async function () {
       const chatMessage = game.messages.get(messageId);
       const button = $(event.currentTarget);
       const buttonType = button.data("buttontype");
-      chatButton(chatMessage, buttonType);
+      chatButtonClick(chatMessage, buttonType);
     });
   });
   $(".chat-message").each((index, element) => {
@@ -1714,8 +1799,7 @@ function applyBuiltinPowerRows() {
     }
     if (actor.type == "monster") {
       actor.items.forEach((item) => {
-        if (item.name == game.i18n.localize("SW25.Config.MonRes"))
-          monres = true;
+        if (isLabel(item.name, "MonRes")) monres = true;   // «Resistance» from an import counts too
         if (
           item.system.label1 == game.i18n.localize("SW25.Config.MonHit") &&
           item.system.label2 == game.i18n.localize("SW25.Config.MonDmg") &&

@@ -12,6 +12,11 @@ const REPREP_MASK = [
   "effect.allck", "effect.init", "effect.mknow", "effect.vitres", "effect.mndres",
 ];
 
+/** [ru.11] Foundry v14 effect changes carry «type» ("add", "subtract", …); the numeric «mode» is a deprecated shim. */
+const CHANGE_MODE = { custom: 0, multiply: 1, add: 2, subtract: 2, downgrade: 3, upgrade: 4, override: 5 };
+const changeMode = (c) => (c?.type != null ? CHANGE_MODE[c.type] ?? 0 : c?.mode);
+const changeValue = (c) => Number(c?.value) * (c?.type === "subtract" ? -1 : 1);
+
 export class SW25Actor extends Actor {
   /** @override */
   prepareData() {
@@ -162,6 +167,8 @@ export class SW25Actor extends Actor {
     try {
 
     //Calcurate Exp & AdvLevel & MgLevel
+    // recomputed from the items each time (a second prepareData() used to double it)
+    systemData.attributes.useexp = 0;
     this.items.forEach((item) => {
       if (item.type == "skill") {
         // Exp
@@ -329,12 +336,18 @@ export class SW25Actor extends Actor {
     systemData.barempp = 0;
     systemData.baredreduce = 0;
     systemData.skillagidodge = 0;
-    systemData.shieldDedicated = this.items.some(item =>
-      item.type === "armor" &&
-      item.system.equip === true &&
-      item.system.dedicated === true &&
-      item.system.category === "shield"
-    );
+    // Shields (Core Rulebook I, pp. 147-148): a shield takes a hand, so it does not
+    // count while a two-handed weapon (2H, 2Hᵴ, 2Hᵱ, 2H*; not 2H#) or a 1HW grappling
+    // weapon is equipped; with several shields equipped only one applies (the best one).
+    const equippedShields = this.items.filter((i) =>
+      i.type === "armor" && i.system.equip === true && i.system.category === "shield");
+    const handsBlocked = this.items.some((i) =>
+      i.type === "weapon" && i.system.equip === true && ["2H", "S2H", "P2H", "2HT", "1HN"].includes(i.system.usage));
+    const shieldScore = (i) => (Number(i.system.dodge) || 0) + (Number(i.system.pp) || 0) + (i.system.dedicated ? 1 : 0);
+    const activeShield = handsBlocked ? null
+      : equippedShields.slice().sort((a, b) => shieldScore(b) - shieldScore(a))[0] ?? null;
+    systemData.shieldIgnored = equippedShields.filter((i) => i !== activeShield).map((i) => i.id);
+    systemData.shieldDedicated = activeShield?.system.dedicated === true;
     this.items.forEach((item) => {
       if (item.type == "skill") {
         if (item.name == systemData.dodgeskill) {
@@ -356,7 +369,7 @@ export class SW25Actor extends Actor {
     });
     this.items.forEach((item) => {
       if (item.type == "armor") {
-        if (item.system.equip == true) {
+        if (item.system.equip == true && !systemData.shieldIgnored.includes(item.id)) {
           systemData.itemdodge += Number(item.system.dodge);
           systemData.itempp += Number(item.system.pp);
           systemData.itemmpp += Number(item.system.mpp);
@@ -1107,8 +1120,8 @@ export class SW25Actor extends Actor {
       return effect.changes.map((change) => {
         return {
           key: change.key,
-          value: Number(change.value),
-          mode: change.mode,
+          value: changeValue(change),
+          mode: changeMode(change),
         };
       });
     }).flat();
@@ -1670,8 +1683,8 @@ export class SW25Actor extends Actor {
       return effect.changes.map((change) => {
         return {
           key: change.key,
-          value: Number(change.value),
-          mode: change.mode,
+          value: changeValue(change),
+          mode: changeMode(change),
         };
       });
     }).flat();

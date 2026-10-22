@@ -48,6 +48,8 @@
     "Deffence": "防御",
     "Other": "その他",
     "Selecthitweapon": "攻撃武器を選択",
+    "DualAttack": "二刀流攻撃",
+    "DualAttackHint": "命中-2で同じ対象に2回攻撃（《二刀流》）",
     "Selectattackskill": "攻撃技能を選択",
     "Selectdodgeskill": "回避技能を選択",
     "Selectherbskill": "薬草技能を選択",
@@ -1368,6 +1370,10 @@
     "sectionTokens": {
       "name": "複数部位の魔物に部位トークンを出す（別トークン）",
       "hint": "複数部位の魔物を配置すると、その隣に各部位のトークンが現れます（部位ごとにターゲットとダメージ）。"
+    },
+    "sectionTextScale": {
+      "name": "部位：文字サイズ",
+      "hint": "複数部位モンスターの上に表示される部位名とバーの大きさ（このクライアントのみ）。"
     }
   },
   "DIALOG": {

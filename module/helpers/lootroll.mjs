@@ -1,4 +1,5 @@
 import { L2, lang } from "./monstergen-i18n.mjs";
+import { shardsOf, shardLootLine } from "./shards.mjs";
 
 /**
  * Execute  Loot roll event and return the result.
@@ -20,6 +21,11 @@ export async function lootRoll(actor) {
     .flatMap((line) => line.replace(/<[^>]*>/g, "").split(RANGE_START))
     .map((line) => line.trim())
     .filter((line) => line !== "");
+
+  // sword shards of a boosted monster: always dropped (CR I p.384)
+  const shards = shardsOf(actor);
+  // the keyword must be one the parser below knows (not the Japanese UI word)
+  if (shards) lootLines.unshift(`${lang() === "ru" ? "Всегда" : "Always"}: ${shardLootLine(shards)}`);
 
   const lootitems = lootLines.map((cleanedLine) => {
     const colon = cleanedLine.search(/[：:]/);
@@ -61,7 +67,7 @@ export async function lootRoll(actor) {
     "systems/sw25-ru/templates/roll/lootlist.hbs",
     {
       flavor: actorName,
-      lootlist: lootlist,
+      lootlist: shards ? `<p>${L2("Всегда", "Always")}: ${shardLootLine(shards)}</p>${lootlist ?? ""}` : lootlist,
     }
   );
 

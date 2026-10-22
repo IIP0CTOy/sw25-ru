@@ -308,11 +308,13 @@ async function sendSectionDeltas(token, main, deltas) {
  * to the current target section, or to every section still standing (area attacks).
  * type: buttonpd | buttonmd | buttoncd | buttonhr.
  */
-export async function applyToSections(token, type, value, { all = false, healReverseBonus = 0 } = {}) {
+export async function applyToSections(token, type, value, { all = false, healReverseBonus = 0, section = null } = {}) {
   const actor = mainActorOf(token.actor) ?? token.actor;
   const secs = sectionsOf(actor);
   if (!secs) return null;
-  const act = activeSectionOf(token.actor);
+  // the section recorded on the attack card (if it still stands) wins over the current pick
+  const rec = section && !sectionIdOfToken(token.actor) ? secs.find((s) => s.id === section && !s.down && secHp(actor, s) > 0) : null;
+  const act = rec ?? activeSectionOf(token.actor);
   let list = all ? secs.filter((x) => type === "buttonhr" || secHp(actor, x) > 0) : [act];
   if (!list.length) list = [act];
   const mpp = Number(actor.system.mpp) || 0;
@@ -444,7 +446,9 @@ function onPreUpdateActor(actor, changes, options) {
   if (!secs) return;
   const newHp = foundry.utils.getProperty(changes, "system.hp.value");
   if (newHp === undefined) return;
-  const act = activeSectionOf(actor);
+  // the section recorded on the attack card (passed by the applier) wins over the current pick
+  const rec = options?.sw25Section ? secs.find((s) => s.id === options.sw25Section && !s.down) : null;
+  const act = rec ?? activeSectionOf(actor);
   const core = coreOf(secs);
   if (!act || act.id === core.id) return;
   const delta = Number(newHp) - Number(actor.system.hp.value);
@@ -807,6 +811,11 @@ function removeOverlay(id) {
 }
 /** screen-size factor: keep overlays readable when zoomed out */
 const zoomK = () => Math.min(4, Math.max(1, 1 / (canvas.stage?.scale?.x || 1)));
+/** client setting «section bars: text size» (×0.75 … ×2) */
+const textK = () => { try { return Number(game.settings.get(game.system.id, "sectionTextScale")) || 1; } catch { return 1; } };
+/** text is rasterised for the current zoom, so it stays sharp when zoomed in */
+const textRes = () => Math.min(8, Math.max(2, Math.ceil((canvas.stage?.scale?.x || 1) * (window.devicePixelRatio || 1) * 1.5)));
+const mkText = (str, style) => { const t = new PIXI.Text(str, style); t.resolution = textRes(); return t; };
 
 function drawOverlay(token) {
   removeOverlay(token.id);
@@ -816,7 +825,7 @@ function drawOverlay(token) {
   if (!secs || !token.visible || token.document.hidden && !game.user.isGM) return;
   const act = activeSectionOf(actor);
   const gm = game.user.isGM;
-  const k = zoomK();
+  const k = zoomK(), ts = textK();
   const c = new PIXI.Container();
   c.eventMode = "static";
   c.position.set(token.document.x, token.document.y);
@@ -836,8 +845,8 @@ function drawOverlay(token) {
   };
   if (secs.length <= 4) {
     // JRPG bars stacked ABOVE the token, clear of the token's own bars
-    const bh = 10 * k, gap = 5 * k, lift = 12 * k;
-    const bw = Math.max(w, 150 * k);
+    const bh = 10 * k * ts, gap = 5 * k, lift = 12 * k;
+    const bw = Math.max(w, 150 * k * ts);
     const x0 = (w - bw) / 2;
     secs.forEach((sec, i) => {
       const hp = hpOf(actor, sec);
@@ -853,7 +862,7 @@ function drawOverlay(token) {
       bind(g, sec);
       c.addChild(g);
       const label = `${sec.core ? "★" : ""}${sec.name}${gm ? `  ${hp.value}/${hp.max}` : ""}`;
-      const t = new PIXI.Text(label, style(9 * k, down ? 0x999999 : 0xffffff));
+      const t = mkText(label, style(9 * k * ts, down ? 0x999999 : 0xffffff));
       t.anchor.set(0, 0.5);
       t.position.set(x0 + 4 * k, y + bh / 2);
       t.eventMode = "none";
@@ -887,13 +896,13 @@ function drawOverlay(token) {
       g.hitArea = new PIXI.Circle(x, y, r + 3 * k);
       bind(g, sec);
       c.addChild(g);
-      const t = new PIXI.Text((sec.core ? "★" : "") + shortName(sec), style(Math.max(9, r * 0.62), down ? 0xaaaaaa : 0xffffff));
+      const t = mkText((sec.core ? "★" : "") + shortName(sec), style(Math.max(9, r * 0.62) * ts, down ? 0xaaaaaa : 0xffffff));
       t.anchor.set(0.5);
       t.position.set(x, y);
       t.eventMode = "none";
       c.addChild(t);
       if (gm) {
-        const v = new PIXI.Text(`${hp.value}`, style(9 * k, 0xffffaa));
+        const v = mkText(`${hp.value}`, style(9 * k * ts, 0xffffaa));
         v.anchor.set(0.5, 0);
         v.position.set(x, y + r + 1);
         v.eventMode = "none";
@@ -978,11 +987,18 @@ export function registerSections() {
   });
   Hooks.on("destroyToken", (token) => removeOverlay(token.id));
   Hooks.on("canvasTearDown", () => { _overlays.clear(); _overlayRoot = null; });
-  let _lastK = 0;
+  game.settings.register(game.system.id, "sectionTextScale", {
+    name: "SETTING.sectionTextScale.name",
+    hint: "SETTING.sectionTextScale.hint",
+    scope: "client", config: true, type: Number, default: 1,
+    range: { min: 0.75, max: 2, step: 0.25 },
+    onChange: () => { for (const t of canvas.tokens?.placeables ?? []) if (_overlays.has(t.id)) drawOverlay(t); },
+  });
+  let _lastK = 0, _lastRes = 0;
   Hooks.on("canvasPan", () => {
-    const k = zoomK();
-    if (Math.abs(k - _lastK) < 0.05) return;
-    _lastK = k;
+    const k = zoomK(), res = textRes();
+    if (Math.abs(k - _lastK) < 0.05 && res === _lastRes) return;   // zooming in redraws too: sharper text
+    _lastK = k; _lastRes = res;
     for (const t of canvas.tokens.placeables) if (_overlays.has(t.id)) drawOverlay(t);
   });
   Hooks.on("targetToken", onTargetToken);

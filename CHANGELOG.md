@@ -1,7 +1,20 @@
 # CHANGELOG
 
+## 2.4.1-ru.11
+- Talent constructor: combat feats and racial abilities from simple steps; declared talents are offered before the accuracy roll.
+- Dual attack with [Dual Wielding]: two attacks at −2, one button applies all hits.
+- Creations (golems, undead, familiars), golem enhancing items, «Enhance golem».
+- Monster generator: live stat block preview and a «Creation» section.
+- Weapon and armour upgrades (GM), Abyss enhancements and curses made in the item constructor.
+- Smithy: +1 / +2 for money, prices set by the GM.
+- Adventurer rank and disgrace, sword shards on monsters, mako stones pay MP.
+- Character wizard: high-level creation and a combat feat step.
+- English names follow the English fan translation (Marksman, Tactician…).
+- Fixes: quick damage clicks no longer lose hits or apply twice, damage to the chosen section, «Luck» ± and 6-6 / 1-1, compact card summaries, shields with two-handed weapons, doubled experience, dialog windows scroll.
+- Foundry v14 support.
+
 ## 2.4.1-ru.10
-- Character wizard: the Russian Monster Knowledge check («Знания о монстрах») is found again; Tabbits and Runefolk cannot take Priest; a Nightmare starts with 1 Soulscar; Leprechaun «Hobbyist» (CR III extra table) gives Sage & Bard for 2000 exp, as in the book.
+- Character wizard fixes (race and background restrictions, Monster Knowledge check in Russian).
 - Weapons made with the item builder or imported from ytsheet: accuracy and damage now use the attack class of the sheet (or the highest warrior class) with Dex / Str. Before, damage got no class + Strength bonus and accuracy used the adventurer level.
 - Foundry VTT v14 only (minimum version 14).
 - Weapons: an attack class left as «-» on the sheet no longer zeroes accuracy and damage; the highest warrior class is used.

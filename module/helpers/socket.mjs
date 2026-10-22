@@ -94,7 +94,7 @@ async function handle(data) {
       if (hp !== undefined && data.method !== "applyMp") update["system.hp.value"] = hp;
       if (mp !== undefined && data.method !== "applyHp") update["system.mp.value"] = mp;
       if (mp !== undefined && update["system.mp.value"] < 0) update["system.mp.value"] = 0;
-      if (Object.keys(update).length) await target.update(update);
+      if (Object.keys(update).length) await target.update(update, data.section ? { sw25Section: data.section } : {});
       return;
     }
 
@@ -123,6 +123,13 @@ async function handle(data) {
         if (effects.length) await targetActor.createEmbeddedDocuments("ActiveEffect", effects);
       }
       return;
+    }
+
+    case "summon":
+    case "dismiss":
+    case "familiarHp": {
+      const { handleSummonSocket } = await import("./summons.mjs");
+      return handleSummonSocket(data);
     }
 
     case "updateChat": {

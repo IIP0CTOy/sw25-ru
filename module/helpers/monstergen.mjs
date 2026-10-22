@@ -22,6 +22,8 @@ function splitBlocks(text) {
 }
 import { lang, L2, tr, watchDom, ja, magicData } from "./monstergen-i18n.mjs";
 import { isYtSpell, isYtItem, isYtSkillArts, importYtSheets } from "./ytspell.mjs";
+import { creationFields, readCreation } from "./summons.mjs";
+import { CLASSES } from "./upgrades.mjs";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const notify = { info: (s) => ui.notifications.info(tr(s)), warn: (s) => ui.notifications.warn(tr(s)), error: (s) => ui.notifications.error(tr(s)) };
@@ -151,7 +153,7 @@ function weaknessEffect(m) {
   // keys as in config.mjs / damagesupport.calcDamage: «…decay.<magic|physical>.flat» (whole category) and «…decay.<cat>.element.magic.<elem>» (an element hits both categories)
   const keys = k === "magic" || k === "physical" ? [`system.attributes.decay.${k}.flat`]
     : [`system.attributes.decay.magic.element.magic.${k}`, `system.attributes.decay.physical.element.magic.${k}`];
-  return { name: `${tr("Слабое место")}: ${tr(WEAK_LABEL[k])} +${n}`, icon: "icons/svg/downgrade.svg", disabled: true, transfer: false, changes: keys.map((key) => ({ key, mode: 2, value: String(-n) })) };
+  return { name: `${tr("Слабое место")}: ${tr(WEAK_LABEL[k])} +${n}`, img: "icons/svg/downgrade.svg", disabled: true, transfer: false, system: { changes: keys.map((key) => ({ key, type: "add", value: String(-n), phase: "initial" })) } };
 }
 
 /** Text pasted from a two-column layout -> left column first, then the right one. */
@@ -418,7 +420,7 @@ export async function createMonster(m, { open = true, folder = null, pack = null
       part: multi ? String(rows.length) : 0, gminfo: gm.join(""), loot: m.loot, usespell: !!m.usespell,
     },
     items,
-    flags: { sw25: { generated: "r91" } },
+    flags: { sw25: { generated: "r91", ...(m.creation ? { creation: m.creation } : {}) } },
   };
   const we = weaknessEffect(m);
   if (we) data.effects = [we];
@@ -500,6 +502,49 @@ function abilityRow(a, i) {
 function rowRow(r, i) {
   const c = (k, w = 52) => `<input data-r="${k}" type="${k === "name" ? "text" : "number"}" value="${esc(r[k])}" style="width:${w}px">`;
   return `<tr data-i="${i}"><td>${c("name", 110)}</td><td>${c("hit")}</td><td>${c("dmgMod")}</td><td>${c("dodge")}</td><td>${c("pp")}</td><td>${c("hp")}</td><td>${c("mp")}</td><td><button type="button" data-delrow="${i}">✕</button></td></tr>`;
+}
+
+/**
+ * [ru.11] Live preview of the monster being edited (left panel of the generator): the stat block as it will
+ * read — header, info lines, the section table (one row = an ordinary monster, several = a multi-section one),
+ * abilities with their marks, weakness and loot. Only what is in the form; nothing is computed from a book.
+ */
+const KIND_MARK = { main: "►", aux: "≫", prep: "△", constant: "◯", decla: "🗨" };
+function monsterPreview(x) {
+  const n = (v) => Number(v) || 0;
+  const fix = (v) => `${n(v)} (${n(v) + 7})`;
+  const line = (label, v) => (v === "" || v == null ? "" : `<div class="mgp-kv"><span>${esc(label)}</span><b>${esc(v)}</b></div>`);
+  const ct = CLASSES.find(([k]) => k === x.classType)?.[1];   // book names (RU singular, EN fan translation)
+  const cls = ct ? L2(ct[0], ct[1]) : tr(CLASS_OPTS.find(([k]) => k === (x.classType || "Other"))?.[1] ?? "");
+  const rows = x.rows ?? [];
+  const multi = rows.length > 1;
+  const core = String(x.coreName ?? "").trim();
+  const table = `<table class="mgp-table"><thead><tr><th>${esc((multi ? L2("Секция", "Section") : L2("Бой. стиль", "Style")))}</th><th>${esc(L2("Точн.", "Acc."))}</th><th>${esc(L2("Урон", "Dmg"))}</th><th>${esc(L2("Уклон.", "Eva."))}</th><th>${esc(L2("Защ.", "Def."))}</th><th>${esc(L2("ОЖ", "HP"))}</th><th>${esc(L2("ОМ", "MP"))}</th></tr></thead><tbody>${
+    rows.map((r) => `<tr${multi && core && r.name === core ? ' class="mgp-core"' : ""}><td>${esc(r.name || "—")}</td><td>${fix(r.hit)}</td><td>2d+${n(r.dmgMod)}</td><td>${fix(r.dodge)}</td><td>${n(r.pp)}</td><td>${n(r.hp)}</td><td>${n(r.mp)}</td></tr>`).join("")
+  }</tbody></table>`;
+  const totalHp = rows.reduce((s, r) => s + n(r.hp), 0);
+  const abs = (x.abilities ?? []).map((a) => {
+    const mark = KIND_MARK[a.kind ?? a.kinds?.[0]] ?? "";
+    const sec = a.section ? ` <i>(${esc(a.section)})</i>` : "";
+    const dm = a.dmg ? (a.dmg.dice ? ` · 2d+${n(a.dmg.mod)}` : ` · ${n(a.dmg.flat)}`) : "";
+    const chk = n(a.check) ? ` · ${esc(L2("Бросок", "Check"))} ${fix(a.check)}` : "";
+    return `<div class="mgp-ab"><b>${mark}${esc(a.name || "—")}</b>${sec}<small>${chk}${dm}</small>${a.text ? `<p>${esc(String(a.text)).replace(/\n/g, "<br>")}</p>` : ""}</div>`;
+  }).join("");
+  const loot = String(x.loot ?? "").split(/\n+/).map((s) => s.replace(/\s{2,}/g, " ").trim()).filter(Boolean);
+  return `<div class="mgp-card">
+    <div class="mgp-head"><span class="mgp-lv">${n(x.level)}</span><span class="mgp-name">${esc(x.name || L2("(без названия)", "(no name)"))}</span></div>
+    <div class="mgp-sub">${esc(cls)}${multi ? ` · ${esc(L2(`секций: ${rows.length}, ОЖ всего ${totalHp}`, `sections: ${rows.length}, total HP ${totalHp}`))}` : ""}</div>
+    <div class="mgp-grid">
+      ${line(L2("Интеллект", "Intelligence"), x.intelligence)}${line(L2("Восприятие", "Perception"), x.perception)}${line(L2("Реакция", "Disposition"), x.disposition)}${line(L2("Язык", "Language"), x.language)}${line(L2("Среда обитания", "Habitat"), x.habitat)}
+      ${line(L2("Известность / Слабое место", "Reputation / Weak point"), `${n(x.popularity)} / ${n(x.weakpoint)}`)}${line(L2("Слабость", "Weakness"), x.weakness)}
+      ${line(L2("Инициатива", "Initiative"), n(x.initiative))}${line(L2("Скорость", "Movement"), x.move)}${line(L2("Стойкость", "Fortitude"), fix(x.vit))}${line(L2("Воля", "Willpower"), fix(x.mnd))}
+    </div>
+    ${table}
+    ${multi && core ? `<div class="mgp-note">${esc(L2(`Основная секция: ${core}`, `Core section: ${core}`))}</div>` : ""}
+    <div class="mgp-sec">${esc(L2("Способности", "Unique skills"))}</div>${abs || `<div class="mgp-empty">${esc(L2("нет", "none"))}</div>`}
+    ${loot.length ? `<div class="mgp-sec">${esc(L2("Трофеи", "Loot"))}</div><ul class="mgp-loot">${loot.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>` : ""}
+    ${x.description ? `<div class="mgp-desc">${esc(x.description)}</div>` : ""}
+  </div>`;
 }
 
 
@@ -660,7 +705,7 @@ export async function openMonsterGenerator(opts = {}) {
   const mons = [blankMonster()];
   let cur = 0;
 
-  const content = `<div class="mg" style="max-height:72vh;overflow:auto;padding-right:6px">
+  const content = `<div class="mg-wrap"><aside class="mg-preview"></aside><div class="mg" style="max-height:72vh;overflow:auto;padding-right:6px;flex:1;min-width:0">
     <div class="mg-nav" style="display:flex;gap:6px;margin-bottom:6px"><button type="button" disabled style="width:auto;font-weight:700"><i class="fa-solid fa-dragon"></i> ${L2("Монстры", "Monsters")}</button><button type="button" class="mg-toitems" style="width:auto"><i class="fa-solid fa-hammer"></i> ${L2("Предметы и заклинания", "Items and spells")}</button></div>
     <details open><summary><b>1. Откуда брать</b> — вставить текст или загрузить JSON-листы ytsheet</summary>
       <div style="display:flex;gap:6px;align-items:center;margin:4px 0;flex-wrap:wrap">
@@ -683,6 +728,9 @@ export async function openMonsterGenerator(opts = {}) {
       <div style="margin:4px 0"><button type="button" class="mg-selall">выбрать всех</button> <button type="button" class="mg-selnone">снять</button> <input class="mg-filter" data-ph="поиск по названию" style="width:160px"></div>
       <div class="mg-list" style="max-height:180px;overflow:auto;border:1px solid #6666;padding:2px"></div></details>
     <details open><summary><b>2. Монстр</b> <span class="mg-curname"></span></summary>
+      <details class="mg-crdet" style="margin:2px 0 6px"><summary><b>${L2("Создание (голем, нежить, фамильяр)", "Creation (golem, undead, familiar)")}</b> <small>${L2("необязательно", "optional")}</small></summary>
+        <small>${L2("Шаблон для окна «Создания» на листе персонажа: числа из вашей книги.", "A template for the «Creations» window on a character sheet: numbers from your rulebook.")}</small>
+        <div class="mg-crbox"></div></details>
       <div class="mg-fields" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px"></div>
       <div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap"><b>Класс:</b> <select data-f="classType">${sel(CLASS_OPTS, "Other")}</select> <label><input type="checkbox" data-f="usespell"> Использует заклинания</label> <small class="mg-magic" style="flex-basis:100%"></small> <b>Слабость:</b>
         <select data-f="weakKind">${sel(WEAK_OPTS, "")}</select> +<input data-f="weakValue" type="number" value="0" style="width:48px">
@@ -701,7 +749,7 @@ export async function openMonsterGenerator(opts = {}) {
       <div style="display:flex;gap:6px;margin:4px 0"><button type="button" class="mg-trcopy">Скопировать тексты на перевод</button><button type="button" class="mg-trapply">Применить перевод</button></div>
       <textarea class="mg-trtext" rows="6" style="width:100%" data-ph="Вставь сюда переведённые строки (нумерация «N|» должна сохраниться)"></textarea></details>
     <div style="text-align:right;margin-top:8px"><button type="button" class="mg-create" style="width:auto"><i class="fa-solid fa-dragon"></i> ${tr("Создать выбранных")}</button></div>
-  </div>`;
+  </div></div>`;
 
   const readAbilityField = (a, key, el) => {
     const v = el.type === "checkbox" ? el.checked : el.value;
@@ -715,7 +763,7 @@ export async function openMonsterGenerator(opts = {}) {
 
   const dlg = new DialogV2({
     window: { title: tr("Генератор монстров"), resizable: true },
-    position: { width: 860 },
+    position: { width: 1200 },
     content,
     buttons: [
       { action: "cancel", label: tr("Закрыть") },
@@ -745,6 +793,9 @@ export async function openMonsterGenerator(opts = {}) {
     $(".mg-file")?.setAttribute("accept", ".json,application/json");
     $(".mg-file")?.setAttribute("multiple", "");
     const m = () => mons[cur];
+    const prevEl = root.querySelector(".mg-preview");
+    let prevQ = 0;
+    const preview = () => { if (!prevEl || prevQ) return; prevQ = requestAnimationFrame(() => { prevQ = 0; prevEl.innerHTML = monsterPreview(m()); }); };
     const paintList = () => {
       $(".mg-listbox").style.display = mons.length > 1 ? "" : "none";
       const q = $(".mg-filter").value.trim().toLowerCase();
@@ -756,6 +807,7 @@ export async function openMonsterGenerator(opts = {}) {
     };
     const applyPh = () => root.querySelectorAll("[data-ph]").forEach((e) => e.setAttribute("placeholder", tr(e.dataset.ph)));  // the dialog HTML drops «placeholder», so it is set here
     const paint = () => {
+      { const box = root.querySelector(".mg-crbox"); if (box) box.innerHTML = creationFields(m().creation ?? {}); }
       const x = m();
       $(".mg-curname").textContent = x.name ? `— ${x.name}` : "";
       fieldsEl.innerHTML = FIELDS.map(([k, l, t]) => `<label style="display:flex;flex-direction:column;font-size:11px">${l}<input data-f="${k}" type="${t}" value="${esc(x[k])}"></label>`).join("");
@@ -771,6 +823,7 @@ export async function openMonsterGenerator(opts = {}) {
       $(".mg-warn").textContent = x.warnings.map(tr).join(" • ");
       paintList();
       applyPh();
+      preview();
     };
     const load = (arr) => {
       arr.forEach((r) => (r.selected = true));
@@ -823,10 +876,12 @@ export async function openMonsterGenerator(opts = {}) {
       if (e.dataset.f) m()[e.dataset.f] = e.type === "number" ? num(e.value) : e.type === "checkbox" ? e.checked : e.value;
       else if (e.dataset.r) { const r = m().rows[num(e.closest("tr").dataset.i)]; r[e.dataset.r] = e.dataset.r === "name" ? e.value : num(e.value); }
       else if (e.dataset.a) { const a = m().abilities[num(e.closest(".mg-ab").dataset.i)]; readAbilityField(a, e.dataset.a, e); }
+      preview();
     });
     root.addEventListener("change", async (ev) => {
       const e = ev.target;
       if (e.dataset.sel !== undefined) { mons[num(e.dataset.sel)].selected = e.checked; paintList(); }
+      if (e.name?.startsWith("cr-")) { m().creation = readCreation(root.querySelector(".mg-crbox")); preview(); return; }
       if (e.classList.contains("mg-file") && e.files?.[0]) {
         const objs = [];
         const bad = [];

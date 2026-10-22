@@ -15,6 +15,7 @@
  *     roll the power against the targets and leave the apply buttons.
  * Shift+click on the icon keeps the old item chat card.
  */
+import { makoSplit, makoCommit } from "./mako.mjs";
 import { chatButton, resistKeyOf, rollAndApplyDamage, applyItemEffects } from "./chatbutton.mjs";
 import { emitToGM } from "./socket.mjs";
 import { L2 } from "./monstergen-i18n.mjs";
@@ -50,6 +51,11 @@ const CONTESTED_RESULTS = ["halving", "disappear", "shortening"];
 const HEAL_RE = /лечен|исцел|восстанавл|heal|cure|回復/i;
 
 export async function castSpell(actor, item, opts = {}) {
+  { // a racial form that forbids spells (talent constructor toggle)
+    const { forbidden } = await import("./feats.mjs");
+    const fb = forbidden(actor, "spell");
+    if (fb) { ui.notifications.warn(L2(`${fb}: пока включено, заклинания нельзя.`, `${fb}: no spells while it is on.`)); return null; }
+  }
   const L = (k, d) => (d ? game.i18n.format(`SW25.Cast.${k}`, d) : game.i18n.localize(`SW25.Cast.${k}`));
   let targets = Array.from(game.user.targets);
 
@@ -104,6 +110,7 @@ export async function castSpell(actor, item, opts = {}) {
   // 0b. [Round 70] "caster chooses": several effect templates flagged
   // choice -> pick one; the others are switched off for this cast
   const choices = item.effects.contents.filter((e) => e.flags?.sw25?.choice);
+  let choice = null;   // the picked variant travels on the card (the item flag is only the last pick)
   if (choices.length > 1 && item.isOwner) {
     const DialogV2 = foundry.applications?.api?.DialogV2;
     const picked = DialogV2
@@ -115,23 +122,33 @@ export async function castSpell(actor, item, opts = {}) {
         }).catch(() => null)
       : choices[0].id;
     if (!picked) return null;
+    choice = picked;
     await item.updateEmbeddedDocuments("ActiveEffect", choices.map((e) => ({ _id: e.id, "flags.sw25.choiceOff": e.id !== picked })));
   }
 
   // 1. cost: MP for spells; songs/alchemy pass their own payer (rhythm, cards)
   let payLine = "";
   const cost = opts.pay ? 0 : Number(item.system.mpcost) || 0;
+  let ownMp = cost;   // the part paid from the caster's own MP
   const mpBefore = Number(actor.system.mp?.value) || 0;
   if (opts.pay) {
     const paid = await opts.pay();
     if (paid === null || paid === false) return null;
     payLine = paid || "";
   } else {
-    if (cost > mpBefore) {
-      ui.notifications.warn(L("NoMP", { name: item.name, cost, mp: mpBefore }));
+    // a mako stone may pay part of the cost (CR I p. 158)
+    const split = await makoSplit(actor, cost, item.name);
+    if (!split) return null;
+    if (split.mp > mpBefore) {
+      const other = cost - split.mp;
+      ui.notifications.warn(other
+        ? L2(`${item.name}: не хватает ОМ — требуется ${cost}, доступно ${mpBefore + other} (${mpBefore} своих + ${other}).`, `${item.name}: not enough MP — ${cost} needed, ${mpBefore + other} available (${mpBefore} own + ${other}).`)
+        : L("NoMP", { name: item.name, cost, mp: mpBefore }));
       return null;
     }
-    if (cost > 0) await actor.update({ "system.mp.value": mpBefore - cost });
+    ownMp = split.mp;
+    if (split.mp > 0) await actor.update({ "system.mp.value": mpBefore - split.mp });
+    payLine = await makoCommit(split.use);
   }
 
   // 2. resistance of this spell
@@ -186,7 +203,7 @@ export async function castSpell(actor, item, opts = {}) {
     resist: showResistButton(resistData, contestTargets) ? resistData : null,
   });
   if (areaNote) content += `<div class="sw25-cast-mp"><i class="fa-regular fa-circle-dot"></i> ${areaNote}</div>`;
-  if (cost > 0) content += `<div class="sw25-cast-mp">${L("MpLine", { cost, before: mpBefore, after: mpBefore - cost })}</div>`;
+  if (ownMp > 0) content += `<div class="sw25-cast-mp">${L("MpLine", { cost: ownMp, before: mpBefore, after: mpBefore - ownMp })}</div>`;
   if (payLine) content += `<div class="sw25-cast-mp">${payLine}</div>`;
   if (fumble) content += `<div class="sw25-contest sw25-contest-miss"><b>${L(opts.pay ? "FumblePaid" : "Fumble")}</b></div>`;
 
@@ -209,6 +226,7 @@ export async function castSpell(actor, item, opts = {}) {
         targetName,
         resist: resistData,
         itemid: item.id,
+        choice,
         critical,
         fumble,
       },
@@ -223,7 +241,7 @@ export async function castSpell(actor, item, opts = {}) {
   // Willing allies of a beneficial spell get it right away.
   if (contested) {
     if (willingTargets.length) {
-      await applyItemEffects(actor, item, willingTargets);
+      await applyItemEffects(actor, item, willingTargets, { choice });
       if (item.system.usepower)
         for (const tok of willingTargets) await rollAndApplyDamage(msg, tok, "full", undefined);
     }
@@ -238,7 +256,7 @@ export async function castSpell(actor, item, opts = {}) {
   // "По желанию" (any): a target that does not want it resists automatically
   // (book I p.167) -> it only works on non-hostile targets
   const willing = result === "any" ? targets.filter((t) => !isHostile(t)) : targets;
-  if (willing.length) await applyItemEffects(actor, item, willing);
+  if (willing.length) await applyItemEffects(actor, item, willing, { choice });
   // [Round 70] flat heals «Мощность магии + N» (fairy magic, book II)
   // [Round 98] the item constructor stores its own flat heal: flags.sw25.flatHeal = N («Magic Power + N»)
   const ownFlat = item.flags?.sw25?.flatHeal;

@@ -9,6 +9,21 @@ export class SW25ActiveEffect extends ActiveEffect {
     super.prepareData();
   }
 
+  /** Racial growth effects (flags.sw25.minAdv) stay off below that adventurer level. */
+  get isSuppressed() {
+    const min = Number(this.flags?.sw25?.minAdv) || 0;
+    if (min) {
+      const actor = this.target ?? this.parent?.actor ?? this.parent;
+      const items = actor?.items;
+      if (items) {
+        let lv = 0;
+        for (const i of items) if (i.type === "skill") lv = Math.max(lv, Number(i.system?.skilllevel) || 0);
+        if (lv < min) return true;
+      }
+    }
+    return super.isSuppressed;
+  }
+
   /** @override */
   prepareDerivedData() {
     // preparation methods overridden (such as prepareBaseData()).
@@ -17,22 +32,28 @@ export class SW25ActiveEffect extends ActiveEffect {
 
   /** @override */
   async update(data, options = {}) {
-    if (data.changes) {
-      data.changes = SW25ActiveEffect.applyChangeData(data.changes);
-    }
+    SW25ActiveEffect.#fixChanges(data);
     return super.update(data, options);
   }
 
   /** @override */
   static async create(data, options = {}) {
-    if (data.changes) {
-      data.changes = SW25ActiveEffect.applyChangeData(data.changes);
-    }
+    SW25ActiveEffect.#fixChanges(data);
     return super.create(data, options);
   }
 
+  /** [ru.11] v14 keeps the changes in system.changes (also accepts the old top-level «changes»). */
+  static #fixChanges(data) {
+    if (!data || typeof data !== "object") return;
+    if (data.changes) data.changes = SW25ActiveEffect.applyChangeData(data.changes);
+    if (data.system?.changes) data.system.changes = SW25ActiveEffect.applyChangeData(data.system.changes);
+    if (data["system.changes"]) data["system.changes"] = SW25ActiveEffect.applyChangeData(data["system.changes"]);
+  }
+
   static applyChangeData(changes) {
+    if (!Array.isArray(changes)) changes = Object.values(changes ?? {});
     return changes.map((change) => {
+      if (!change || typeof change !== "object") return change;
       if (!change.keyClassification) {
         change.keyClassification = "";
       }

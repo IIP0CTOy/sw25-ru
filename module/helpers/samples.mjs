@@ -9,6 +9,7 @@ import { L2, lang } from "./monstergen-i18n.mjs";
 import { classKey, className } from "./names.mjs";
 import { starterPack } from "./starter.mjs";
 import { buildItem, ensureFolder } from "./itembuilder.mjs";
+import { exampleFeat } from "./feats.mjs";
 
 const P = (ru, en) => [ru, en];
 const pick = (pair) => (Array.isArray(pair) ? (lang() === "ru" ? pair[0] : pair[1]) : pair);
@@ -52,28 +53,29 @@ const S = {
 
 /**
  * One character per class. cls: [classKey, level]…; ab: dex agi str vit int mnd (totals);
- * checks / tech: Russian names of starter items (the English twins are found automatically).
+ * checks / tech: Russian names of starter items (the English twins are found automatically);
+ * feats: neutral example talents (feats.mjs EX) — 2 at adventurer level 3 where an example fits, else 1.
  */
 const CHARACTERS = [
-  { key: "fighter", cls: [["fighter", 3], ["enhancer", 1]], ab: [14, 12, 18, 17, 9, 11], w: ["sword"], a: ["chain", "shield"], checks: ["Точность", "Уклонение"], tech: ["Жучья кожа"] },
-  { key: "grappler", cls: [["grappler", 3], ["scout", 1]], ab: [16, 17, 15, 14, 9, 10], w: ["fists"], a: ["cloth"], checks: ["Точность", "Уклонение", "Акробатика"] },
-  { key: "fencer", cls: [["fencer", 3], ["scout", 2]], ab: [17, 18, 11, 12, 12, 11], w: ["rapier"], a: ["leather"], checks: ["Точность", "Уклонение", "Скрытность", "Поиск"] },
-  { key: "shooter", cls: [["shooter", 3], ["ranger", 1]], ab: [18, 14, 12, 12, 12, 12], w: ["bow", "dagger"], a: ["leather"], checks: ["Точность", "Выслеживать"] },
-  { key: "sorcerer", cls: [["sorcerer", 3], ["sage", 1]], ab: [10, 11, 8, 11, 19, 17], w: ["staff"], a: ["cloth"], checks: ["Заклинания", "Знания о Монстрах"], spells: ["spark", "heavyLids"] },
-  { key: "conjurer", cls: [["conjurer", 3], ["sage", 1]], ab: [11, 10, 9, 12, 18, 17], w: ["staff"], a: ["cloth"], checks: ["Заклинания", "Чтение"], spells: ["stoneSkin", "keenEdge"] },
-  { key: "priest", cls: [["priest", 3], ["fighter", 1]], ab: [11, 10, 14, 15, 13, 18], w: ["mace"], a: ["chain", "shield"], checks: ["Заклинания", "Точность", "Уклонение"], spells: ["mend", "goodWord"] },
-  { key: "fairytamer", cls: [["fairytamer", 3], ["ranger", 1]], ab: [12, 13, 8, 10, 17, 18], w: ["staff"], a: ["cloth"], checks: ["Заклинания", "Гербология"], spells: ["petal", "spring"] },
-  { key: "magitech", cls: [["magitech", 3], ["shooter", 2]], ab: [17, 12, 10, 11, 17, 12], w: ["gun"], a: ["leather"], checks: ["Заклинания", "Точность"], spells: ["aimAssist", "burstShot"] },
-  { key: "scout", cls: [["scout", 3], ["fencer", 2]], ab: [18, 18, 10, 11, 13, 10], w: ["dagger"], a: ["leather"], checks: ["Поиск", "Скрытность", "Взлом", "Чутьё (Чувство опасности)", "Точность", "Уклонение"] },
-  { key: "ranger", cls: [["ranger", 3], ["shooter", 2]], ab: [17, 15, 12, 13, 13, 10], w: ["bow", "dagger"], a: ["leather"], checks: ["Выслеживать", "Первая помощь", "Гербология", "Точность"] },
-  { key: "sage", cls: [["sage", 3], ["sorcerer", 1]], ab: [10, 10, 8, 11, 20, 16], w: ["staff"], a: ["cloth"], checks: ["Знания о Монстрах", "Чтение", "Понимание", "Заклинания"], spells: ["spark"] },
-  { key: "enhancer", cls: [["enhancer", 3], ["grappler", 2]], ab: [15, 15, 16, 16, 9, 12], w: ["fists"], a: ["cloth"], checks: ["Точность", "Уклонение"], tech: ["Кошачьи глаза", "Жучья кожа", "Медвежья мышца"] },
-  { key: "bard", cls: [["bard", 3], ["fencer", 1]], ab: [14, 14, 9, 11, 13, 19], w: ["rapier"], a: ["leather"], checks: ["Выступление", "Точность", "Уклонение"] },
-  { key: "rider", cls: [["rider", 3], ["fighter", 2]], ab: [14, 15, 15, 15, 12, 10], w: ["spear"], a: ["chain"], checks: ["Верховая езда", "Точность", "Уклонение"] },
-  { key: "alchemist", cls: [["alchemist", 3], ["shooter", 1]], ab: [16, 12, 9, 11, 19, 11], w: ["gun"], a: ["leather"], checks: ["Приворот", "Точность"] },
-  { key: "warleader", cls: [["warleader", 3], ["fighter", 2]], ab: [13, 13, 15, 14, 16, 12], w: ["sword"], a: ["chain", "shield"], checks: ["Точность", "Уклонение"] },
-  { key: "geomancer", cls: [["geomancer", 3], ["ranger", 1]], ab: [12, 13, 10, 13, 17, 16], w: ["staff"], a: ["cloth"], checks: ["Выслеживать"] },
-  { key: "darkhunter", cls: [["darkhunter", 3], ["fencer", 2]], ab: [16, 16, 12, 13, 12, 14], w: ["rapier"], a: ["leather"], checks: ["Точность", "Уклонение"] },
+  { key: "fighter", feats: ["risk", "mastery"], cls: [["fighter", 3], ["enhancer", 1]], ab: [14, 12, 18, 17, 9, 11], w: ["sword"], a: ["chain", "shield"], checks: ["Точность", "Уклонение"], tech: ["Жучья кожа"] },
+  { key: "grappler", feats: ["risk", "aim"], cls: [["grappler", 3], ["scout", 1]], ab: [16, 17, 15, 14, 9, 10], w: ["fists"], a: ["cloth"], checks: ["Точность", "Уклонение", "Акробатика"] },
+  { key: "fencer", feats: ["aim", "risk"], cls: [["fencer", 3], ["scout", 2]], ab: [17, 18, 11, 12, 12, 11], w: ["rapier"], a: ["leather"], checks: ["Точность", "Уклонение", "Скрытность", "Поиск"] },
+  { key: "shooter", feats: ["aim"], cls: [["shooter", 3], ["ranger", 1]], ab: [18, 14, 12, 12, 12, 12], w: ["bow", "dagger"], a: ["leather"], checks: ["Точность", "Выслеживать"] },
+  { key: "sorcerer", feats: ["aim"], cls: [["sorcerer", 3], ["sage", 1]], ab: [10, 11, 8, 11, 19, 17], w: ["staff"], a: ["cloth"], checks: ["Заклинания", "Знания о Монстрах"], spells: ["spark", "heavyLids"] },
+  { key: "conjurer", feats: ["aim"], cls: [["conjurer", 3], ["sage", 1]], ab: [11, 10, 9, 12, 18, 17], w: ["staff"], a: ["cloth"], checks: ["Заклинания", "Чтение"], spells: ["stoneSkin", "keenEdge"] },
+  { key: "priest", feats: ["risk", "aim"], cls: [["priest", 3], ["fighter", 1]], ab: [11, 10, 14, 15, 13, 18], w: ["mace"], a: ["chain", "shield"], checks: ["Заклинания", "Точность", "Уклонение"], spells: ["mend", "goodWord"] },
+  { key: "fairytamer", feats: ["aim"], cls: [["fairytamer", 3], ["ranger", 1]], ab: [12, 13, 8, 10, 17, 18], w: ["staff"], a: ["cloth"], checks: ["Заклинания", "Гербология"], spells: ["petal", "spring"] },
+  { key: "magitech", feats: ["aim"], cls: [["magitech", 3], ["shooter", 2]], ab: [17, 12, 10, 11, 17, 12], w: ["gun"], a: ["leather"], checks: ["Заклинания", "Точность"], spells: ["aimAssist", "burstShot"] },
+  { key: "scout", feats: ["aim", "risk"], cls: [["scout", 3], ["fencer", 2]], ab: [18, 18, 10, 11, 13, 10], w: ["dagger"], a: ["leather"], checks: ["Поиск", "Скрытность", "Взлом", "Чутьё (Чувство опасности)", "Точность", "Уклонение"] },
+  { key: "ranger", feats: ["aim"], cls: [["ranger", 3], ["shooter", 2]], ab: [17, 15, 12, 13, 13, 10], w: ["bow", "dagger"], a: ["leather"], checks: ["Выслеживать", "Первая помощь", "Гербология", "Точность"] },
+  { key: "sage", feats: ["aim"], cls: [["sage", 3], ["sorcerer", 1]], ab: [10, 10, 8, 11, 20, 16], w: ["staff"], a: ["cloth"], checks: ["Знания о Монстрах", "Чтение", "Понимание", "Заклинания"], spells: ["spark"] },
+  { key: "enhancer", feats: ["risk", "aim"], cls: [["enhancer", 3], ["grappler", 2]], ab: [15, 15, 16, 16, 9, 12], w: ["fists"], a: ["cloth"], checks: ["Точность", "Уклонение"], tech: ["Кошачьи глаза", "Жучья кожа", "Медвежья мышца"] },
+  { key: "bard", feats: ["aim", "risk"], cls: [["bard", 3], ["fencer", 1]], ab: [14, 14, 9, 11, 13, 19], w: ["rapier"], a: ["leather"], checks: ["Выступление", "Точность", "Уклонение"] },
+  { key: "rider", feats: ["risk", "aim"], cls: [["rider", 3], ["fighter", 2]], ab: [14, 15, 15, 15, 12, 10], w: ["spear"], a: ["chain"], checks: ["Верховая езда", "Точность", "Уклонение"] },
+  { key: "alchemist", feats: ["aim"], cls: [["alchemist", 3], ["shooter", 1]], ab: [16, 12, 9, 11, 19, 11], w: ["gun"], a: ["leather"], checks: ["Приворот", "Точность"] },
+  { key: "warleader", feats: ["risk", "mastery"], cls: [["warleader", 3], ["fighter", 2]], ab: [13, 13, 15, 14, 16, 12], w: ["sword"], a: ["chain", "shield"], checks: ["Точность", "Уклонение"] },
+  { key: "geomancer", feats: ["aim"], cls: [["geomancer", 3], ["ranger", 1]], ab: [12, 13, 10, 13, 17, 16], w: ["staff"], a: ["cloth"], checks: ["Выслеживать"] },
+  { key: "darkhunter", feats: ["aim", "risk"], cls: [["darkhunter", 3], ["fencer", 2]], ab: [16, 16, 12, 13, 12, 14], w: ["rapier"], a: ["leather"], checks: ["Точность", "Уклонение"] },
 ];
 
 /* ------------------------------------------------------------------ *
@@ -179,6 +181,7 @@ async function buildCharacter(c, folderId) {
   }
   for (const k of c.w ?? []) { const d = buildItem("weapon", { ...W[k], name: pick(W[k].name), rank: "B", hit: 0, dmod: 0 }).data; d.system.equip = k === c.w[0]; items.push(d); }
   for (const k of c.a ?? []) { const d = buildItem("armor", { ...A[k], name: pick(A[k].name), rank: "B", dodge: A[k].dodge ?? 0, mpp: 0 }).data; d.system.equip = true; items.push(d); }
+  for (const k of c.feats ?? []) { const d = exampleFeat(k); if (d) items.push(d); }
   for (const k of c.spells ?? []) {
     const s = S[k];
     items.push(buildItem("spell", { ...s, name: pick(s.name) }, (s.rows ?? []).map(([id, value]) => ({ id, value }))).data);
@@ -187,6 +190,7 @@ async function buildCharacter(c, folderId) {
   await new Promise((r) => setTimeout(r, 600));
   const hp = Number(actor.system.hp?.max) || 0, mp = Number(actor.system.mp?.max) || 0;
   // samples are above starting level: earned XP covers what the classes cost (never negative free XP)
+  actor.reset();   // useexp is derived data: re-read it from the source (a bare prepareData() adds it up twice)
   const used = Number(actor.system.attributes?.useexp) || 0;
   await actor.update({ "system.hp.value": hp, "system.mp.value": mp, "system.attributes.totalexp": Math.max(3000, used) });
   return { actor, missing };

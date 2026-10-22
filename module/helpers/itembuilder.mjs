@@ -23,7 +23,17 @@ const KINDS = [
   ["spell", "fa-solid fa-wand-sparkles", ["Заклинание", "Spell"]],
   ["alchemy", "fa-solid fa-vial", ["Приворот алхимика", "Alchemist evocation"]],
   ["song", "fa-solid fa-music", ["Мелодия барда", "Bard song"]],
+  // GM only: the system ships no list of these — the GM makes them from their rulebook
+  ["enh", "fa-solid fa-gem", ["Улучшение", "Upgrade"], true],
+  ["curse", "fa-solid fa-skull", ["Проклятие Бездны", "Abyss curse"], true],
+  ["golempart", "fa-solid fa-gears", ["Деталь голема", "Golem part"], true],
 ];
+const SIZES = [["small", ["малый", "small"]], ["medium", ["средний", "medium"]], ["large", ["большой", "large"]]];
+const AB_TAGS = [["◯", ["◯ постоянная", "◯ passive"]], ["►", ["► основное действие", "► main action"]], ["△", ["△ подготовка", "△ setup"]], ["🗨", ["🗨 заявляемая", "🗨 declared"]]];
+const WHEN = [["equip", ["пока экипирован", "while equipped"]], ["carried", ["пока при себе (и в сумке)", "while carried (even in a bag)"]], ["off", ["пока НЕ в руках / не надет", "while NOT in use"]]];
+const UPG_FIELDS = [["hit", ["Точность", "Accuracy"]], ["dmod", ["Доп. урон", "Extra damage"]], ["reqstr", ["Мин. сила", "Min. Strength"]], ["cvalue", ["Крит", "Crit"]], ["pp", ["Защита", "Defense"]], ["dodge", ["Уклонение", "Evasion"]]];
+const slug = (s) => norm(s).replace(/\s*[(（][^)）]*[)）]\s*$/, "").replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "");
+const fieldDeltas = (f) => Object.fromEntries(UPG_FIELDS.map(([k]) => [k, N(f[`d_${k}`])]).filter(([, v]) => v));
 const NOTES = [["up", "↑"], ["down", "↓"], ["charm", "♡"]];
 const SONG_SIDES = [["", ["никого (только ритм)", "nobody (rhythm only)"]], ["foe", ["врагов в 30 м (штраф)", "foes within 30 m (penalty)"]], ["ally", ["союзников в 30 м (бонус)", "allies within 30 m (bonus)"]]];
 const CARD_COLORS = [["red", ["Красные", "Red"]], ["green", ["Зелёные", "Green"]], ["black", ["Чёрные", "Black"]], ["white", ["Белые", "White"]], ["gold", ["Золотые", "Gold"]]];
@@ -197,6 +207,7 @@ export function buildItem(kind, f, rows = []) {
   const fxRows = rows.map((r) => ({ ...r, key: r.key ?? statById(r.id)?.key })).filter((r) => r.key && N(r.value));
   const base = { description: html(f.description), quantity: Math.max(1, Math.round(N(f.quantity, 1))), price: f.price === "" || f.price == null ? "" : N(f.price), equip: false };
   let type = kind, system, folder, effects = [], schoolText = "", songSide = "";
+  const extra = {};   // flags of the GM-only kinds
 
   if (kind === "weapon") {
     const category = f.category in (C.weaponCategories ?? {}) ? f.category : "";
@@ -298,10 +309,37 @@ export function buildItem(kind, f, rows = []) {
     }
     songSide = side;
     folder = [L2("Мелодии барда", "Bard songs"), final ? L2("Финальные аккорды", "Finales") : L2("Мелодии", "Songs")];
+  } else if (kind === "golempart") {
+    const ab = `${f.abtag || "◯"}${String(f.abname ?? "").trim() || name}`;
+    const part = { id: slug(name), size: SIZES.some(([k]) => k === f.size) ? f.size : "small", ab: { ru: ab, en: ab, ja: ab },
+      ...(String(f.needs ?? "").trim() ? { needs: slug(f.needs), replaces: true } : {}),
+      ...Object.fromEntries(["hp", "hit", "mdmg", "move"].map((k) => [k, Math.max(0, N(f[k]))]).filter(([, v]) => v)),
+      ...(f.weak ? { weak: true } : {}), ...(f.resist ? { resist: true } : {}) };
+    type = "item";
+    system = { ...base, ...(String(f.overview ?? "").trim() ? { description: `<p>${esc(String(f.abname ?? "").trim() || name)}: ${esc(f.overview)}</p>` } : {}) };
+    folder = [L2("Детали големов", "Golem parts"), L2(SIZES.find(([k]) => k === part.size)[1][0], SIZES.find(([k]) => k === part.size)[1][1])];
+    Object.assign(extra, { golemPart: part });
+  } else if (kind === "enh") {
+    const kinds = ["weapon", "armor", "shield"].filter((k) => f[`k_${k}`]);
+    if (!kinds.length) throw new Error(L2("Отметьте, к чему улучшение применяется (оружие, броня, щит).", "Tick what the upgrade is for (weapon, armor, shield)."));
+    const tag = String(f.tag ?? "").trim();
+    type = "item";
+    system = { ...base, quantity: 1 };
+    folder = [L2("Улучшения", "Upgrades"), f.abyss ? L2("Бездна", "Abyss") : L2("Мастерская", "Workshop")];
+    Object.assign(extra, { enh: { kinds, f: fieldDeltas(f), fx: fxRows.map((r) => [r.key, N(r.value)]), p: f.param || "", price: N(f.price), tag: tag ? { ru: tag, en: tag, ja: tag } : {}, el: {}, abyss: !!f.abyss, ...(f.newOnly ? { newOnly: true } : {}) } });
+  } else if (kind === "curse") {
+    const when = WHEN.some(([k]) => k === f.when) ? f.when : "equip";
+    const mech = { f: fieldDeltas(f), fx: fxRows.map((r) => [r.key, N(r.value)]), off: when === "off" };
+    const text = String(f.overview ?? "").trim();
+    type = "item";
+    system = { ...base, quantity: 1, price: "" };
+    folder = [L2("Улучшения", "Upgrades"), L2("Проклятия Бездны", "Abyss curses")];
+    Object.assign(extra, { curse: { code: N(f.code) || 0, name: { ru: name, en: name, ja: name }, text: { ru: text, en: text, ja: text }, carried: when !== "equip", p: f.param || "",
+      manual: !mech.fx.length && !Object.keys(mech.f).length, weapon: mech, armor: mech } });
   } else throw new Error(`unknown kind: ${kind}`);
 
-  if (effects.length) notes.push(L2(`эффект: ${describeRows(fxRows)}`, `effect: ${describeRows(fxRows)}`));
-  const extraFlags = kind === "spell" && f.does === "flat" ? { flatHeal: Math.max(0, N(f.amount)) } : {};
+  if (effects.length || (["enh", "curse"].includes(kind) && fxRows.length)) notes.push(L2(`эффект: ${describeRows(fxRows)}`, `effect: ${describeRows(fxRows)}`));
+  const extraFlags = { ...(kind === "spell" && f.does === "flat" ? { flatHeal: Math.max(0, N(f.amount)) } : {}), ...extra };
   return { data: { name, type, system, effects, flags: { sw25: { builder: true, ...(schoolText ? { schoolText } : {}), ...(songSide ? { songSide } : {}), ...extraFlags } }, ...(f.img ? { img: f.img } : {}) }, folder, notes };
 }
 
@@ -446,11 +484,38 @@ function formHtml(kind) {
       + fld(L2("Коротко (одна строка)", "Summary (one line)"), `<input type="text" name="overview">`, 4)
       + `<small style="grid-column:span 4;opacity:.75">${L2("Счётчики ритма ↑ ↓ ♡ появляются на листе барда сами при первом исполнении. Проверка идёт от класса Бард и Духа.", "The rhythm counters ↑ ↓ ♡ appear on the bard's sheet by themselves at the first performance. The check uses the Bard class and Spirit.")}</small>`;
   }
-  const price = ["spell", "alchemy", "song"].includes(kind) ? "" : fld(L2("Цена, G", "Price, G"), `<input type="number" name="price" value="" min="0" step="1">`);
+  const deltas = () => `<div class="ib-f" style="grid-column:span 4"><span>${L2("Изменения полей предмета (± к числам)", "Item field changes (± to the numbers)")}</span><div style="display:flex;gap:8px;flex-wrap:wrap">`
+    + UPG_FIELDS.map(([k, l]) => `<label style="display:flex;gap:4px;align-items:center">${L2(l[0], l[1])} <input type="number" name="d_${k}" value="0" step="1" style="width:4em"></label>`).join("") + `</div></div>`;
+  if (kind === "golempart") {
+    body = fld(L2("Размер", "Size"), `<select name="size">${pairOpts(SIZES, "small")}</select>`)
+      + fld(L2("Способность голема", "Golem ability"), `<input type="text" name="abname" placeholder="${L2("пусто — как название", "empty — same as the name")}">`, 2)
+      + fld(L2("Вид способности", "Ability kind"), `<select name="abtag">${pairOpts(AB_TAGS, "◯")}</select>`)
+      + fld(L2("ОЖ +", "HP +"), num("hp", 0, 'min="0"')) + fld(L2("Точность +", "Accuracy +"), num("hit", 0, 'min="0"'))
+      + fld(L2("Маг. урон −", "Magic damage −"), num("mdmg", 0, 'min="0"')) + fld(L2("Скорость +", "Movement +"), num("move", 0, 'min="0"'))
+      + fld(L2("Требует предмет (название)", "Needs the item (name)"), `<input type="text" name="needs" placeholder="${L2("заменяет его способность", "replaces its ability")}">`, 2)
+      + `<label class="ib-f" style="grid-column:span 1"><span>&nbsp;</span><span><input type="checkbox" name="weak"> ${L2("нет слабого места", "no weak point")}</span></label>`
+      + `<label class="ib-f" style="grid-column:span 1"><span>&nbsp;</span><span><input type="checkbox" name="resist"> ${L2("стихия при создании", "element on creation")}</span></label>`
+      + fld(L2("Коротко (одна строка)", "Summary (one line)"), `<input type="text" name="overview">`, 4);
+  } else if (kind === "enh") {
+    body = `<div class="ib-f" style="grid-column:span 4"><span>${L2("К чему применяется", "Applies to")}</span><div style="display:flex;gap:12px">`
+      + [["weapon", ["оружие", "weapon"]], ["armor", ["броня", "armor"]], ["shield", ["щит", "shield"]]].map(([k, l]) => `<label><input type="checkbox" name="k_${k}"${k === "weapon" ? " checked" : ""}> ${L2(l[0], l[1])}</label>`).join("") + `</div></div>`
+      + fld(L2("Метка в названии", "Tag in the name"), `<input type="text" name="tag" placeholder="${L2("напр. Посеребренный", "e.g. Silvered")}">`, 2)
+      + `<label class="ib-f" style="grid-column:span 2"><span>&nbsp;</span><span><input type="checkbox" name="abyss"> ${L2("улучшение Бездны (нужно проклятие)", "Abyss enhancement (needs a curse)")}</span></label>`
+      + `<label class="ib-f" style="grid-column:span 2"><span>&nbsp;</span><span><input type="checkbox" name="newOnly"> ${L2("только при покупке (кузница не делает на уже купленном)", "only when buying (the smithy won't add it to an owned item)")}</span></label>`
+      + deltas();
+  } else if (kind === "curse") {
+    body = fld(L2("Номер (2d: 11–66)", "Number (2d: 11–66)"), num("code", "", 'min="11" max="66"'))
+      + fld(L2("Когда действует", "When it works"), `<select name="when">${pairOpts(WHEN, "equip")}</select>`, 3)
+      + deltas()
+      + fld(L2("Текст (что делает)", "Text (what it does)"), `<input type="text" name="overview">`, 4);
+  }
+  const price = ["spell", "alchemy", "song", "curse"].includes(kind) ? "" : fld(L2("Цена, G", "Price, G"), `<input type="number" name="price" value="" min="0" step="1">`);
   const fxExtra = kind === "song" ? `<small class="ib-song" style="grid-column:span 4;opacity:.75">${L2("Бонус мелодии действует 1 раунд и обновляется каждым исполнением. Штраф пишется отрицательным числом.", "A song's bonus lasts 1 round and is renewed by each performance. A penalty is a negative number.")}</small>`
       + fld(L2("Длительность эффекта, р.", "Effect duration, rd."), `<input type="number" name="fxRounds" value="" min="0">`, 2, "ib-final")
     : kind === "alchemy" ? `<small style="grid-column:span 4;opacity:.75">${L2("Если ранг карт задаёт величину бонуса — число в строке заменится значением ранга (впиши любое, например 1). Если длительность — эффект продлится столько раундов.", "If the card rank sets the size of the bonus, the number in the row is replaced by the rank value (type any, e.g. 1). If it sets the duration, the effect lasts that many rounds.")}</small>`
     : kind === "spell" ? fld(L2("Длительность эффекта, р. (пусто — как у заклинания)", "Effect duration, rd. (empty — same as the spell)"), `<input type="number" name="fxRounds" value="" min="0">`, 3)
+    : ["enh", "curse"].includes(kind) ? `<small style="grid-column:span 4;opacity:.75">${L2("Бонусы и штрафы персонажу, пока предмет надет (проклятие — по «Когда действует»).", "Bonuses and penalties to the character while the item is equipped (a curse: per «When it works»).")}</small>`
+    : kind === "golempart" ? `<small style="grid-column:span 4;opacity:.75">${L2("Детали голема берут числа из полей выше; строки бонусов не используются.", "Golem parts use the fields above; bonus rows are not used.")}</small>`
     : kind === "item" ? fld(L2("Длительность эффекта, р.", "Effect duration, rd."), `<input type="number" name="fxRounds" value="" min="0">`, 2) + `<label class="ib-f" style="grid-column:span 2"><span>&nbsp;</span><span><input type="checkbox" name="worn"> ${L2("действует, пока предмет при себе", "works while carried")}</span></label>`
     : `<small style="grid-column:span 4;opacity:.75">${L2("Бонусы действуют, пока предмет надет.", "Bonuses apply while the item is equipped.")}</small>`;
   return `<div class="ib-grid">${common}${body}${price}</div>
@@ -570,7 +635,7 @@ export async function openItemBuilder(startKind = "weapon") {
   let kind = KINDS.some((k) => k[0] === startKind) ? startKind : "weapon";
   ensureStyle();
   const content = `<div class="sw25-ib">
-    <div class="ib-tabs">${KINDS.map(([k, ic, l]) => `<button type="button" data-kind="${k}"><i class="${ic}"></i> ${L2(l[0], l[1])}</button>`).join("")}</div>
+    <div class="ib-tabs">${KINDS.filter((k) => !k[3] || game.user.isGM).map(([k, ic, l]) => `<button type="button" data-kind="${k}"><i class="${ic}"></i> ${L2(l[0], l[1])}</button>`).join("")}</div>
     <div class="ib-form"></div>
     <div class="ib-foot"><button type="button" class="ib-create"><i class="fa-solid fa-plus"></i> ${L2("Создать", "Create")}</button>
       ${mine.length ? `<label>${L2("на лист", "onto")} <select class="ib-actor">${mine.map((a) => `<option value="${a.id}"${a.id === game.user.character?.id ? " selected" : ""}>${esc(a.name)}</option>`).join("")}</select></label>` : ""}

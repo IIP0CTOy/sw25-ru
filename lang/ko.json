@@ -48,6 +48,8 @@
     "Deffence": "방어",
     "Other": "기타",
     "Selecthitweapon": "공격 무기 선택",
+    "DualAttack": "쌍수 공격",
+    "DualAttackHint": "명중 -2로 같은 대상에게 2회 공격",
     "Selectattackskill": "공격 기술 선택",
     "Selectdodgeskill": "회피 기술 선택",
     "Selectherbskill": "약초 기술 선택",

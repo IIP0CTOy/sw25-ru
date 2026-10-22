@@ -3,6 +3,8 @@ import { dailyCheck, dailyMark } from "../helpers/rest.mjs";
 import { isItem, findClassItem } from "../helpers/names.mjs";
 import { canon } from "../helpers/ability-names.mjs";
 import { starterPack } from "../helpers/starter.mjs";
+import { makoSplit, makoCommit } from "../helpers/mako.mjs";
+import { L2 } from "../helpers/monstergen-i18n.mjs";
 
 /**
  * SW25-RU — new character sheet (redesign).
@@ -112,8 +114,13 @@ export async function useTechnique(actor, item) {
     ? Math.max(1, TECH_MP - (Number(actor.system.attributes?.efmpall) || 0))
     : Number(item.system.mpcost) || 0;
   const mp = Number(actor.system.mp?.value) || 0;
-  if (cost > mp) {
-    ui.notifications.warn(T("NoMp", { name: item.name, cost, mp }));
+  const split = await makoSplit(actor, cost, item.name);   // a mako stone may pay part of it
+  if (!split) return null;
+  if (split.mp > mp) {
+    const other = cost - split.mp;
+    ui.notifications.warn(other
+      ? L2(`${item.name}: не хватает ОМ — требуется ${cost}, доступно ${mp + other} (${mp} своих + ${other}).`, `${item.name}: not enough MP — ${cost} needed, ${mp + other} available (${mp} own + ${other}).`)
+      : T("NoMp", { name: item.name, cost, mp }));
     return null;
   }
   const rounds = techniqueRounds(item.system.time);
@@ -175,10 +182,12 @@ export async function useTechnique(actor, item) {
     if (lv && to !== hp) await actor.update({ "system.hp.value": to });
     heal = lv ? T("HpHealed", { n: to - hp, from: hp, to }) : T("NoEnhancer");
   }
-  if (cost) await actor.update({ "system.mp.value": mp - cost });
+  if (split.mp) await actor.update({ "system.mp.value": mp - split.mp });
+  const makoLine = await makoCommit(split.use);
 
   const lines = [
-    cost ? T("MpSpent", { cost, from: mp, to: mp - cost }) : "",
+    split.mp ? T("MpSpent", { cost: split.mp, from: mp, to: mp - split.mp }) : "",
+    makoLine,
     heal,
     heal
       ? ""

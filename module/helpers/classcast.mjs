@@ -375,7 +375,7 @@ const TAC_FX = {
   // inspire
   "Поиск Недостатков": { free: 2, note: ["+1 к доп. урону по обнаруженному слабому месту — учитывается вручную.", "+1 extra damage against a revealed weak point — track manually."] },
   "Позиция Божественной Скорости": { ch: [[KT.move, 5]], free: 2 },
-  "Гимн храбрых": { free: 2, selfOnly: true, note: ["Мелодии Тактика в этот раунд действуют только на выбранную сторону — вручную.", "This round the Warleader's songs affect only the chosen side — apply manually."] },
+  "Гимн храбрых": { free: 2, selfOnly: true, note: ["Мелодии Тактика в этот раунд действуют только на выбранную сторону — вручную.", "This round the Tactician's songs affect only the chosen side — apply manually."] },
   "Тайное возрождение": { free: 3, note: ["Каждый союзник может сразу сделать проверку Знания монстров по указанному монстру.", "Each ally may immediately make a Monster Knowledge check for the indicated monster."] },
   "Великая задача": { ch: [[KT.dodge, 1], [KT.vitres, 1], [KT.mndres, 1]], self: [[KT.dodge, -3], [KT.vitres, -3], [KT.mndres, -3]], free: 3 },
   "Оценка травматизма": { free: 3, note: ["Союзник, восстановивший хотя бы 1 ОЖ в этот раунд, получает ещё +5 ОЖ — вручную.", "An ally who recovers at least 1 HP this round gains another +5 HP — apply manually."] },
@@ -392,7 +392,7 @@ const TAC_FX = {
   "Сопротивление II": { choice: VW(5) },
   "Неожиданный Удар I": { ch: [[KT.hit, 2], [KT.dmg, 2]], note: ["На одну атаку — после неё снимите эффект.", "For one attack — remove the effect afterwards."] },
   "Неожиданный Удар II": { ch: [[KT.hit, 4], [KT.dmg, 4]], note: ["На одну атаку — после неё снимите эффект.", "For one attack — remove the effect afterwards."] },
-  "Стратегическая изобретательность": { note: ["Инициатива: можно взять «уровень Тактика + мод. Интеллекта + 1» — вручную.", "Initiative: you may use “Warleader level + Intelligence mod. + 1” — apply manually."] },
+  "Стратегическая изобретательность": { note: ["Инициатива: можно взять «уровень Тактика + мод. Интеллекта + 1» — вручную.", "Initiative: you may use “Tactician level + Intelligence mod. + 1” — apply manually."] },
   "Сплошная линия": { gain: 1, noLimit: true },
   "Сокрушительная победа": { gain: 1, noLimit: true },
 };
@@ -515,7 +515,7 @@ export async function useTactics(actor, item) {
   const lines = [];
   if (changes.length) lines.push(`${esc(chText(changes))}${label ? ` <i>(${esc(label)})</i>` : ""} — ${L2("на 1 раунд", "for 1 round")}`);
   if (isStrat && !fx.selfOnly) lines.push(targets.length ? `${L2("Союзники", "Allies")} (${targets.length}): ${targets.map((t) => esc(t.name)).join(", ")}` : L2(`<b>Рядом нет союзников — Предел не накоплен.</b>`, `<b>No allies nearby — no Edge gained.</b>`));
-  if (fx.self?.length) lines.push(`${L2("Сам Тактик", "The Warleader")}: ${esc(chText(fx.self))}`);
+  if (fx.self?.length) lines.push(`${L2("Сам Тактик", "The Tactician")}: ${esc(chText(fx.self))}`);
   if (!changes.length && !fx.self && !fx.gain) lines.push(L2(`<i>Эффект применяется вручную.</i>`, `<i>Apply the effect manually.</i>`));
   if (fx.note) lines.push(`<i>${esc(loc(fx.note))}</i>`);
   if (fx.free) lines.push(L2(`В следующем раунде доступна стратагема ранга ${fx.free} любого типа.`, `Next round a rank ${fx.free} stratagem of any type is available.`));

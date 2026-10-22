@@ -19,10 +19,11 @@ export function onManageActiveEffect(event, owner) {
           }),
           img: "icons/svg/aura.svg",
           origin: owner.uuid,
-          "duration.rounds":
+          // v14 duration: { value, units }
+          duration:
             li.dataset.effectType === "temporary" ||
             li.dataset.effectType === "inactive"
-              ? 1
+              ? { value: 1, units: "rounds" }
               : undefined,
           disabled: li.dataset.effectType === "inactive",
         },

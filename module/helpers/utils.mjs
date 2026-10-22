@@ -79,8 +79,22 @@ export const SW25_LABELS = {
   MonHit: ["Точность", "Accuracy", "命中", "명중"],
   MonDmg: ["Урон", "Damage", "打撃", "타격"],
   MonDge: ["Уклонение", "Evasion", "回避", "회피"],
-  MonRes: ["Сопротивление", "Resist", "抵抗判定", "저항 판정"],
+  MonRes: ["Сопротивление", "Resist", "Resistance", "抵抗判定", "抵抗力", "저항 판정"],
 };
+const resEmpty = (i) => !Number(i?.system?.checkbasemod1) && !Number(i?.system?.checkbasemod2);
+/**
+ * The monster's Fortitude / Willpower item. Imported monsters may carry «Resistance» next to an empty
+ * «Resist» the system added on creation: the one with numbers wins.
+ */
+export function monResOf(actor) {
+  const list = (actor?.items ?? []).filter((i) => i.type === "monsterability" && isLabel(i.name, "MonRes"));
+  return list.find((i) => !resEmpty(i)) ?? list[0] ?? null;
+}
+/** Empty duplicate resist items (safe to remove): only when another one has numbers. */
+export function emptyResDupes(actor) {
+  const list = (actor?.items ?? []).filter((i) => i.type === "monsterability" && isLabel(i.name, "MonRes"));
+  return list.some((i) => !resEmpty(i)) ? list.filter(resEmpty) : [];
+}
 export function isLabel(value, key) {
   if (value === undefined || value === null || value === "") return false;
   return (

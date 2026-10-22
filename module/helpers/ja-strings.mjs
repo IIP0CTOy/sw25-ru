@@ -43,7 +43,7 @@ export const JA_STATIC = new Map(Object.entries({
 "Heaven Qi": "天の命脈",
 "Hours": "時間",
 "Initiative": "先制力",
-"Initiative: you may use “Warleader level + Intelligence mod. + 1” — apply manually.": "先制判定：「ウォーリーダー技能レベル＋知力ボーナス＋1」を使用できます — 手動で適用してください。",
+"Initiative: you may use “Tactician level + Intelligence mod. + 1” — apply manually.": "先制判定：「ウォーリーダー技能レベル＋知力ボーナス＋1」を使用できます — 手動で適用してください。",
 "Inspirational": "鼓舞系",
 "Intelligence": "知力",
 "Intelligence bonus": "知力ボーナス",
@@ -87,7 +87,7 @@ export const JA_STATIC = new Map(Object.entries({
 "The damage reduction applies only to attacks of the chosen target.": "ダメージ軽減は選択した対象からの攻撃にのみ適用されます。",
 "The effect ends after the first Evasion check — remove it manually.": "最初の回避判定の後に効果は終了します — 手動で削除してください。",
 "The target cannot move (no effect on flying creatures).": "対象は移動できません（飛行している対象には効果なし）。",
-"This round the Warleader's songs affect only the chosen side — apply manually.": "このラウンド、ウォーリーダーの鼓咆は選択した側にのみ効果を及ぼします — 手動で適用してください。",
+"This round the Tactician's songs affect only the chosen side — apply manually.": "このラウンド、ウォーリーダーの鼓咆は選択した側にのみ効果を及ぼします — 手動で適用してください。",
 "Vitality": "生命力",
 "Vitality bonus": "生命力ボーナス",
 "Wakes fallen/sleeping allies like [Awaken] — apply manually.": "【アウェイクン】のように、倒れた／眠っている味方を目覚めさせます — 手動で適用してください。",
@@ -335,7 +335,7 @@ export const JA_STATIC = new Map(Object.entries({
 "Target for the next attacks and healing": "次の攻撃と回復の対象",
 "The GM has to confirm the character’s death — the system does not do it automatically.": "キャラクターの死亡はGMが確定してください — システムは自動では行いません。",
 "The Geomancer": "ジオマンサー",
-"The Warleader": "ウォーリーダー",
+"The Tactician": "ウォーリーダー",
 "The background gives level 1 starting classes and the base ability values. “Experience” is what is left for other classes.": "生まれによって1レベルの初期技能と能力値の基本値が決まります。「経験点」は他の技能に使える残りです。",
 "The background gives one of these classes — your choice.": "生まれによって、これらの技能のいずれか1つを得ます — 選択してください。",
 "The card rank sets": "カードのランクが決めるもの",
@@ -462,7 +462,7 @@ export const JA_STATIC = new Map(Object.entries({
 "Abilities": "特殊能力",
 "Acc.": "命中",
 "An attack checked against Evasion; if evaded, it misses.": "回避力で判定する攻撃です。回避されると外れます。",
-"Animals": "動物",
+"Animal": "動物",
 "Any magic damage +N": "魔法ダメージ（全種）+N",
 "Any physical damage +N": "物理ダメージ（全種）+N",
 "Applied manually for N rounds.": "手動でNラウンド適用します。",
@@ -480,11 +480,11 @@ export const JA_STATIC = new Map(Object.entries({
 "Buff": "強化",
 "Can't": "必中",
 "Class:": "分類：",
-"Constructs": "魔法生物",
+"Construct": "魔法生物",
 "Copy texts for translation": "翻訳用テキストをコピー",
 "Could not find the “Level + Name” line — enter it manually": "「レベル＋名前」の行が見つかりません — 手動で入力してください",
 "Create selected": "選択した魔物を作成",
-"Daemons": "魔神",
+"Daemon": "魔神",
 "Def.": "防護",
 "Delete": "削除",
 "Description": "解説",
@@ -495,7 +495,7 @@ export const JA_STATIC = new Map(Object.entries({
 "Earth +N": "土 +N",
 "Energy +N": "純エネルギー +N",
 "Eva.": "回避",
-"Fairies": "妖精",
+"Fairy": "妖精",
 "Fire +N": "炎 +N",
 "Fireball": "火球",
 "Fortitude (bonus)": "生命抵抗力（基本値）",
@@ -504,7 +504,7 @@ export const JA_STATIC = new Map(Object.entries({
 "Habitat": "生息地",
 "Half": "半減",
 "Hit with save (Fortitude, half)": "抵抗付きの攻撃（生命抵抗力、半減）",
-"Humanoids": "人族",
+"Humanoid": "人族",
 "Ice/Water +N": "水・氷 +N",
 "Info / translation": "情報 / 翻訳",
 "Language": "言語",
@@ -517,7 +517,7 @@ export const JA_STATIC = new Map(Object.entries({
 "Mental (Willpower, negates)": "精神効果（精神抵抗力、消滅）",
 "Monster generator": "魔物ジェネレーター",
 "Monsters found:": "見つかった魔物：",
-"Mythical beasts": "幻獣",
+"Mythical Beast": "幻獣",
 "Names, descriptions and ability texts can go through any translator: structure and numbers are not affected.": "名前・解説・特殊能力のテキストは、どの翻訳ツールにかけても構いません。構造と数値は影響を受けません。",
 "Negate": "消滅",
 "New monster": "新しい魔物",
@@ -534,7 +534,7 @@ export const JA_STATIC = new Map(Object.entries({
 "Paste some text.": "テキストを貼り付けてください。",
 "Paste the translated lines here (keep the “N|” numbering)": "翻訳済みの行をここに貼り付けてください（「N|」の番号は残してください）",
 "Perception": "知覚",
-"Plants": "植物",
+"Plant": "植物",
 "Regeneration": "再生",
 "Regeneration (text)": "再生（テキスト）",
 "Reputation": "知名度",
@@ -590,7 +590,608 @@ export const JA_STATIC = new Map(Object.entries({
 "△ preparation": "△ 戦闘準備",
 "► main": "► 主動作",
 "◯ passive": "◯ 常時",
-"🗨 declared": "🗨 宣言"
+"🗨 declared": "🗨 宣言",
+"class lv": "技能Lv",
+"adv. lv": "冒険者Lv",
+"the dual attack penalty is removed": "二刀攻撃のペナルティがなくなる",
+"(text)": "（テキスト）",
+"with any weapon attack": "すべての武器攻撃で",
+"in melee": "近接攻撃で",
+"when shooting or throwing": "射撃・投擲で",
+"with 2H weapons": "2H武器で",
+"in dual attacks": "二刀攻撃で",
+"against poison and disease": "毒・病気に対して",
+"once a day": "1日1回",
+"once an hour": "1時間に1回",
+" (the second may go to another target)": "（2回目は別の対象でもよい）",
+"if the target evaded, another attack with the same weapon at the same target": "回避されたら、同じ武器で同じ対象にもう一度攻撃",
+"after a hit, another attack with the same weapon": "命中したら、同じ武器でもう一度攻撃",
+"attack instead of evading (manual for now)": "回避の代わりに攻撃（現在は手動）",
+"accuracy rolled twice, best kept (manual for now)": "命中力判定を2回行い高い方を採用（現在は手動）",
+"attack and spell in one action (manual for now)": "1回の主動作で攻撃と魔法（現在は手動）",
+" No more than one declared talent per turn.": " 宣言できる特技は1手番に1つまで。",
+" Allows 2 declared talents per turn.": " 1手番に2つまで宣言できる。",
+" (on an ally holding hands)": "（手をつないだ味方に）",
+" (on own mount)": "（自分の騎獣に）",
+"Combat feats": "戦闘特技",
+"A talent was already declared this turn.": "この手番にはすでに特技を宣言しています。",
+" — automatic success (6-6)": " — 自動成功（6ゾロ）",
+" — still an automatic failure": " — 自動失敗のまま",
+"You have no character to build the talent onto.": "特技を作成できる自分のキャラクターがいません。",
+"Talent constructor": "特技ビルダー",
+"Number": "数値",
+"Special": "特殊",
+"what to show on the sheet": "シートに表示する文",
+"Combat feat": "戦闘特技",
+"Racial ability": "種族特徴",
+"Examples:": "例：",
+"How does it work?": "どう働く？",
+"Attack form": "攻撃の形",
+"what happens when declared or pressed": "宣言またはボタンを押したときに起こること",
+"Where does it work?": "どこで働く？",
+"Check name (as on the sheet)": "判定名（シートの表記どおり）",
+"Works in the dual attack. No need to point at another talent.": "二刀攻撃で働きます。ほかの特技を指定する必要はありません。",
+"Shown on the sheet; applied by hand against poison and disease.": "シートに表示されます。毒・病気に対しては手動で適用してください。",
+"On whom:": "対象：",
+"What does it give?": "何が得られる？",
+"another row": "行を追加",
+"Racial growth": "種族の成長",
+"at adventurer level 6 and 11": "冒険者レベル6と11で",
+"More (optional)": "その他（任意）",
+"Check — this is how the system reads it": "確認 — システムはこう解釈します",
+"Folder: ": "フォルダ：",
+"Lasts:": "持続：",
+"this attack": "この攻撃",
+"1 round (until your turn)": "1ラウンド（自分の手番まで）",
+"Turn on": "オンにする",
+"Turn off": "オフにする",
+"MP cost": "消費MP",
+"Limit": "回数制限",
+"While on, no": "有効な間は不可",
+"spells": "魔法",
+"speech": "会話",
+"Button on the check card": "判定カードのボタン",
+"Up to how many targets": "対象数の上限",
+"the second attack may go to another target": "2回目の攻撃は別の対象でもよい",
+"Margin at least": "差の最小値",
+"May stay empty: the attack form does the work.": "空欄でかまいません。攻撃の形が処理します。",
+"Nothing yet.": "まだありません。",
+"Risk": "リスク",
+"a penalty for 1 round after declaring, even on a miss:": "宣言後1ラウンドのペナルティ（外れても適用）：",
+"risk": "リスク",
+"At level 6": "6レベルで",
+"At level 11": "11レベルで",
+"no change": "変化なし",
+"add": "追加",
+"Requirement (text)": "習得条件（テキスト）",
+"Allows 2 declared talents per turn": "1手番に2つまで宣言できる",
+"Drag the racial ability onto a character or into the race compendium.": "種族特徴をキャラクターや種族の辞典にドラッグしてください。",
+"Spellcasting check": "魔法行使判定",
+"Critical value": "C値",
+"Remove the dual attack penalty": "二刀攻撃のペナルティをなくす",
+"Immune to damage…": "ダメージ無効…",
+"Half damage from…": "ダメージ半減…",
+"More damage taken from…": "受けるダメージ増加…",
+"Check base…": "判定の基準…",
+"“After the roll” bonus +N": "「判定後」ボーナス+N",
+"Text only (not automated)": "テキストのみ（自動化なし）",
+"fire": "炎",
+"water/ice": "水・氷",
+"wind": "風",
+"earth": "土",
+"lightning": "雷",
+"energy": "純エネルギー",
+"silver weapons": "銀の武器",
+"the element of origin": "出自の属性",
+"plain number": "固定値",
+"× class level": "× 技能レベル",
+"× ½ class level": "× 技能レベルの½",
+"+ magic power": "+ 魔力",
+"× adventurer level": "× 冒険者レベル",
+"Minor action": "補助動作",
+"Major action": "主動作",
+"Combat preparation": "戦闘準備",
+"No action": "動作不要",
+"◯ Always": "◯ 常時",
+"🗨 Declared": "🗨 宣言",
+"▶ Action": "▶ 動作",
+"⇄ Toggle": "⇄ 切り替え",
+"☀ Use": "☀ 使用",
+"↺ After the roll": "↺ 判定後",
+"Normal attack": "通常の攻撃",
+"bonuses only": "修正のみ",
+"Two attacks": "2回攻撃",
+"one with each weapon": "それぞれの武器で1回ずつ",
+"Several targets": "複数の対象",
+"one accuracy roll, damage to each": "命中力判定は1回、ダメージは対象ごと",
+"Another attack after a miss": "外れたらもう一度攻撃",
+"if the target evaded": "回避されたとき",
+"Another attack after a hit": "命中したらもう一度攻撃",
+"with the same weapon": "同じ武器で",
+"Attack instead of evading": "回避の代わりに攻撃",
+"manual for now": "現在は手動",
+"Two rolls, best": "2回振って高い方",
+"Attack + spell": "攻撃＋魔法",
+"Damage ×2 on a margin": "差があればダメージ2倍",
+"Flip both dice (1↔6, 2↔5, 3↔4)": "2つのダイスの出目を裏返す（1↔6、2↔5、3↔4）",
+"no limit": "制限なし",
+"N times a day": "1日N回",
+"N rounds a day": "1日Nラウンド",
+"any weapon attack": "すべての武器攻撃",
+"melee": "近接攻撃",
+"shooting and throwing": "射撃・投擲",
+"weapon category…": "武器カテゴリ…",
+"2H weapon": "2H武器",
+"dual attack": "二刀攻撃",
+"always, everything": "常時・すべて",
+"always": "常時",
+"while on": "有効な間",
+"a check…": "判定…",
+"self": "自分",
+"an ally holding hands": "手をつないだ味方",
+"own mount": "自分の騎獣",
+"Risky Strike": "捨て身の打撃",
+"Declared before the attack: more damage, worse evasion until your next turn.": "攻撃前に宣言：ダメージが増えるが、次の手番まで回避が下がる。",
+"Risky Strike II": "捨て身の打撃II",
+"Second tier: the first one is hidden automatically, by name.": "第2段階：名前から判断して、第1段階は自動で隠れます。",
+"Precise Strike": "精密打撃",
+"The simplest declared talent: an accuracy bonus.": "いちばん簡単な宣言特技：命中力ボーナスだけ。",
+"Wide Sweep": "大振り",
+"Form “several targets” plus a damage penalty row.": "形「複数の対象」＋ダメージペナルティの行。",
+"Follow-up": "追い打ち",
+"Only the attack form, no rows needed.": "攻撃の形だけで、行は不要。",
+"Two Hands": "両の手",
+"Gives a “two attacks” button with a penalty.": "ペナルティ付きの「2回攻撃」ボタンを与える。",
+"Practiced Combo": "鍛えた連携",
+"Place “dual attack”: it improves “Two Hands” without pointing at it.": "場所「二刀攻撃」：「両の手」を指定しなくても強化する。",
+"Spellblade": "魔法剣",
+"“+ magic power” and a two-row risk.": "「＋魔力」と2行のリスク。",
+"Weapon Mastery": "武器の熟練",
+"A permanent bonus for one weapon category.": "1つの武器カテゴリへの常時ボーナス。",
+"Tough Hide": "頑丈な皮膚",
+"The simplest racial ability: always +N.": "いちばん簡単な種族特徴：常に+N。",
+"Second Form": "第二の姿",
+"A toggle: bonuses only while on, plus a restriction.": "切り替え：有効な間だけのボーナスと制限。",
+"Flight": "飛行",
+"A toggle with a daily budget of rounds.": "1日のラウンド数に上限がある切り替え。",
+"Luck": "幸運",
+"The button appears on the check card.": "ボタンは判定カードに表示されます。",
+"Exchange": "力の交換",
+"A “use” button with a limit; the effect is text.": "回数制限付きの「使用」ボタン。効果はテキスト。",
+"Elemental Ward": "属性への守り",
+"Special rows by damage type.": "ダメージの種類ごとの特殊な行。",
+"Weakness": "弱点",
+"A minus can be a racial ability too.": "マイナスも種族特徴になりえる。",
+"Poison Ward": "毒への耐性",
+"Place “against poison and disease” (bonus applied by hand).": "場所「毒・病気に対して」（ボーナスは手動で適用）。",
+"Works by itself while the talent is there.": "特技を持っている間、自動で働く。",
+"A checkbox before the accuracy roll.": "命中力判定の前のチェックボックス。",
+"Its own button on the sheet.": "シートに専用ボタン。",
+"Works by itself.": "自動で働く。",
+"A form: its bonuses while it is on.": "変身：有効な間だけのボーナス。",
+"A sheet button with a limit.": "回数制限付きのシートのボタン。",
+"A button on the roll card.": "判定カードのボタン。",
+"Dual attack: needs [Dual Wielding] and two equipped 1H weapons with Min STR 20 or less.": "二刀攻撃：二刀流の特技と、必要筋力20以下の1H武器を2つ装備している必要があります。",
+"Dual attack: two targets at most.": "二刀攻撃：対象は2体まで。",
+"Dual attack: pick one target (both attacks go to the same target).": "二刀攻撃：対象を1体選んでください（2回とも同じ対象を攻撃します）。",
+"Each hit: its own evasion and Defense.": "命中ごとに回避と防護点を個別に処理。",
+"Apply damage (all hits)": "ダメージ適用（全命中）",
+"Dual attack": "二刀攻撃",
+"The target has not rolled evasion against every attack yet.": "対象はまだすべての攻撃に対して回避を振っていません。",
+"No hits": "命中なし",
+"another attack": "追加攻撃",
+"Another attack": "もう一度攻撃",
+", ": "、",
+".": "。",
+"turned on with a minor action": "補助動作でオンにできる",
+"spend HP, gain as much MP": "HPを消費し、同じだけMPを得る",
+"the same for an ally holding hands": "手をつないだ味方にも同じ効果",
+"Per shard: +5 max HP and +1 max MP. Fortitude and Willpower: +1 (1–5), +2 (6–10), +3 (11–15), +4 (16+). Once defeated, the shards are “always” loot.": "かけら1個につき最大HP+5、最大MP+1。生命抵抗力と精神抵抗力：+1（1〜5個）、+2（6〜10個）、+3（11〜15個）、+4（16個以上）。倒されると、かけらは「自動」の戦利品になります。",
+"Sword Shards": "剣のかけら",
+"Multi-section monster: spread the HP and MP as you like.": "複数部位の魔物：HPとMPを自由に配分してください。",
+"Apply": "適用",
+"Shards": "かけら",
+"silver": "銀",
+"Silvered Weapon.": "銀製。",
+"Magic Weapon +1: Accuracy +1, Extra Damage +1.": "魔法の武器+1：命中+1、追加ダメージ+1。",
+"Magic Armor +1: Defense +1.": "魔法の鎧+1：防護点+1。",
+"Bulletproofed": "防弾",
+"Bulletproof Armor: Gun and Magic Arrow/Quarrel damage is reduced by the armor's Defense, 6 times (repair at the Institute Of Magitechnology).": "防弾加工：銃弾と魔法の矢のダメージを鎧の防護点で軽減、6回まで（修理は魔動機術研究所）。",
+"when carried": "所持中",
+"when equipped": "装備中",
+"[manual]": "［手動］",
+"Upgrades": "強化",
+"You don't own this item.": "このアイテムの所有者ではありません。",
+"not set": "未決定",
+"— none —": "— なし —",
+"Abyss Curse…": "呪い…",
+"Roll 2d on the Abyss Curse Table": "アビスカース表を2dで振る",
+"Workshop": "工房",
+"rank": "ランク",
+"Custom-Forged: Minimum Strength": "オーダーメイド：必要筋力",
+"not for guns": "ガンは不可",
+"Silvered Weapon": "銀製",
+"Magic Weapon +1: Accuracy and Extra Damage +1": "魔法の武器+1：命中と追加ダメージ+1",
+"Fairy Weapon": "妖精の武器",
+"per type": "属性ごと",
+"Magic Armor +1: Defense +1": "魔法の鎧+1：防護点+1",
+"Bulletproof Armor": "防弾加工",
+"Shields: Abyss Enhancement only.": "盾：アビス強化のみ。",
+"Abyss Enhancement": "アビス強化",
+"each; Abyss Shards 3, the second one 6": "各回；シャード3個、2回目は6個",
+"Up to two different ones. Each has a curse: roll 2d or pick it. Pick the category and type for the curse from the tables (p. 256).": "異なるものを2つまで。各強化に呪いが付く：2dで振るか選ぶ。呪いの分類・属性は表（256頁）から選択。",
+"Price, name and fields change; «Apply» with everything empty removes it all.": "価格・名前・数値が変わります。全て空で「適用」すると全解除。",
+"The two Abyss Enhancements must differ.": "2つのアビス強化は異なる必要があります。",
+"Every Abyss Enhancement needs an Abyss Curse.": "各アビス強化には呪いが必要です。",
+"Same curse twice — reroll it.": "同じ呪いが2つ — 振り直してください。",
+"the remaining combat feats": "残りの戦闘特技",
+"languages": "言語",
+"buying equipment": "装備の購入",
+"class spells": "技能の魔法",
+"abyss shards": "アビスシャード",
+"Creation": "作成",
+"Normal (levels 1–2, 1200 G)": "通常（レベル1～2、1200G）",
+"exp": "経験点",
+"Now": "現在",
+"Growth": "成長",
+"Skip": "スキップ",
+"major (A)": "メイン（A）",
+"minor (B)": "サブ（B）",
+"Exp table": "経験点表",
+"can't see the target −4": "対象が見えない −4",
+"can't see the attacker −4": "攻撃者が見えない −4",
+"Barbarous": "蛮族",
+"Water/ice": "水・氷",
+"Lightning": "雷",
+"Slashing": "斬撃",
+"Bludgeoning": "打撃",
+"Poison": "毒",
+"Disease": "病気",
+"Curse": "呪い",
+"Psychic": "精神効果",
+"Accuracy +1": "命中+1",
+"Extra Damage +1": "追加ダメージ+1",
+"Minimum Strength −2": "必要筋力−2",
+"Critical Threshold −1 (minimum 8)": "クリティカル値−1（最低8）",
+"Extra Damage +2 to a Specific Category of Monsters": "特定分類へのダメージ+2",
+"Extra Damage +1 by a Specific Type": "特定属性のダメージ+1",
+"Spellcasting check Success Value +1 (magical implement: Truespeech / Spiritualism)": "行使判定+1（発動体として：真語・操霊魔法）",
+"Spell Damage +1 (magical implement, «Duration: Instant»)": "魔法ダメージ+1（発動体として、一瞬の魔法）",
+"Spell Restoration +1 («Duration: Instant»)": "回復魔法+1点（一瞬の魔法）",
+"Defense +1": "防護点+1",
+"Magic Damage −1": "魔法ダメージ−1",
+"Defense +2 against a Specific Category of Monsters": "特定分類に対し防護点+2",
+"Physical and Magic Damage of a Specific Type −2": "特定属性のダメージ−2",
+"Check Package Enhancement (+1)": "パッケージ判定+1",
+"Evasion +1": "回避+1",
+"Of Self-Harm": "自傷",
+"A critical hit with it: −5 HP to yourself.": "この武器でクリティカル：自分のHP−5。",
+"Of Lamentation": "嘆き",
+"Foes near or long tension: only «Range: Caster» and «Range: Touch» targets.": "敵が近い・緊張下：対象は「術者」「接触」のみ。",
+"Of Kindness": "優しさ",
+"Against a hostile target whose HP is reduced: −2 to Accuracy and Spellcasting checks.": "傷ついた敵に：命中と行使判定−2。",
+"Of Discrimination": "差別",
+"Damage dealt to a monster classification −2 (Classification Table roll).": "特定分類へのダメージ−2（分類表で決定）。",
+"Vulnerable": "脆弱",
+"Magic damage taken +1.": "受ける魔法ダメージ+1。",
+"Reckless": "無謀",
+"Defense −2.": "防護点−2。",
+"Heavy": "重さ",
+"The item's Minimum Strength +2.": "この品の必要筋力+2。",
+"Difficult": "難しさ",
+"On power tables, ③–④ count as 0.": "威力表の出目3～4は0扱い。",
+"Wimp": "意志薄弱",
+"Willpower −1.": "精神抵抗−1。",
+"Weak": "虚弱",
+"Fortitude −1.": "生命抵抗−1。",
+"Sensitive": "敏感",
+"Damage of a type taken +2 (Type Determination Table roll).": "特定属性のダメージ+2（属性表で決定）。",
+"Hilarious": "陽気",
+"Failed Willpower check: −1 to action checks until the end of the next turn, stacks.": "精神抵抗失敗：次の手番終了まで行為判定−1、累積。",
+"Stuttering": "吃音",
+"Spellcasting checks −1.": "行使判定−1。",
+"Proxy": "代弁者",
+"Speaks only Arcana; no Fairy Magic or Magitech.": "魔法文明語しか話せず、妖精魔法・魔動機術は使えない。",
+"No Charities": "無慈悲",
+"Accepted «Resistance: Optional» in combat: Fortitude and Willpower −2 until your next turn.": "戦闘中「抵抗：任意」を受け入れた：手番まで生命・精神抵抗−2。",
+"Near Death": "死の淵",
+"Death Check: penalty = Adventurer Level.": "生死判定：冒険者レベル分のペナルティ。",
+"Stylish": "派手好み",
+"10% of any income goes to decorating the item.": "収入の10%をこの品の装飾に使う。",
+"Mana Draining": "魔力吸収",
+"MP cost +1 for spells and techniques.": "魔法・技の消費MP+1。",
+"Slow": "鈍足",
+"Movement halved (round up).": "移動力半減（切り上げ）。",
+"Undefined": "不確か",
+"Turn start, 1 on 1d: no «Targeting» or the combat feats that require it.": "手番開始時1dで1：《ターゲッティング》とそれ前提の特技なし。",
+"Of Confusion": "混乱",
+"Turn start, 1 on 1d: «Touch» target is random in the same position.": "手番開始時1dで1：「接触」の対象は同じ位置からランダム。",
+"Foot Tangling": "足もつれ",
+"Turn start, 1 on 1d: falls prone, can't stand this turn.": "手番開始時1dで1：転倒、その手番は起き上がれない。",
+"Slippery": "滑り",
+"Turn start, 1 on 1d: drops everything held.": "手番開始時1dで1：手に持つ物を全て落とす。",
+"Stinking": "悪臭",
+"Hide checks −2, Adventurer Rank one lower.": "隠密−2、冒険者ランク1つ下扱い。",
+"Disgusting": "醜悪",
+"Sells for ¼ price, Adventurer Rank one lower.": "売値は¼、冒険者ランク1つ下扱い。",
+"Buzzing": "羽音",
+"Hide and Danger Sense checks −4.": "隠密と危険感知−4。",
+"Soggy": "湿気",
+"Extra Damage −1 (weapon) or Defense −1 (armor, shield); Fortitude and Willpower −4 against disease.": "追加ダメージ−1（武器）または防護点−1（鎧・盾）；病気に対する生命・精神抵抗−4。",
+"Of Old Wounds": "古傷",
+"Any HP recovery −1.": "HP回復量−1。",
+"Dazzling": "眩しさ",
+"Always −1 for poor visibility.": "常に視界不良−1。",
+"Fameless": "無名",
+"Once a day an automatic success doesn't count — reroll 2d.": "1日1回、自動成功が無効 — 2dを振り直す。",
+"Honest": "正直",
+"−4 against Detect checks on lies.": "嘘を見抜く判定に対し−4。",
+"Motion Sick": "乗り物酔い",
+"Travelled not on foot over 10 minutes: −1 to action checks for 1 hour.": "10分以上運ばれた：1時間行為判定−1。",
+"Hater of Nature": "自然嫌い",
+"In a natural environment action checks −1.": "自然環境で行為判定−1。",
+"Can’t Wait": "浪費癖",
+"Each day — Adventurer Level ×10 G on hobbies, or max HP and MP −Adventurer Level.": "毎日レベル×10Gを趣味に、払えなければ最大HP・MP−レベル。",
+"Clinging": "執着",
+"While this weapon is not equipped: Accuracy and Spellcasting −4; while this armor (shield) is not worn: Evasion −4.": "この武器を装備していない間：命中力判定と行使判定−4。この鎧（盾）を装備していない間：回避力判定−4。",
+"Gullible": "お人好し",
+"Always skips Combat Preparation.": "常に戦闘準備を行えない。",
+"Get": "取得",
+"No disgrace.": "不名誉なし。",
+"Mark of dishonour": "不名誉称号",
+"prevented by the rank": "ランクで防止",
+"Disgrace": "不名誉点",
+"Ranks are bought with reputation, several at once is fine. «Free» — famous items up to this reputation cost need no reputation. Loan — the Guild's advance limit.": "ランクは名誉点で取得、一度に複数可。「無料」— この名誉点以下の名誉アイテムは名誉点不要。前借り — ギルドの貸付上限。",
+"Reputation (total)": "名誉点（累計）",
+"Free": "無料",
+"Loan": "前借り",
+"Disgrace +N": "不名誉点+N",
+"Pay off with reputation": "名誉点で相殺",
+"Lower the rank": "ランク降格",
+"Not enough reputation.": "名誉点が足りません。",
+"from the stone": "魔晶石から",
+"points in a full stone": "魔晶石の点数",
+"Mako Stone": "魔晶石",
+"Pay": "支払う",
+"No stone": "使わない",
+"0 (breaks)": "0（砕ける）",
+"Disgrace: Guild surcharge": "不名誉：ギルドの割増",
+"None": "なし",
+"Dagger": "ダガー",
+"Rapier": "レイピア",
+"Broadsword": "ブロードソード",
+"Greatsword": "グレートソード",
+"Flamberge": "フランベルジュ",
+"Guardian": "センチネル",
+"Hyperion": "ハイペリオン",
+"Sword of Creation": "始まりの剣",
+"Sword of Creation★": "始まりの剣★",
+"Sword of Creation★2": "始まりの剣★2",
+"Sword of Creation★3": "始まりの剣★3",
+"Goblin Nuisance": "ゴブリン級の厄介者",
+"item purchase and service prices +10%": "物品・サービス価格+10%",
+"Bolg Hazard": "ボルグ級の危険人物",
+"prices +20%": "価格+20%",
+"Ogre Outcast": "オーガ級のはぐれ者",
+"prices +50%": "価格+50%",
+"Troll Extreme Evil": "トロール級の極悪人",
+"prices ×2": "価格×2",
+"Drake Enemy of Humanoids": "ドレイク級の人族の敵",
+"prices ×5": "価格×5",
+"Barbarous King World Breaker": "蛮王級の世界の破壊者",
+"Guild services suspended": "ギルドの利用停止",
+"lv": "Lv",
+"Golems": "ゴーレム",
+"Familiar (Truespeech)": "ファミリア（真語魔法）",
+"Another creature (drag it)": "その他のクリーチャー（ドラッグ）",
+"Creature: found by name in the world and the compendiums. You can drop your own here.": "クリーチャー：ワールドとコンペンディウムから名前で検索。ここに直接ドロップも可。",
+"MP already paid (the spell was cast separately)": "MP支払い済み（魔法は別途行使）",
+"Take the normal material from the inventory": "通常素材を所持品から消費",
+"One familiar per master. No HP of its own: damage goes to the master. Casting takes 1 hour.": "主人1人につきファミリア1体。HPを持たず、ダメージは主人へ。行使に1時間。",
+"Drop a creature. No MP is spent.": "クリーチャーをドロップ。MPは消費しない。",
+"Dismiss all": "全て解除",
+"not found — drop one": "見つからない — ドロップしてください",
+"Creature not found: drop it into the window.": "クリーチャーが見つかりません：ウィンドウにドロップしてください。",
+"Put the creator's token on the scene.": "作成者のトークンをシーンに置いてください。",
+"creates": "が作成",
+"Creations": "作成物",
+"Dismiss": "解除",
+"Familiar MP": "ファミリアのMP",
+"Own MP only": "自分のMPのみ",
+"Oak Golem": "オークゴーレム",
+"Enchanted Oak Branch": "魔化した樫の枝",
+"Oak Hound": "オークハウンド",
+"Straw Bird": "ストローバード",
+"Enchanted Straw Bundle": "魔化した藁束",
+"Loam Puppet": "ロームパペット",
+"Enchanted Clay": "魔化した粘土",
+"Bone Animal": "ボーンアニマル",
+"Enchanted Animal Bones": "魔化した獣骨",
+"Leather Fish": "レザーフィッシュ",
+"Enchanted Leather": "魔化した革",
+"Flabby Golem": "フレッシュゴーレム",
+"Enchanted Flesh": "魔化した肉",
+"Stone Servant": "ストーンサーヴァント",
+"Enchanted Stone": "魔化した石",
+"Brasswing": "ブラスウイング",
+"Enchanted Brass": "魔化した真鍮",
+"Scale Flipper": "スケイルフリッパー",
+"Enchanted Rock Slag": "魔化した鉱滓",
+"Rock Golem": "ロックゴーレム",
+"Enchanted Rock": "魔化した岩",
+"Bronze Golem": "ブロンズゴーレム",
+"Enchanted Bronze": "魔化した青銅",
+"Rutile Raptor": "ルチルラプター",
+"Enchanted Golden Redstone": "魔化した金紅石",
+"Iron Golem": "アイアンゴーレム",
+"Enchanted Iron": "魔化した鉄",
+"Granite Shell": "グラナイトシェル",
+"Enchanted Granite": "魔化した花崗岩",
+"Platinum Dragon": "プラチナドラゴン",
+"Enchanted Platinum": "魔化した白金",
+"Skeleton": "スケルトン",
+"Skeletonized Corpse": "白骨死体",
+"Zombie": "ゾンビ",
+"Corpse": "死体",
+"Dry Corpse": "干からびた死体",
+"Skeleton Archer": "スケルトンアーチャー",
+"Skeleton Soldier": "スケルトンソルジャー",
+"Skeleton Guardian": "スケルトンガーディアン",
+"Magical Bones": "魔法の骨",
+"Frog": "カエル",
+"Spider": "クモ",
+"Bird": "鳥",
+"Cat": "猫",
+"Snake": "ヘビ",
+"Familiar": "ファミリア",
+"Familiar II": "ファミリアII",
+"The creature is found by name in the world and the compendiums. Not there? Make it first in the «Monster generator» (or load it from ytsheet) and drop it here.": "クリーチャーはワールドとコンペンディウムから名前で検索されます。無ければ先に「モンスタージェネレーター」で作成（またはゆとシートから読み込み）し、ここにドロップしてください。",
+"The same item twice has no effect.": "同じアイテムを2つ使っても効果はありません。",
+"Enhancement items": "強化パーツ",
+"No «Golem Enhancing Items» compendium: build the starter compendiums.": "「ゴーレム強化パーツ」コンペンディウムがありません：スターターコンペンディウムを作成してください。",
+"A copy of the monster is made with the chosen items. The template is not changed.": "選んだパーツ付きのモンスターのコピーを作成します。元データは変わりません。",
+"Size": "サイズ",
+"Maximum": "最大",
+"Diffuser element": "ディフューザーの属性",
+"Make a copy": "コピーを作成",
+"No fitting items in the inventory.": "所持品に合うパーツがありません。",
+"Enhance golem": "ゴーレム強化",
+"Classes, skill checks, racial abilities, Enhancer techniques and Golem Enhancing Items — names and numbers only, no rulebook text. The character wizard and the sheets use them. The guide “SW25: how to make items and abilities” is built with them.": "技能、判定、種族特徴、練技、ゴーレム強化パーツ — 名前と数値のみで、ルールブックの文章は含みません。キャラクター作成とシートが使用します。ガイド「SW25: アイテムと能力の作り方」も一緒に作成されます。",
+"small": "小",
+"medium": "中",
+"large": "大",
+"New": "新規",
+"new compendium": "新しいコンペンディウム",
+"SW25: new starter data": "SW25：スターターデータの追加",
+"This version of the system has entries the compendiums of this world do not have:": "このバージョンのシステムには、このワールドのコンペンディウムにない項目があります：",
+"«Add what's new» — the new entries go separately, the old compendiums are not touched. «Rebuild all» — the starter compendiums are made again, edits inside them are lost.": "「新規分を追加」— 新しい項目は別に追加され、既存のコンペンディウムは変更されません。「すべて再作成」— スターターコンペンディウムを作り直します。中の編集は失われます。",
+"Add what's new": "新規分を追加",
+"Rebuild all": "すべて再作成",
+"Later": "後で",
+"The «SW25: …» starter compendiums are built by the system and <b>rebuilt on updates</b>: their data may change in future versions.": "「SW25: …」スターターコンペンディウムはシステムが作成し、<b>更新時に作り直されます</b>：今後のバージョンで内容が変わる場合があります。",
+"Please don't edit them — the edits would be lost. Need your own version of an item — drag it into the world or your own compendium and edit it there.": "編集しないでください — 編集内容は失われます。独自のアイテムが必要な場合は、ワールドまたはご自身のコンペンディウムにドラッグして、そちらで編集してください。",
+"Got it": "了解",
+"Disruptor type": "ディスラプターの属性",
+"Enhancing Items": "強化パーツ",
+"Water/Ice": "水・氷",
+"Broad Sword": "ブロードソード",
+"Great Sword": "グレートソード",
+"Sentinel": "センチネル",
+"Sword of Genesis": "始まりの剣",
+"Sword of Genesis★": "始まりの剣★",
+"Sword of Genesis★2": "始まりの剣★2",
+"Sword of Genesis★3": "始まりの剣★3",
+"Silvered": "銀",
+"Servant": "命令を聞く",
+"Instructed": "命令による",
+"Various": "さまざま",
+"Style": "攻撃方法",
+"(no name)": "（名前なし）",
+"Reputation / Weak point": "知名度／弱点値",
+"Unique skills": "特殊能力",
+"Book golem:": "ルールブックのゴーレム：",
+"— golem preset —": "— ゴーレムのひな形 —",
+"Conjurer": "コンジャラー",
+"Book name (the «Creations» window finds it by that), level, type Construct, common golem data and skills. Enter the numbers or paste the book text above.": "ルールブックの名前（「作成物」ウィンドウはこの名前で探します）、レベル、分類「魔法生物」、ゴーレム共通のデータと特殊能力。数値は自分で入力するか、上にルールブックの文章を貼り付けてください。",
+"Poison Immunity": "毒無効",
+"Disease Immunity": "病気無効",
+"Psychic Immunity": "精神効果無効",
+"Can be Detected": "魔法で感知される",
+"Artificial": "人造",
+"Knowledge = Conjurer class": "知識＝コンジャラー技能",
+"No damage or effects of poison.": "毒のダメージと効果を受けない。",
+"No damage or effects of disease.": "病気のダメージと効果を受けない。",
+"No psychic damage or effects.": "精神効果のダメージと効果を受けない。",
+"Found by magic-detecting spells.": "魔法を感知する魔法で見つかる。",
+"Healed only by what restores constructs.": "魔法生物のHPを回復する手段でのみ回復する。",
+"A Conjurer knows it automatically; the weak point needs a Sage roll.": "コンジャラーは自動で知る。弱点はセージの判定が必要。",
+" — automatic failure (1-1)": " — 自動的失敗（1ゾロ）",
+"Disgrace raises the Guild's prices (CR II p. 119)": "不名誉点はギルドの価格を上げる（CR II p.119）",
+"Buying at the Guild (disgrace surcharge)": "ギルドで購入（不名誉による割増）",
+"To pay": "支払額",
+"You pay only for what is added; nothing is refunded for what is removed.": "支払うのは追加分のみ。外した分の払い戻しはありません。",
+"Upgrade": "強化する",
+"the Guild refuses (disgrace)": "ギルドが応じない（不名誉）",
+"The smith failed — the money was refunded.": "鍛冶屋が失敗しました。代金は返金されました。",
+"Smithy": "鍛冶屋",
+"Paid": "支払い",
+"Upgrading at the Guild (disgrace surcharge)": "ギルドで強化（不名誉による割増）",
+"Drag a weapon or armor here from your sheet": "キャラクターシートから武器か防具をここにドラッグ",
+"The item stays with the character; the smith changes it and takes the book price (CR II pp. 241–257).": "アイテムはキャラクターの手元に残り、鍛冶屋がルールブックの価格で強化します（CR II p.241–257）。",
+"The smith only takes weapons and armor.": "鍛冶屋は武器と防具だけを扱います。",
+"Drag the item from a character sheet (the smith upgrades an owner's things).": "キャラクターシートからアイテムをドラッグしてください（鍛冶屋は持ち主の品を強化します）。",
+"No golem enhancing items: make them in the item constructor («Golem part»).": "ゴーレム強化パーツがありません。アイテムビルダー（「ゴーレムパーツ」）で作成してください。",
+"Golem parts": "ゴーレムパーツ",
+"Tick what the upgrade is for (weapon, armor, shield).": "強化の対象（武器・鎧・盾）にチェックを入れてください。",
+"Abyss": "アビス",
+"Abyss curses": "アビスカース",
+"Item field changes (± to the numbers)": "アイテムの数値の変更（±）",
+"Golem ability": "ゴーレムの能力",
+"empty — same as the name": "空欄なら名前と同じ",
+"Ability kind": "能力の種類",
+"HP +": "HP＋",
+"Accuracy +": "命中＋",
+"Magic damage −": "魔法ダメージ−",
+"Movement +": "移動力＋",
+"Needs the item (name)": "前提アイテム（名前）",
+"replaces its ability": "その能力を置き換える",
+"no weak point": "弱点なし",
+"element on creation": "作成時に属性を選ぶ",
+"Applies to": "対象",
+"Tag in the name": "名前に付ける印",
+"e.g. Silvered": "例：銀",
+"Abyss enhancement (needs a curse)": "アビス強化（呪いが必要）",
+"Number (2d: 11–66)": "番号（2d：11〜66）",
+"When it works": "効果がある時",
+"Text (what it does)": "テキスト（効果）",
+"Bonuses and penalties to the character while the item is equipped (a curse: per «When it works»).": "アイテム装備中のキャラクターへの修正（呪いは「効果がある時」に従う）。",
+"Golem parts use the fields above; bonus rows are not used.": "ゴーレムパーツは上の欄の数値を使い、修正の行は使いません。",
+"Creation (golem, undead, familiar)": "作成物（ゴーレム・アンデッド・使い魔）",
+"A template for the «Creations» window on a character sheet: numbers from your rulebook.": "キャラクターシートの「作成物」ウィンドウ用のひな形。数値はお手元のルールブックから。",
+"Classes, skill checks, racial abilities and Enhancer techniques — names and numbers only, no rulebook text. The character wizard and the sheets use them. The guide “SW25: how to make items and abilities” is built with them.": "技能・判定・種族特徴・練技 — 名前と数値のみで、ルールブックの文章は含みません。キャラクター作成ウィザードとシートが使います。ガイド「SW25：アイテムと能力の作り方」も一緒に作成されます。",
+"No creation templates. The GM makes them in the «Monster generator» (section «Creation») or marks a monster with the «Creation» button on its sheet.": "作成物のひな形がありません。GMが「モンスタージェネレーター」（「作成物」欄）で作るか、モンスターシートの「作成物」ボタンで指定します。",
+"Familiars": "使い魔",
+", consumed": "、消費",
+"One familiar per master. No HP of its own: damage goes to the master.": "使い魔は主人1人に1体。自分のHPはなく、ダメージは主人が受けます。",
+"Conjurer level": "コンジャラーのレベル",
+"Material": "素材",
+"or": "または",
+"material is consumed": "素材を消費する",
+"Enhancing items, max": "強化パーツの上限",
+"Item size": "パーツのサイズ",
+"A template for the «Creations» window on a character sheet. The numbers come from your rulebook.": "キャラクターシートの「作成物」ウィンドウ用のひな形です。数値はお手元のルールブックから。",
+"Accuracy and Extra Damage": "命中と追加ダメージ",
+"Magic enhancement": "魔法の強化",
+"no price set": "価格未設定",
+"No upgrade items: the GM makes them in the item constructor («Upgrade»).": "強化アイテムがありません。GMがアイテムビルダー（「強化」）で作成します。",
+"Up to two different ones. Each has a curse: roll 2d or pick it.": "異なるものを2つまで。それぞれ呪いが付きます：2dを振るか選択。",
+"No Abyss enhancements: make them in the item constructor.": "アビス強化がありません。アイテムビルダーで作成してください。",
+"no price set by the GM": "GMが価格を設定していません",
+"No curses: make them in the item constructor.": "呪いがありません。アイテムビルダーで作成してください。",
+"The GM has not set the price of this upgrade (system settings: «Smithy»).": "GMがこの強化の価格を設定していません（システム設定：「鍛冶屋」）。",
+"The item stays with the character; the smith makes it +1 or +2 for the price the GM has set.": "アイテムはキャラクターの手元に残り、鍛冶屋がGMの設定した価格で+1か+2にします。",
+"The price from your rulebook. 0 — the smith doesn't do it.": "お手元のルールブックの価格。0なら鍛冶屋は扱いません。",
+"Smithy: weapon +1, G": "鍛冶屋：武器+1、G",
+"Smithy: weapon +2, G": "鍛冶屋：武器+2、G",
+"Smithy: armor and shield +1, G": "鍛冶屋：鎧・盾+1、G",
+"Smithy: armor and shield +2, G": "鍛冶屋：鎧・盾+2、G",
+"Abyss curse": "アビスカース",
+"Golem part": "ゴーレムパーツ",
+"— not a creation —": "— 作成物ではない —",
+"Golem": "ゴーレム",
+"► main action": "► 主動作",
+"△ setup": "△ 戦闘準備",
+"while equipped": "装備中",
+"while carried (even in a bag)": "所持中（袋の中でも）",
+"while NOT in use": "装備していない間",
+"Extra damage": "追加ダメージ",
+"weapon": "武器",
+"armor": "鎧",
+"shield": "盾",
+"Up to two different ones, each paid separately. The curse is rolled on 2d.": "異なるものを2つまで、それぞれ別に支払います。アビスカースは2dで決定します。",
+"What the item already has stays; you pay only for what is new.": "すでに施されている加工はそのまま残り、新しく加える分だけ支払います。",
+"The item stays with the character. The smith makes +1 / +2 for the GM's price and any upgrade or Abyss enhancement that has a price.": "アイテムはキャラクターの手元に残ります。鍛冶屋はGMが決めた価格で+1/+2を、価格のある加工やアビス強化も施します。",
+"only when buying (the smithy won't add it to an owned item)": "購入時のみ（所持品には鍛冶屋で追加できない）"
 }));
 export const JA_TPL = [
 [
@@ -1104,5 +1705,485 @@ export const JA_TPL = [
 [
 "lv. ${m[1]}",
 "Lv.${m[1]}"
+],
+[
+"immune to damage from ${}",
+"${}によるダメージを受けない"
+],
+[
+"half damage from ${}",
+"${}によるダメージを半減"
+],
+[
+"damage from ${} +${}",
+"${}によるダメージ+${}"
+],
+[
+"check = adventurer level + ${} bonus",
+"判定＝冒険者レベル＋${}ボーナス"
+],
+[
+"+${} to the result",
+"達成値+${}"
+],
+[
+"with ${} weapons",
+"〈${}〉の武器で"
+],
+[
+"for the “${}” check",
+"「${}」判定に"
+],
+[
+"${} times a day",
+"1日${}回"
+],
+[
+"up to ${} rounds a day",
+"1日${}ラウンドまで"
+],
+[
+"two attacks, one with each weapon${}",
+"それぞれの武器で1回ずつ、計2回攻撃${}"
+],
+[
+"one accuracy roll against ${} targets, damage to each",
+"1回の命中力判定で${}体まで攻撃し、ダメージは対象ごと"
+],
+[
+"damage ×2 on a margin of ${}+ (manual for now)",
+"${}以上の差で命中したらダメージ2倍（現在は手動）"
+],
+[
+"Before the accuracy roll${} ${} may be declared.",
+"命中力判定の前に${}、${}を宣言できる。"
+],
+[
+" Until the next turn: ${}.",
+" 次の手番開始まで：${}。"
+],
+[
+" For this attack: ${}.",
+" この攻撃に：${}。"
+],
+[
+" Risk for 1 round: ${}.",
+" リスク（1ラウンド）：${}。"
+],
+[
+" In these attacks: ${}.",
+" これらの攻撃で：${}。"
+],
+[
+" Requires: ${}.",
+" 習得条件：${}。"
+],
+[
+" While on: no ${}.",
+" 有効な間：${}不可。"
+],
+[
+", ${} MP",
+"、MP${}"
+],
+[
+", −${} MP",
+"、MP−${}"
+],
+[
+" From level 6: ${}.",
+" 6レベル以降：${}。"
+],
+[
+" From level 11: ${}.",
+" 11レベル以降：${}。"
+],
+[
+"lv ${}+",
+"Lv${}以上"
+],
+[
+"You may declare: ${}",
+"宣言できる数：${}"
+],
+[
+"${}: declare a talent?",
+"${}：特技を宣言しますか？"
+],
+[
+"Risk: ${}",
+"リスク：${}"
+],
+[
+"Not enough MP (${} of ${}).",
+"MPが足りません（${}／${}）。"
+],
+[
+"Turned off (${}).",
+"オフにしました（${}）。"
+],
+[
+"Tier ${}: lower tiers of “${}” stop counting.",
+"段階${}：「${}」の下位段階は効果を失います。"
+],
+[
+"${}: no spells while it is on.",
+"${}：有効な間は魔法を使えません。"
+],
+[
+"No more than ${} targets.",
+"対象は${}体までです。"
+],
+[
+"While the character has ${}: ${}.",
+"${}を持っている間：${}。"
+],
+[
+"A sheet button ${}: ${}.",
+"シートのボタン${}：${}。"
+],
+[
+"Always ${}: ${}.",
+"常時 ${}：${}。"
+],
+[
+"Always: ${}.",
+"常時：${}。"
+],
+[
+"Toggle ${}: on — ${}, off — ${}. While on${}: ${}.",
+"切り替え${}：オン — ${}、オフ — ${}。有効な間${}：${}。"
+],
+[
+"Button ${} (${})${}: ${}.",
+"ボタン${}（${}）${}：${}。"
+],
+[
+"On the character's check cards, a button ${}: ${}.",
+"このキャラクターの判定カードにボタン${}：${}。"
+],
+[
+"Turned on (${}).",
+"オンにしました（${}）。"
+],
+[
+"dual attack ${}",
+"二刀攻撃 ${}"
+],
+[
+"While the character has ${}, ${}: ${}.",
+"${}を持っている間、${}：${}。"
+],
+[
+"Sword Shards ×${}",
+"剣のかけら×${}"
+],
+[
+"${}: Sword Shards",
+"${}：剣のかけら"
+],
+[
+"Fortitude and Willpower +${}",
+"生命抵抗力・精神抵抗力+${}"
+],
+[
+"Spread: HP ${} of ${}, MP ${} of ${}.",
+"配分：HP ${}／${}、MP ${}／${}。"
+],
+[
+"${}: ${} Sword Shards.",
+"${}：剣のかけら${}個。"
+],
+[
+"${}: shards removed.",
+"${}：剣のかけらを外しました。"
+],
+[
+"Sword Shard (200G/-) x${}",
+"剣のかけら（200G）x${}"
+],
+[
+"Custom-Forged: Minimum Strength ${}, Power as well.",
+"オーダーメイド：必要筋力${}、威力も同じだけ。"
+],
+[
+"Fairy (${})",
+"妖精：${}"
+],
+[
+"Fairy Weapon: damage type by password (Minor Action) — ${}.",
+"妖精の武器：合言葉（補助動作）で属性付与 — ${}。"
+],
+[
+"Abyss ${}: ${}.",
+"アビス強化${}：${}。"
+],
+[
+"Abyss Curse «${}» (${}): ${}",
+"呪い「${}」（${}）：${}"
+],
+[
+"Abyss Shards: ${}.",
+"アビスシャード：${}。"
+],
+[
+"${}: curse (carried)",
+"${}：呪い（所持）"
+],
+[
+"${}: upgrades",
+"${}：強化"
+],
+[
+"${}: Abyss curse",
+"${}：アビスカース"
+],
+[
+"Curse ${} is already there — rerolling.",
+"呪い${}は既にある — 振り直し。"
+],
+[
+"${} G per point, power follows",
+"1点ごとに${}G、威力も連動"
+],
+[
+"${}: upgrades applied.",
+"${}：強化を適用しました。"
+],
+[
+"Combat feats: ${} of ${}.",
+"戦闘特技：${}／${}。"
+],
+[
+"Next, by hand: ${}.",
+"この後は手動で：${}。"
+],
+[
+"High level: ${}",
+"高レベル：${}"
+],
+[
+"Character creation · ability growth (${})",
+"キャラクター作成・能力値成長（${}）"
+],
+[
+"Spread ${} growths over the abilities. The book's “average growth” scheme is filled in: most to the highest one.",
+"成長${}回を能力値に振り分けます。ルールブックの「平均的な成長」を入力済み：最も高い能力値に多く。"
+],
+[
+"${} of ${} spread.",
+"${}／${}を振り分け済み。"
+],
+[
+"Character creation · combat feats (${})",
+"キャラクター作成・戦闘特技（${}）"
+],
+[
+"Slots: ${} (one on adventurer level 1, 3, 5…). Check the requirements in the book. Automatic class feats are added by themselves.",
+"取得数：${}（冒険者レベル1、3、5…ごとに1つ）。前提はルールブックで確認。自動取得特技は自動で追加されます。"
+],
+[
+"Free experience: <b class=\"sw25-cg-left\">${}</b> of ${} (background + ${}). Main class around the average level ${}; Scout, Sage, Ranger no more than 2 levels lower. Unspent experience is kept.",
+"使用可能経験点：<b class=\"sw25-cg-left\">${}</b>／${}（生まれ＋${}）。メイン技能は平均レベル${}前後、スカウト・セージ・レンジャーは2レベル下まで。余った経験点は保持されます。"
+],
+[
+"High level ${}: ${} ability growths, reputation ${}, ${} abyss shards.",
+"高レベル${}：能力値成長${}回、名誉点${}、アビスシャード${}個。"
+],
+[
+"${}: adventurer rank",
+"${}：冒険者ランク"
+],
+[
+"<b>${}</b>: rank «${}» (−${} reputation). Famous items whose reputation cost is up to ${} give it back.",
+"<b>${}</b>：ランク「${}」（名誉点−${}）。必要名誉点${}以下の名誉アイテム分は返還。"
+],
+[
+"<b>${}</b>: disgrace +${} (total ${}).",
+"<b>${}</b>：不名誉点+${}（合計${}）。"
+],
+[
+"<b>${}</b>: disgrace −${} for ${} reputation (${} left).",
+"<b>${}</b>：不名誉点−${}、名誉点${}で相殺（残り${}）。"
+],
+[
+"<b>${}</b>: rank lowered to «${}», disgrace +${}.",
+"<b>${}</b>：ランクを「${}」に降格、不名誉点+${}。"
+],
+[
+"${}: cost <b>${}</b> MP, MP now ${}. How much does a mako stone pay (one stone per cost)?",
+"${}：消費<b>${}</b>MP、現在MP${}。魔晶石からいくら払う？（1回につき1個）"
+],
+[
+"Stone: ${} → ${}. MP: ${} → ${}.",
+"魔晶石：${} → ${}。MP：${} → ${}。"
+],
+[
+"Mako Stone: −${} MP, the stone broke.",
+"魔晶石：−${}MP、魔晶石は砕けた。"
+],
+[
+"Mako Stone: −${} MP (${} left).",
+"魔晶石：−${}MP（残り${}）。"
+],
+[
+"${}: the Guild refuses service because of the disgrace.",
+"${}：不名誉のためギルドの利用停止。"
+],
+[
+"Sword of Genesis★${}",
+"始まりの剣★${}"
+],
+[
+"Conjurer: level ${}. Golems and undead need Conjurer 3+ (CR II p. 87).",
+"コンジャラー：レベル${}。ゴーレムとアンデッドはコンジャラー3以上（ルールブックII 87頁）。"
+],
+[
+"Material: ${} (${} G) or Strongly ${} (${} G, recovered afterwards).",
+"素材：${}（${}G）または強化素材（${}G、後で回収可）。"
+],
+[
+"Material: ${} (or Magical Bones, 500 G). Consumed.",
+"素材：${}（または魔法の骨、500G）。消費される。"
+],
+[
+"${}: creations",
+"${}：作成物"
+],
+[
+"Needs Conjurer level ${}.",
+"コンジャラーレベル${}が必要。"
+],
+[
+"No material: ${}. Untick the box if it is covered another way.",
+"素材がない：${}。別途用意済みならチェックを外してください。"
+],
+[
+"Not enough MP: ${} needed, ${} left.",
+"MP不足：必要${}、残り${}。"
+],
+[
+"MP −${}.",
+"MP−${}。"
+],
+[
+"Material: ${} −1.",
+"素材：${} −1。"
+],
+[
+"Damage to the familiar (${}) goes to the master: ${}.",
+"ファミリアへのダメージ（${}）は主人が受ける：${}。"
+],
+[
+"from the familiar's MP (${}, needs contact)",
+"ファミリアのMPから（${}、接触が必要）"
+],
+[
+"${}: cost <b>${}</b> MP, MP now ${}. What pays part of it (one Mako Stone per cost)?",
+"${}：消費<b>${}</b>MP、現在MP${}。一部を何で払う？（魔晶石は1回1個）"
+],
+[
+"Stone: ${} → ${}.",
+"魔晶石：${} → ${}。"
+],
+[
+"Familiar: ${} → ${}.",
+"ファミリア：${} → ${}。"
+],
+[
+"MP: ${} → ${}.",
+"MP：${} → ${}。"
+],
+[
+"Familiar MP: −${} (${} left).",
+"ファミリアのMP：−${}（残り${}）。"
+],
+[
+"No more than ${} items for this golem.",
+"このゴーレムには${}個まで。"
+],
+[
+"«${}» needs its base item.",
+"「${}」には元になるアイテムが必要です。"
+],
+[
+"${}: enhanced copy",
+"${}：強化コピー"
+],
+[
+"Size: ${}. Up to ${}. Compendium «SW25: Golem Enhancing Items».",
+"サイズ：${}。${}個まで。コンペンディウム「SW25: ゴーレム強化パーツ」。"
+],
+[
+"In other golems: ${}.",
+"他のゴーレムで使用中：${}。"
+],
+[
+"Enhancements: ${}.",
+"強化パーツ：${}。"
+],
+[
+"SW25: starter compendiums built — ${} items.",
+"SW25：スターターコンペンディウムを作成 — ${}アイテム。"
+],
+[
+"SW25: new entries (${}) — in the compendium «${}».",
+"SW25：新しい項目（${}）— コンペンディウム「${}」に追加。"
+],
+[
+"${}: not enough MP — ${} needed, ${} available (${} own + ${}).",
+"${1}：MPが足りません — 必要${2}、使用可能${3}（自分${4}＋${5}）。"
+],
+[
+"${}: curse (not in use)",
+"${1}：呪い（未使用時）"
+],
+[
+"sections: ${}, total HP ${}",
+"部位数：${1}、合計HP ${2}"
+],
+[
+"Core section: ${}",
+"コア部位：${1}"
+],
+[
+"Smithy: ${}",
+"鍛冶屋：${1}"
+],
+[
+"Conjurer: level ${}.",
+"コンジャラー：レベル${1}。"
+],
+[
+"Material: ${}",
+"素材：${1}"
+],
+[
+" or ${}",
+" または ${1}"
+],
+[
+"Size: ${}.",
+"サイズ：${1}。"
+],
+[
+"Up to ${}.",
+"最大${1}個。"
+],
+[
+"${}: creation",
+"${1}：作成物"
+],
+[
+"Magic Weapon +${}: Accuracy +${}, Extra Damage +${}.",
+"魔法の武器+${1}：命中+${2}、追加ダメージ+${3}。"
+],
+[
+"Magic +${}: Defense +${}.",
+"魔法の防具+${1}：防護点+${2}。"
+],
+[
+"Rolled ${}, but there is no curse with that number — pick one or make it in the constructor.",
+"出目は${1}ですが、その番号の呪いがありません。手で選ぶか、ビルダーで作成してください。"
 ]
 ];

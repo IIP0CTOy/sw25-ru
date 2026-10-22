@@ -1,6 +1,6 @@
 <ol class='items-list'>
   <li class='item flexrow items-header'>
-    <div class='item-name'>{{localize "TYPES.Item.weapon"}} ({{localize "SW25.Item.Equip"}})</div>
+    <div class='item-name'>{{localize "TYPES.Item.weapon"}} ({{localize "SW25.Item.Equip"}}){{#if @root.dualReady}} <a class="sw25-dualattack" title="{{localize "SW25.DualAttackHint"}}"><i class="fa-solid fa-khanda"></i> {{localize "SW25.DualAttack"}}</a>{{/if}}</div>
     <div class='item-element' style="flex: 0 0 120px;">{{localize "SW25.Skillname"}}</div>
     <div class='item-element' style="flex: 0 0 30px;">{{localize "SW25.Item.Weapon.Hit"}}</div>
     <div class='item-element' style="flex: 0 0 90px;">{{localize "SW25.Item.Power"}}</div>

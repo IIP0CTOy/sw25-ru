@@ -259,7 +259,7 @@
       <div class="n-cols">
         <div class="n-col">
           <section class="n-card">
-            <h3>{{localize "TYPES.Item.weapon"}}</h3>
+            <h3>{{localize "TYPES.Item.weapon"}}{{#if dualReady}} <a class="sw25-dualattack n-btn" title="{{localize "SW25.DualAttackHint"}}"><i class="fa-solid fa-khanda"></i> {{localize "SW25.DualAttack"}}</a>{{/if}}</h3>
             <ol class="n-rows">
             {{#each battleweapons as |item id|}}
               <li class="item n-row" data-item-id="{{item._id}}">

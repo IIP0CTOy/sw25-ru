@@ -3848,3 +3848,254 @@ input[type=checkbox]:disabled + .checkbox--label:focus {
 body:not(.sw25-is-gm) .sw25-gmonly {
   display: none !important;
 }
+
+/* [ru.11] every dialog window (DialogV2: constructors, wizard, shop, creations...): the content scrolls,
+   the buttons stay on screen, also when the window is stretched or the screen is small */
+.application.dialog {
+  max-height: calc(100vh - 10px);
+}
+.application.dialog .window-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+.application.dialog .window-content > .dialog-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.application.dialog .dialog-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+.application.dialog .form-footer {
+  flex: 0 0 auto;
+}
+
+/* [ru.11] character sheet (classic): ability labels no longer overlap the «Изменение» column */
+.sw25.sheet.actor .abilities .grid-5col{grid-template-columns:30px 30px 20px 52px minmax(0,1fr)}
+.sw25.sheet.actor .abilities .grid-5col .resource-label.flexlarge{font-size:12px;line-height:1.15;white-space:nowrap}
+.sw25.sheet.actor .abilities .grid-5col label.resource-label-s{white-space:nowrap}
+
+/* ==================================================================
+   [ru.11] SW25 tool windows — one look for the system's dialogs
+   (class .sw25-tool is added in sw25.mjs, renderDialogV2). Core dialogs stay as they are.
+   ================================================================== */
+.application.dialog.sw25-tool {
+  /* palette and fonts of the new character sheet (css/sw25-sheet-new.css): steel, brass, vellum */
+  --sw25-bg: #0f2029;
+  --sw25-panel: #17323d;
+  --sw25-panel-2: #1c3d4a;
+  --sw25-well: #0b181f;
+  --sw25-line: rgba(63, 127, 140, .45);
+  --sw25-text: #e9f1d6;
+  --sw25-muted: #9fc0c2;
+  --sw25-accent: #d2a94e;
+  --sw25-accent-hi: #f3dc93;
+  --sw25-accent-ink: #3a2a06;
+  --sw25-gold: #d2a94e;
+  --sw25-radius: 10px;
+  background: var(--sw25-bg);
+  color: var(--sw25-text);
+  font-family: "Alegreya Sans", "Segoe UI", sans-serif;
+  border: 1px solid #234a59;
+  border-top: 3px solid var(--sw25-gold);
+  border-radius: 10px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .6);
+}
+.application.dialog.sw25-tool .window-header {
+  background: linear-gradient(180deg, #234a59, #17323d);
+  border-bottom: 1px solid var(--sw25-line);
+}
+.application.dialog.sw25-tool .window-title {
+  font-family: "Alegreya SC", Georgia, serif;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--sw25-gold);
+}
+.application.dialog.sw25-tool .dialog-content {
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.application.dialog.sw25-tool .dialog-content p { margin: 0 0 8px; }
+.application.dialog.sw25-tool .hint,
+.application.dialog.sw25-tool small { color: var(--sw25-muted); }
+/* cards */
+.application.dialog.sw25-tool fieldset {
+  background: var(--sw25-panel);
+  border: 1px solid var(--sw25-line);
+  border-radius: var(--sw25-radius);
+  padding: 8px 12px 10px;
+  margin: 0 0 10px;
+}
+.application.dialog.sw25-tool legend {
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--sw25-gold);
+}
+/* fields */
+.application.dialog.sw25-tool input[type="text"],
+.application.dialog.sw25-tool input[type="number"],
+.application.dialog.sw25-tool input:not([type]),
+.application.dialog.sw25-tool select,
+.application.dialog.sw25-tool textarea {
+  background: var(--sw25-well);
+  color: var(--sw25-text);
+  border: 1px solid #3f7f8c;
+  border-radius: 6px;
+  min-height: 28px;
+}
+.application.dialog.sw25-tool input:focus,
+.application.dialog.sw25-tool select:focus,
+.application.dialog.sw25-tool textarea:focus {
+  border-color: var(--sw25-gold);
+  box-shadow: 0 0 0 2px rgba(210, 169, 78, .3);
+  outline: none;
+}
+.application.dialog.sw25-tool input[type="checkbox"],
+.application.dialog.sw25-tool input[type="radio"] { accent-color: var(--sw25-accent-hi); }
+/* the core draws its own dark box: on the dark panel an unticked box was nearly invisible */
+.application.dialog.sw25-tool input[type="checkbox"] { appearance: auto; -webkit-appearance: checkbox; width: 16px; height: 16px; flex: none; margin: 0 4px 0 0; }
+.application.dialog.sw25-tool input[type="checkbox"]::before,
+.application.dialog.sw25-tool input[type="checkbox"]::after { content: none; display: none; }
+/* tables */
+.application.dialog.sw25-tool table:not(.mgp-table) {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  background: var(--sw25-panel);
+  border: 1px solid var(--sw25-line);
+  border-radius: var(--sw25-radius);
+  overflow: hidden;
+}
+.application.dialog.sw25-tool table:not(.mgp-table) th {
+  background: var(--sw25-panel-2);
+  color: var(--sw25-gold);
+  font-size: 11px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--sw25-line);
+}
+.application.dialog.sw25-tool table:not(.mgp-table) td { padding: 5px 8px; border-bottom: 1px solid var(--sw25-line); background: transparent; }
+.application.dialog.sw25-tool table:not(.mgp-table) tr:nth-child(even) td { background: rgba(255, 255, 255, .025); }
+.application.dialog.sw25-tool table:not(.mgp-table) tbody tr:hover td { background: rgba(210, 169, 78, .1); }
+.application.dialog.sw25-tool td select { border-color: #3f7f8c; }
+/* buttons inside the content */
+.application.dialog.sw25-tool .dialog-content button {
+  background: var(--sw25-panel-2);
+  color: var(--sw25-text);
+  border: 1px solid #3f7f8c;
+  border-radius: 6px;
+  min-height: 28px;
+}
+.application.dialog.sw25-tool .dialog-content button:hover { border-color: var(--sw25-gold); color: #fff; }
+/* footer: secondary buttons left and quiet, the main one right and filled */
+.application.dialog.sw25-tool .form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px;
+  margin: 0;
+  background: var(--sw25-panel);
+  border-top: 1px solid var(--sw25-line);
+}
+.application.dialog.sw25-tool .form-footer button {
+  flex: 0 1 auto;
+  min-width: 110px;
+  min-height: 32px;
+  padding: 0 16px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--sw25-muted);
+  border: 1px solid #3f7f8c;
+  order: 1;
+}
+.application.dialog.sw25-tool .form-footer button:hover { color: var(--sw25-text); border-color: var(--sw25-muted); }
+.application.dialog.sw25-tool .form-footer button.default,
+.application.dialog.sw25-tool .form-footer button[autofocus] {
+  order: 2;
+  background: linear-gradient(180deg, var(--sw25-accent-hi), var(--sw25-accent));
+  color: var(--sw25-accent-ink);
+  border-color: #8a6a22;
+  font-family: "Alegreya Sans SC", "Trebuchet MS", sans-serif;
+  font-weight: 700;
+}
+.application.dialog.sw25-tool .form-footer button.default:hover,
+.application.dialog.sw25-tool .form-footer button[autofocus]:hover { filter: brightness(1.08); }
+/* a lone «Close» / «Cancel» stays quiet even when it is the default button */
+.application.dialog.sw25-tool .form-footer button:is([data-action="close"], [data-action="cancel"]) {
+  background: transparent;
+  color: var(--sw25-muted);
+  border-color: #3f7f8c;
+  font-weight: 400;
+}
+/* reusable pieces for the next tools: a total line and chips */
+.application.dialog.sw25-tool .sw25-total {
+  margin-right: auto;
+  align-self: center;
+  font-weight: 700;
+  color: var(--sw25-gold);
+}
+.sw25-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid #3f7f8c;
+  background: #1c3d4a;
+  color: #e9f1d6;
+  cursor: pointer;
+  font-size: 12px;
+}
+.sw25-chip.active { border-color: #d2a94e; background: rgba(210, 169, 78, .18); }
+
+/* [ru.11] monster generator: live stat block on the left, the form on the right */
+.mg-wrap { display: flex; gap: 14px; align-items: flex-start; }
+.mg-preview { flex: 0 0 340px; width: 340px; max-height: 72vh; overflow: auto; position: sticky; top: 0; }
+.mgp-card {
+  background: #f4ecdb;
+  color: #2a2118;
+  border: 1px solid #b9a27a;
+  border-radius: 8px;
+  padding: 10px 12px 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  box-shadow: inset 0 0 0 3px rgba(122, 31, 21, .08);
+}
+.mgp-head { display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #7a1f15; padding-bottom: 4px; }
+.mgp-lv {
+  flex: 0 0 auto;
+  min-width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #7a1f15; color: #fff; border-radius: 50%;
+  font-weight: 700; font-size: 14px;
+}
+.mgp-name { font-size: 16px; font-weight: 700; color: #3a1a12; }
+.mgp-sub { margin: 3px 0 6px; color: #7a6a55; font-style: italic; }
+.mgp-grid { display: grid; grid-template-columns: 1fr; gap: 1px 0; margin-bottom: 6px; }
+.mgp-kv { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dotted #cdbb98; }
+.mgp-kv span { color: #6d5d48; }
+.mgp-kv b { text-align: right; font-weight: 600; }
+.mg-preview .mgp-table { width: 100%; table-layout: fixed; border-collapse: collapse; margin: 4px 0; font-size: 10.5px; background: transparent; border: 0; }
+.mg-preview .mgp-table th { background: #7a1f15; color: #fff; font-weight: 600; padding: 2px 2px; text-align: center; font-size: 10px; letter-spacing: 0; text-transform: none; }
+.mg-preview .mgp-table td { padding: 2px 2px; text-align: center; border-bottom: 1px solid #e0d2b5; color: #2a2118; background: transparent; }
+.mg-preview .mgp-table td:first-child, .mg-preview .mgp-table th:first-child { text-align: left; width: 26%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mg-preview .mgp-table tr.mgp-core td { background: rgba(214, 168, 78, .25); font-weight: 700; }
+.mgp-note { font-size: 11px; color: #7a6a55; }
+.mgp-sec { margin: 8px 0 3px; font-weight: 700; color: #7a1f15; text-transform: uppercase; letter-spacing: .06em; font-size: 11px; border-bottom: 1px solid #cdbb98; }
+.mgp-ab { margin: 3px 0 5px; }
+.mgp-ab small { color: #7a6a55; margin-left: 4px; }
+.mgp-ab p { margin: 1px 0 0; }
+.mgp-empty { color: #8f7f69; font-style: italic; }
+.mgp-loot { margin: 0; padding-left: 16px; }
+.mgp-desc { margin-top: 8px; font-style: italic; color: #4d3f30; white-space: pre-wrap; }
