@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.4.1-ru.11.2
+- Declared talents: their damage bonus also counts when the damage is rolled from the sheet (an attack without a target).
+- Talent constructor: new "Power roll result" stat; a declared talent's critical value change now works; a "1 round" talent's accuracy bonus counts for the attack it is declared with.
+
 ## 2.4.1-ru.11.1
 - The new character sheet is the default; XP and class levels can be edited in its header (settings mode).
 - Accuracy and Evasion: only classes that can make the check add their level and ability bonus (Accuracy also by weapon type); without one it is plain 2d. The attack panel follows the equipped weapon.

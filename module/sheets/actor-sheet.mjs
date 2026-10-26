@@ -1381,7 +1381,7 @@ export class SW25ActorSheet extends ActorSheet {
           // [Round 66] for contest resolution / one-click damage
           kind: "check",
           itemid: itemId,
-          featMods: featCtx && (featCtx.dmg || featCtx.form !== "none") ? { dmg: featCtx.dmg, form: featCtx.form, names: featCtx.names } : null,
+          featMods: featCtx && (featCtx.dmg || featCtx.crit || featCtx.lt || featCtx.form !== "none") ? { dmg: featCtx.dmg, crit: featCtx.crit || 0, lt: featCtx.lt || 0, form: featCtx.form, names: featCtx.names } : null,
           critical: chatCritical,
           fumble: chatFumble,
         },
@@ -1488,6 +1488,21 @@ export class SW25ActorSheet extends ActorSheet {
     const powertype = dataset.powertype ? dataset.powertype.split(",") : "";
     const powertable = dataset.pt.split(",");
     //const powertable = dataset.pt.split(",").map(Number);
+    // [ru.11.1] declared talents (e.g. a damage bonus) of the latest attack with this weapon also count when
+    // the damage is rolled from the sheet (an attack without a target has no damage button on its card)
+    let featNote = "";
+    if (itemId && powertable.length > 13) {
+      const own = (m) => m.speaker?.actor === this.actor.id && m.flags?.sw25?.kind === "check" && !m.flags.sw25.spellcast && m.flags.sw25.itemid === itemId;
+      const last = game.messages.contents.slice(-30).reverse().find(own);
+      const fm = last?.flags?.sw25?.featMods;
+      if ((fm?.dmg || fm?.crit || fm?.lt) && !fm.used) {
+        powertable[13] = String((Number(powertable[13]) || 0) + (Number(fm.dmg) || 0));
+        if (fm.crit) powertable[1] = String((Number(powertable[1]) || 0) + Number(fm.crit));
+        if (fm.lt) powertable[16] = String((Number(powertable[16]) || 0) + Number(fm.lt));
+        featNote = (fm.names ?? []).join(", ");
+        if (last.isOwner) last.update({ "flags.sw25.featMods.used": true });
+      }
+    }
     let roll;
     try {
       roll = await powerRoll(formula, powertable);
@@ -1510,7 +1525,7 @@ export class SW25ActorSheet extends ActorSheet {
       return { roll: null, chatMessageId: null };
     }
 
-    const chatLabel = `${dataset.label}`;
+    const chatLabel = `${dataset.label}${featNote ? ` [${featNote}]` : ""}`;
     let cValueFormula = "@" + roll.cValue;
     let halfFormula = "";
     let lethalTechFormula = "";

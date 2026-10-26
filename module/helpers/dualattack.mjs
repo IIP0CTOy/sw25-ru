@@ -59,7 +59,7 @@ export async function attackCard(actor, item, targets, mods = {}) {
       apply: item.system.applycheck, checktype: item.system.checkTypesButton ?? "",
       target, targetName, resist, elements, damage, tags,
       kind: "check", itemid: item.id, critical, fumble, dualAttack: !!mods.dual,
-      featMods: mods.dmg ? { dmg: mods.dmg, form: "none" } : null,
+      featMods: mods.dmg || mods.crit || mods.lt ? { dmg: mods.dmg || 0, crit: mods.crit || 0, lt: mods.lt || 0, form: "none" } : null,
     } },
   });
   return msg;

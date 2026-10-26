@@ -273,7 +273,8 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
 
       item.system.powertable = [
         item.system.power,
-        item.system.totalcvalue,
+        // [ru.11.2] a declared talent may change the critical value of this attack
+        Number(item.system.totalcvalue) + (Number(chatMessage.flags?.sw25?.featMods?.crit) || 0),
         0,
         item.system.pt3,
         item.system.pt4,
@@ -289,7 +290,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
         Number(item.system.powerbase) + (Number(chatMessage.flags?.sw25?.featMods?.dmg) || 0),
         halfpow,
         halfpowmod,
-        lethaltech,
+        Number(lethaltech) + (Number(chatMessage.flags?.sw25?.featMods?.lt) || 0),
         criticalray,
         pharmtool,
         powup,

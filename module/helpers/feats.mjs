@@ -41,6 +41,7 @@ export const STAT = {
   cast: [["Проверка заклинания", "Spellcasting check"], A + "efmckall"],
   mp: [["Стоимость ОМ", "MP cost"], A + "efmpall", -1],
   crit: [["Крит. значение", "Critical value"], E + "efcvalue"],
+  lethal: [["Бросок мощи (+к выпавшему)", "Power roll result"], A + "ltmod"],
   hp: [["Макс. ОЖ", "Max HP"], "system.hp.efhpmod"],
   strmod: [["Мод. Силы", "Strength bonus"], "system.abilities.str.efmodify"],
   agimod: [["Мод. Подвижности", "Agility bonus"], "system.abilities.agi.efmodify"],
@@ -411,12 +412,13 @@ export async function attackMods(actor, weapon, ctx = {}) {
     if (res === "cancel" || res === null || res === undefined) return null;
     chosen = (Array.isArray(res) ? res : []).slice(0, left).map((i) => decl[i]);
   }
-  const out = { hit: pass.hit, dmg: pass.dmg, form: "none", formN: 0, names: [...pass.names], declared: chosen.map((c) => c.item.name) };
+  const out = { hit: pass.hit, dmg: pass.dmg, crit: 0, lt: 0, form: "none", formN: 0, names: [...pass.names], declared: chosen.map((c) => c.item.name) };
   const roundFx = [];
   for (const { item, f } of chosen) {
     const s = sumRules(f.rules, actor, weapon);
-    if (f.dur === "round") { if (f.rules?.length) roundFx.push({ item, f, rules: f.rules }); }
-    else { out.hit += s.hit ?? 0; out.dmg += s.dmg ?? 0; }
+    // a «1 round» talent is an effect from now on; this roll's accuracy formula was read before it, so add it here too
+    if (f.dur === "round") { if (f.rules?.length) roundFx.push({ item, f, rules: f.rules }); out.hit += s.hit ?? 0; }
+    else { out.hit += s.hit ?? 0; out.dmg += s.dmg ?? 0; out.crit += s.crit ?? 0; out.lt += s.lethal ?? 0; }
     if (f.form && f.form !== "none") { out.form = f.form; out.formN = N(f.formN) || 0; }
     out.names.push(item.name);
     if (f.risk?.length) roundFx.push({ item, f, rules: f.risk, risk: true });

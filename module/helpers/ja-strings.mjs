@@ -1202,7 +1202,8 @@ export const JA_STATIC = new Map(Object.entries({
 "the item is already magic": "すでに魔法の品",
 "Abyss Shards": "アビスシャード",
 "Bullet (loads the next gun shot)": "弾丸（次の銃撃に装填）",
-"Bullet": "弾丸"
+"Bullet": "弾丸",
+"Power roll result": "威力表の出目"
 }));
 export const JA_TPL = [
 [
