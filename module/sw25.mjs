@@ -46,7 +46,7 @@ import { L2, lang as i18nLang } from "./helpers/monstergen-i18n.mjs";
 import { registerRest } from "./helpers/rest.mjs";
 import { registerEquipRequirement } from "./helpers/equipreq.mjs";
 import { registerChargen } from "./helpers/chargen.mjs";
-import { periodicEffectDamage } from "./helpers/spellcast.mjs";
+import { periodicEffectDamage, bindBullet } from "./helpers/spellcast.mjs";
 import { registerSocketHandler } from "./helpers/socket.mjs";
 import { registerItemPiles } from "./helpers/itempiles.mjs";
 
@@ -513,11 +513,11 @@ Hooks.once("init", function () {
     makeDefault: true,
     label: "SW25.SheetLabels.Actor",
   });
-  // [UI redesign] second, opt-in sheet for characters — pick it from the
-  // sheet window's "Sheet" button. The classic sheet above stays the default.
+  // [UI redesign] the new character sheet; the classic sheet above stays available
+  // from the sheet window's "Sheet" button (and stays the default for monsters / NPCs).
   Actors.registerSheet("sw25", SW25CharacterSheetNew, {
     types: ["character"],
-    makeDefault: false,
+    makeDefault: true, // [ru.11.1] the new sheet is the default for characters; the classic one stays selectable
     label: "SW25.SheetLabels.ActorNew", // a lang key: at init the client language is not known yet
   });
   Items.unregisterSheet("core", ItemSheet);
@@ -1444,6 +1444,7 @@ Hooks.once("ready", async function () {
   // [Round 66] compact action cards: children are tagged, summarised on the
   // parent card and hidden from the log
   Hooks.on("preCreateChatMessage", (doc) => tagChildMessage(doc));
+  Hooks.on("preCreateChatMessage", (doc) => bindBullet(doc));   // [ru.11.1] a gun shot takes the loaded bullet
   Hooks.on("createChatMessage", async (message, options, userId) => {
     // one writer for the summary: the active GM (the creator when no GM is online), otherwise
     // the player's and the GM's cards overwrote each other's rows

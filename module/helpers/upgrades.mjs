@@ -26,6 +26,20 @@ const esc = (v) => foundry.utils.escapeHTML(String(v ?? ""));
 const T = (p) => L2(p[0], p[1]);
 const loc3 = (v) => (v && typeof v === "object" ? v[uiLang()] ?? v.en ?? v.ru ?? "" : String(v ?? ""));
 const rankIx = (r) => ({ B: 0, A: 1, S: 2, SS: 2 }[String(r ?? "").toUpperCase()] ?? 0);
+// [ru.11.1] Abyss shards: 3 for the first Abyss Enhancement of an item, 6 for the second
+const SHARD_RE = /^(?:Осколк[иа]? Бездны|Осколок Бездны|Abyss Shards?|アビスシャード)$/i;
+const shardItems = (actor) => (actor?.items ?? []).filter((i) => SHARD_RE.test(String(i.name ?? "").trim()));
+const shardCount = (actor) => shardItems(actor).reduce((n, i) => n + (Number(i.system?.quantity) || 0), 0);
+const shardsFor = (had, now) => [3, 6].slice(had, Math.max(had, now)).reduce((a, b) => a + b, 0);
+async function spendShards(actor, n) {
+  for (const i of shardItems(actor)) {
+    if (n <= 0) break;
+    const q = Number(i.system?.quantity) || 0, take = Math.min(q, n);
+    n -= take;
+    if (q - take > 0) await i.update({ "system.quantity": q - take });
+    else await i.delete();
+  }
+}
 
 /* ---------------- monster categories and damage types (system vocabulary) ---------------- */
 export const CLASSES = [
@@ -254,12 +268,16 @@ export async function openUpgrades(it, opts = {}) {
       <button type="button" class="roll" data-n="${n}"${lock} title="${esc(L2("Бросить 2d по таблице проклятий", "Roll 2d on the Abyss Curse Table"))}"><i class="fa-solid fa-dice"></i></button>
       <span class="cps">${pSel(n, curses[ci]?.spec?.p, "cp", a.cp)}</span>
       <div class="cu" style="flex-basis:100%">${esc(curseLine(ci))}</div></div>`; };
-  const maxPlus = forge ? Math.max(2, N(plan.plus)) : 3, minPlus = forge ? N(plan.plus) : 0;
+  // [ru.11.1] the smith: no +N on a shield; no +N on an item already magic another way (an Abyss or fairy
+  // upgrade, or a «+N» in its own name); a +1 item may go to +2 (the GM's price)
+  const magicOther = !N(plan.plus) && (plan.abyss.some((a) => a?.spec) || plan.enh.some((e) => /fairy/.test(String(e?.spec?.key ?? ""))) || /\+\d\b/.test(it.name));
+  const noPlus = forge && (kind === "shield" || magicOther);
+  const maxPlus = noPlus ? N(plan.plus) : forge ? Math.max(2, N(plan.plus)) : 3, minPlus = forge ? N(plan.plus) : 0;
   const plusTxt = kind === "weapon" ? L2("точность и доп. урон", "Accuracy and Extra Damage") : L2("защита", "Defense");
   const hadEnh = (e) => forge && (old.enh ?? []).some((x) => sameSpec(x.spec, e.spec));
   const plusRow = `<fieldset><legend>${L2("Магическое улучшение", "Magic enhancement")}</legend>
       <div class="row"><label>+N (${plusTxt}) <select name="plus">${Array.from({ length: maxPlus + 1 }, (_, v) => v).filter((v) => v >= minPlus).map((v) => opt(v, v ? `+${v}` : "—", plan.plus)).join("")}</select></label>
-      <span class="hint">${[1, 2].map((v) => { const p = plusPrice(it, v); return `+${v}: ${p == null ? L2("цена не задана", "no price set") : `${p} G`}`; }).join(" · ")}</span></div></fieldset>`;
+      <span class="hint">${noPlus ? (kind === "shield" ? L2("щит так не улучшают", "not for shields") : L2("предмет уже магический", "the item is already magic")) : [1, 2].map((v) => { const p = plusPrice(it, v); return `+${v}: ${p == null ? L2("цена не задана", "no price set") : `${p} G`}`; }).join(" · ")}</span></div></fieldset>`;
   const rk = rankIx(it.system?.rank);
   const enhRows = !enhList.length ? `<p class="hint">${L2("Нет предметов-улучшений: ГМ делает их в конструкторе предметов («Улучшение»).", "No upgrade items: the GM makes them in the item constructor («Upgrade»).")}</p>`
     : enhList.map((e, k) => `<div class="row"><label><input type="checkbox" name="en${k}"${plan.enh.some((x) => sameSpec(x.spec, e.spec)) ? " checked" : ""}${hadEnh(e) ? " disabled" : ""}> ${esc(e.name)}${priceAt(e.spec, rk) ? ` (+${priceAt(e.spec, rk)} G)` : ""}</label></div>`).join("");
@@ -269,6 +287,7 @@ export async function openUpgrades(it, opts = {}) {
       <p class="hint">${forge ? L2("До двух разных, каждое со своей ценой. Проклятие — только бросок 2d.", "Up to two different ones, each paid separately. The curse is rolled on 2d.") : L2("До двух разных. У каждого — проклятие: бросок 2d или выбрать.", "Up to two different ones. Each has a curse: roll 2d or pick it.")}${abList.length ? "" : " " + L2("Улучшений Бездны нет: сделайте их в конструкторе предметов.", "No Abyss enhancements: make them in the item constructor.")}</p>
       ${plan.abyss.map(abyssRow).join("")}</fieldset>`}
     ${forge ? `<div class="sw25-total" style="display:flex;justify-content:space-between;gap:8px;margin-top:6px"><span>${L2("Деньги", "Money")}: <b>${N(it.actor.system?.money)}</b> G</span><span>${L2("К оплате", "To pay")}: <b class="up-cost">0</b> G</span></div>
+      <div class="sw25-total up-shards" style="margin-top:2px"></div>
       <p class="hint">${L2("Что уже сделано, остаётся; платится только новое.", "What the item already has stays; you pay only for what is new.")}</p>`
       : `<p class="hint">${L2("Цена, название и поля предмета меняются; «Применить» с пустыми полями всё снимает.", "Price, name and fields change; «Apply» with everything empty removes it all.")}</p>`}</div>`;
 
@@ -303,6 +322,8 @@ export async function openUpgrades(it, opts = {}) {
         if (!forge) return;
         const p = read(root), c = costOf(p), el = root.querySelector(".up-cost");
         if (el) el.textContent = c != null ? String(c) : compute(it, p).unpriced ? L2("цена не задана ГМом", "no price set by the GM") : L2("Гильдия не обслуживает (позор)", "the Guild refuses (disgrace)");
+        const need = shardsFor(plan.abyss.filter((a) => a?.spec).length, p.abyss.length), sh = root.querySelector(".up-shards");
+        if (sh) sh.textContent = need ? L2(`Осколки Бездны: нужно ${need}, есть ${shardCount(it.actor)}`, `Abyss Shards: ${need} needed, ${shardCount(it.actor)} carried`) : "";
       };
       root.addEventListener("change", cost); root.addEventListener("input", cost); cost();
       const refresh = (n) => {
@@ -345,6 +366,8 @@ export async function openUpgrades(it, opts = {}) {
     ? L2("ГМ не задал цену этого улучшения (настройки системы: «Кузница»).", "The GM has not set the price of this upgrade (system settings: «Smithy»).")
     : L2(`${actor.name}: из-за позора Гильдия не обслуживает.`, `${actor.name}: the Guild refuses service because of the disgrace.`));
   if (gold < cost) return ui.notifications.error(L2(`${actor.name}: не хватает денег (${gold} G из ${cost} G).`, `${actor.name} cannot afford it (${gold} G of ${cost} G).`));
+  const shards = shardsFor(plan.abyss.filter((a) => a?.spec).length, res.abyss.length), have = shardCount(actor);
+  if (shards > have) return ui.notifications.error(L2(`${actor.name}: не хватает осколков Бездны (${have} из ${shards}).`, `${actor.name}: not enough Abyss Shards (${have} of ${shards}).`));
   if (cost) await actor.update({ "system.money": gold - cost });
   let out;
   try { out = await applyUpgrades(it, res); }
@@ -353,9 +376,10 @@ export async function openUpgrades(it, opts = {}) {
     if (cost) await actor.update({ "system.money": gold });
     return ui.notifications.error(L2("Кузнец не справился — деньги возвращены.", "The smith failed — the money was refunded."));
   }
+  if (shards) await spendShards(actor, shards);
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor }),
-    content: `<p><b>${L2("Кузница", "Smithy")}</b>: ${esc(before)} → <b>${esc(it.name)}</b></p>${out.lines.map((l) => `<p>${esc(l)}</p>`).join("")}<hr><p>${L2("Оплачено", "Paid")}: <b>${cost} G</b> (${gold} → ${gold - cost} G)</p>`,
+    content: `<p><b>${L2("Кузница", "Smithy")}</b>: ${esc(before)} → <b>${esc(it.name)}</b></p>${out.lines.map((l) => `<p>${esc(l)}</p>`).join("")}<hr><p>${L2("Оплачено", "Paid")}: <b>${cost} G</b> (${gold} → ${gold - cost} G)${shards ? `, ${L2("осколки Бездны", "Abyss Shards")}: ${shards}` : ""}</p>`,
   });
 }
 

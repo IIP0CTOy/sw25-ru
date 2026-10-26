@@ -58,7 +58,7 @@
           </div>
         {{else}}
         <div class="n-lvl"><small>{{localize "SW25.Level"}}</small><b>{{system.attributes.advlevel.value}}</b></div>
-        <div class="n-lvl"><small>{{localize "SW25.Attributes.Exp"}}</small><b>{{system.attributes.totalexp}}</b></div>
+        <div class="n-lvl"><small>{{localize "SW25.Attributes.Exp"}}</small>{{#if system.isEdit}}<input class="n-exp" type="number" value="{{system.attributes.totalexp}}" data-dtype="Number" data-tooltip="{{localize "SW25.Attributes.Useexp"}}: {{system.attributes.useexp}}"/>{{else}}<b>{{system.attributes.totalexp}}</b>{{/if}}</div>
         {{/if}}
       </div>
     </div>
@@ -114,7 +114,7 @@
         </div>
       </div>
       <div class="n-classes">
-        {{#each skills as |item id|}}<span class="n-cls">{{item.name}} <b>{{item.system.skilllevel}}</b></span>{{/each}}
+        {{#if system.isEdit}}{{#each skills as |item id|}}<li class="item n-cls n-cls-edit" data-item-id="{{item._id}}">{{item.name}} <a class="changesl-button" data-action="decrease" data-property="system.skilllevel"><i class="fas fa-minus"></i></a><input class="sl-change" type="text" value="{{item.system.skilllevel}}" data-dtype="Number"/><a class="changesl-button" data-action="increase" data-property="system.skilllevel"><i class="fas fa-plus"></i></a></li>{{/each}}{{else}}{{#each skills as |item id|}}<span class="n-cls">{{item.name}} <b>{{item.system.skilllevel}}</b></span>{{/each}}{{/if}}
       </div>
       <div class="n-vitals">
 <div class="hpbar">
@@ -453,7 +453,7 @@
                 <select name="system.attackskill">
                   {{#select system.attackskill}}
                   <option value="-">{{localize "SW25.Selectattackskill"}}</option>
-                  {{#each skills as |item id|}}
+                  {{#each attackskills as |item id|}}
                   <option value="{{item.name}}">{{item.name}}</option>
                   {{/each}}
                   {{/select}}
@@ -464,7 +464,7 @@
                 <select name="system.dodgeskill">
                   {{#select system.dodgeskill}}
                   <option value="-">{{localize "SW25.Selectdodgeskill"}}</option>
-                  {{#each skills as |item id|}}
+                  {{#each dodgeskills as |item id|}}
                   <option value="{{item.name}}">{{item.name}}</option>
                   {{/each}}
                   {{/select}}

@@ -3,6 +3,7 @@ import {
   prepareActiveEffectCategories,
 } from "../helpers/effects.mjs";
 import { powerRoll } from "../helpers/powerroll.mjs";
+import { isAccuracyClass, isEvasionClass } from "../helpers/names.mjs";
 import { mpCost, hpCost } from "../helpers/mpcost.mjs";
 import { lootRoll } from "../helpers/lootroll.mjs";
 import { growthCheck } from "../helpers/growthcheck.mjs";
@@ -746,6 +747,9 @@ export class SW25ActorSheet extends ActorSheet {
     
     // Assign and return
     context.skills = skills;
+    // [ru.11.1] the Attack / Evasion class lists offer only classes that can make those checks
+    context.attackskills = skills.filter((i) => isAccuracyClass(i));
+    context.dodgeskills = skills.filter((i) => isEvasionClass(i));
     context.checks = checks;
     context.battlechecks = battlechecks;
     // [2026-10-07] alchemist cards: sorted by colour and rank; empty stacks are folded away

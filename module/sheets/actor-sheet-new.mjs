@@ -264,6 +264,13 @@ export class SW25CharacterSheetNew extends SW25ActorSheet {
     const root = html[0];
     if (!root) return;
 
+    // [ru.11.1] header XP field (settings mode); it has no form name so it does not clash with the
+    // same field on the «Checks» tab
+    root.querySelector("input.n-exp")?.addEventListener("change", (event) => {
+      const v = Number(event.currentTarget.value);
+      if (Number.isFinite(v)) this.actor.update({ "system.attributes.totalexp": v });
+    });
+
     // "Breakdown" popovers are native <details>: keep only one open and close
     // them when the user clicks anywhere outside (works for mouse and touch).
     root.addEventListener("click", (event) => {

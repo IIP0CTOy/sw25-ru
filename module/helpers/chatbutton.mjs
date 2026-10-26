@@ -2796,12 +2796,28 @@ async function _autoDamage(contestMsg, { auto = false } = {}) {
     ui.notifications.warn(game.i18n.localize("SW25.Contest.TargetNotOnScene"));
     return;
   }
+  // [ru.11.1] a gun has no power of its own: the damage is the loaded bullet's (its spell card rolls it)
+  const atkItem = atkActor?.items.get(atkMsg.flags?.sw25?.itemid);
+  const bulletMsg = atkMsg.flags?.sw25?.bullet?.msgId ? game.messages.get(atkMsg.flags.sw25.bullet.msgId) : null;
+  if (atkItem?.type === "weapon" && atkItem.system?.category === "gun" && !bulletMsg) {
+    if (!auto) ui.notifications.warn(L2("Выстрел без заряженной пули: урона нет (сначала заклинание-пуля).", "A shot without a loaded bullet deals no damage (cast a bullet spell first)."));
+    return;
+  }
   _damageDone.add(contestMsg.id);
   // lock the button for everyone BEFORE the damage: the GM and a player clicking at the same
   // time (or the GM's auto damage and a click) must not both apply it
   const lockFlags = { sw25: { ...f, damageDone: true } };
   if (contestMsg.isOwner) await contestMsg.update({ "flags.sw25.damageDone": true });
   else emitToGM({ method: "updateChat", id: contestMsg.id, flags: lockFlags });
+  if (bulletMsg) {
+    // a healing bullet heals, any other bullet deals magic damage (guns deal magic damage)
+    const bItem = atkActor?.items.get(bulletMsg.flags?.sw25?.itemid);
+    const pts = bItem?.system?.powerTypesButton ?? [];
+    const heal = pts.length > 0 && pts.every((t) => t === "hr" || t === "mr");
+    const type = heal ? (pts.includes("hr") ? "hr" : "mr") : "md";
+    await rollAndApplyDamage(bulletMsg, tok, "full", type);
+    return;
+  }
   await rollAndApplyDamage(atkMsg, tok, f.damageMode);
 }
 

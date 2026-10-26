@@ -55,6 +55,31 @@ const CLASS_IX = index(CLASS), ITEM_IX = index(ITEM);
 export const classKey = (name) => CLASS_IX.get(norm(name));
 /** Is `name` one of the classes `keys`? */
 export const isClass = (name, ...keys) => { const k = classKey(name); return !!k && keys.flat().includes(k); };
+/** [ru.11.1] Classes that make an Accuracy check: warrior-type (Fighter, Grappler, Fencer, Marksman, Battle Dancer). */
+export const isAccuracyClass = (it) => !!it && (it.system?.skilltype === "fighterskill" || isClass(it.name, "fighter", "grappler", "fencer", "shooter", "battledancer"));
+/** [ru.11.1] Warrior classes that can attack with a weapon of this category (grapple: Grappler; bow, crossbow,
+ * gun: Marksman; thrown: Marksman, Fighter, Fencer; other melee: Fighter, Fencer, Battle Dancer). A GM's own
+ * warrior class (unknown name) fits any category. */
+export const weaponClassFits = (it, category) => {
+  if (!isAccuracyClass(it)) return false;
+  const k = classKey(it.name);
+  if (!k) return true;
+  const cat = String(category ?? "");
+  const allowed = cat === "grapple" ? ["grappler"]
+    : ["bow", "crossbow", "gun"].includes(cat) ? ["shooter"]
+    : ["throw", "throwing"].includes(cat) ? ["shooter", "fighter", "fencer"]
+    : ["fighter", "fencer", "battledancer"];
+  return allowed.includes(k);
+};
+/** [ru.11.1] Classes that make an Evasion check: Fighter, Grappler, Fencer, Battle Dancer (a GM's own warrior class too, not Marksman). */
+export const isEvasionClass = (it) => !!it && (isClass(it.name, "fighter", "grappler", "fencer", "battledancer")
+  || (it.system?.skilltype === "fighterskill" && !classKey(it.name)));
+/** [ru.11.1] The class used for a check: the picked one when it fits, else the highest fitting class, else none. */
+export function pickCheckClass(items, picked, fits) {
+  const own = [...(items ?? [])].filter((i) => i.type === "skill" && Number(i.system?.skilllevel) > 0 && fits(i));
+  const p = picked && picked !== "-" ? own.find((i) => i.name === picked) : null;
+  return p ?? own.sort((a, b) => Number(b.system.skilllevel) - Number(a.system.skilllevel))[0] ?? null;
+}
 /** Same class, whatever the language ("Боец" == "Fighter"); unknown names compare as plain text. */
 export const sameClass = (a, b) => { const ka = classKey(a), kb = classKey(b); return ka || kb ? ka === kb : norm(a) === norm(b); };
 /** Default name of a class in the language of this client. */

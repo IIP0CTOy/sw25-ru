@@ -73,6 +73,7 @@ const SHAPES = [
   ["line", ["Линия от заклинателя", "Line from the caster"]],
   ["area", ["Область в точке (сфера)", "Area at a point (sphere)"]],
   ["selfarea", ["Область вокруг себя", "Area around the caster"]],
+  ["bullet", ["Пуля (заряжает следующий выстрел из ружья)", "Bullet (loads the next gun shot)"]],
 ];
 const TIMES = [
   ["instant", ["Мгновенно", "Instant"]],
@@ -110,6 +111,7 @@ export function spellShape(f) {
     case "line": return { target: L2("Все на линии", "Everyone on the line"), rangeshape: `${range} ${m}/${L2("Линия", "Line")}` };
     case "area": return { target: area, rangeshape: `${range} ${m}/${L2("Цель", "Target")}` };
     case "selfarea": return { target: area, rangeshape: `${self}/-` };
+    case "bullet": return { target: L2("Пуля", "Bullet"), rangeshape: `${self}/-` };
     default: return { target: one, rangeshape: `${range} ${m}/${L2("Цель", "Target")}` };
   }
 }
@@ -249,6 +251,7 @@ export function buildItem(kind, f, rows = []) {
     const prop = f.prop in (C.spellProps ?? {}) ? f.prop : "";
     const act = { main: !!f.actMain, aux: !!f.actAux, prep: !!f.actPrep, constant: !!f.actConst, decla: false };
     if (!act.main && !act.aux && !act.prep && !act.constant) act.main = true;
+    if (f.shape === "bullet") Object.assign(act, { aux: true, main: false });   // a bullet is loaded with a Minor Action
     system = { description: html(f.description), overview: String(f.overview ?? "").trim(), type: school, level, basempcost: Math.max(0, N(f.mp)), target, rangeshape, time: t.text, prop,
       resist: "", resistinfo: { type: f.resistType ?? "", result: f.resistType ? (f.resistResult || "halving") : "none" }, ...act };
     const helpful = ["heal", "mheal", "flat", "regen", "mregen"].includes(does);

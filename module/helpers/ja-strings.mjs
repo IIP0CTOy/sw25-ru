@@ -1191,7 +1191,18 @@ export const JA_STATIC = new Map(Object.entries({
 "Up to two different ones, each paid separately. The curse is rolled on 2d.": "異なるものを2つまで、それぞれ別に支払います。アビスカースは2dで決定します。",
 "What the item already has stays; you pay only for what is new.": "すでに施されている加工はそのまま残り、新しく加える分だけ支払います。",
 "The item stays with the character. The smith makes +1 / +2 for the GM's price and any upgrade or Abyss enhancement that has a price.": "アイテムはキャラクターの手元に残ります。鍛冶屋はGMが決めた価格で+1/+2を、価格のある加工やアビス強化も施します。",
-"only when buying (the smithy won't add it to an owned item)": "購入時のみ（所持品には鍛冶屋で追加できない）"
+"only when buying (the smithy won't add it to an owned item)": "購入時のみ（所持品には鍛冶屋で追加できない）",
+"A shot without a loaded bullet deals no damage (cast a bullet spell first).": "弾丸を込めていない射撃はダメージを与えません（先に弾丸の魔法を使ってください）。",
+"How is it cast?": "どの動作で行使しますか？",
+"Minor Action (no check)": "補助動作（判定なし）",
+"Major Action (with a check)": "主動作（判定あり）",
+"Minor Action: no check, success value 0.": "補助動作：行使判定なし、達成値0。",
+"Bullet loaded: its damage or effect comes with the next shot that hits.": "弾丸を装填：次に命中した射撃でダメージや効果が発生します。",
+"not for shields": "盾には不可",
+"the item is already magic": "すでに魔法の品",
+"Abyss Shards": "アビスシャード",
+"Bullet (loads the next gun shot)": "弾丸（次の銃撃に装填）",
+"Bullet": "弾丸"
 }));
 export const JA_TPL = [
 [
@@ -2185,5 +2196,13 @@ export const JA_TPL = [
 [
 "Rolled ${}, but there is no curse with that number — pick one or make it in the constructor.",
 "出目は${1}ですが、その番号の呪いがありません。手で選ぶか、ビルダーで作成してください。"
+],
+[
+"Abyss Shards: ${} needed, ${} carried",
+"アビスシャード：必要${}、所持${}"
+],
+[
+"${}: not enough Abyss Shards (${} of ${}).",
+"${}：アビスシャードが足りません（所持${}／必要${}）。"
 ]
 ];

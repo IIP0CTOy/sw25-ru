@@ -205,7 +205,7 @@
       "Actor": "SW25キャラクターシート",
       "Item": "SW25アイテムシート",
       "ActiveEffect": "SW25バフデバフシート",
-      "ActorNew": "SW25 — 新シート（ベータ）"
+      "ActorNew": "SW25 — 新シート"
     },
     "Actor": {
       "ColorSetting": {

@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2.4.1-ru.11.1
+- The new character sheet is the default; XP and class levels can be edited in its header (settings mode).
+- Accuracy and Evasion: only classes that can make the check add their level and ability bonus (Accuracy also by weapon type); without one it is plain 2d. The attack panel follows the equipped weapon.
+- Spells cast as a Minor Action make no Spellcasting check.
+- Magitech bullets: the bullet is loaded first, its damage or effect comes with the next gun shot that hits.
+- Smithy: no +N on shields or on items already magic; Abyss Enhancement also takes Abyss Shards (3 / 6).
+
 ## 2.4.1-ru.11
 - Talent constructor: combat feats and racial abilities from simple steps; declared talents are offered before the accuracy roll.
 - Dual attack with [Dual Wielding]: two attacks at −2, one button applies all hits.

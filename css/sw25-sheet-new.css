@@ -721,3 +721,9 @@
 /* long names: two lines at most, then an ellipsis (full name in the window title) */
 .sw25n .n-nameplate .header__title .header__title--name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; line-height: 1.05; }
 .sw25n.is-edit .n-nameplate .header__title .header__title--name { display: block; overflow: visible; }
+/* [ru.11.1] header: XP and class levels editable in settings mode */
+.sw25n .n-lvl input.n-exp { width: 100%; height: 24px; text-align: center; font-family: var(--sw-f-num); font-size: 15px; }
+.sw25n .n-cls-edit { list-style: none; padding: 1px 4px 1px 8px; }
+.sw25n .n-cls-edit input.sl-change { width: 2.4em; height: 20px; text-align: center; padding: 0; }
+.sw25n .n-cls-edit .changesl-button { font-size: 11px; opacity: .8; }
+.sw25n .n-cls-edit .changesl-button:hover { opacity: 1; }

@@ -1,7 +1,7 @@
 import { effectInitPC, effectVitResPC, effectMndResPC, effectMKnowPC } from "../sw25.mjs";
 import { PT } from "../helpers/powerroll.mjs";
 import { effectHitMon, effectDmgMon, effectDodgeMon, rpt } from "../sw25.mjs";
-import { isClass, isItem } from "../helpers/names.mjs";
+import { isClass, isItem, isEvasionClass, pickCheckClass } from "../helpers/names.mjs";
 /**
  * Extend the base Actor document by defining a custom roll data structure which is ideal for the Simple system.
  * @extends {Actor}
@@ -202,15 +202,12 @@ export class SW25Actor extends Actor {
       // class keys (names.mjs): the actor's own item name is used, whatever its language
       const MAGIC = { scskill: "sorcerer", cnskill: "conjurer", prskill: "priest", mtskill: "magitech", frskill: "fairytamer", drskill: "druid", dmskill: "daemonruler" };
       for (const [k, key] of Object.entries(MAGIC)) { const n = own(key); if (unset(systemData[k]) && n) systemData[k] = n; }
-      if (unset(systemData.dodgeskill)) {
-        const f = skills.filter((i) => isClass(i.name, "fighter", "grappler", "fencer"))
-          .sort((a, b) => Number(b.system.skilllevel) - Number(a.system.skilllevel))[0];
-        if (f) systemData.dodgeskill = f.name;
-      }
-      if (unset(systemData.hitweapon)) {
-        const w = this.items.find((i) => i.type === "weapon" && i.system.equip);
-        if (w) systemData.hitweapon = w.name;
-      }
+      // [ru.11.1] a safety net for a forgotten pick: the picked class only when it can make
+      // the check, else the highest class that can; none = standard value 0
+      systemData.dodgeskill = pickCheckClass(this.items, systemData.dodgeskill, isEvasionClass)?.name ?? "-";
+      // the attack panel follows an equipped weapon only (an unequipped one cannot attack)
+      const hw = this.items.find((i) => i.type === "weapon" && i.system.equip && i.name === systemData.hitweapon);
+      if (!hw) systemData.hitweapon = this.items.find((i) => i.type === "weapon" && i.system.equip)?.name ?? "-";
     }
 
     // Calculate Skill check & Action check
@@ -287,9 +284,11 @@ export class SW25Actor extends Actor {
     }
 
     //Calculate Battle Data
+    // [ru.11.1] start empty: without an equipped weapon the panel shows nothing (no values left from before)
+    for (const k of ["itemname", "itemhitformula", "itemhitbase", "itempowerformula", "itempower", "itemcvalue", "itempowerbase"]) systemData[k] = "";
     this.items.forEach((item) => {
       if (item.type == "weapon") {
-        if (item.name == systemData.hitweapon) {
+        if (item.name == systemData.hitweapon && item.system.equip) {
           systemData.itemname = item.name;
           systemData.itemhitformula = item.system.checkformula;
           systemData.itemhitbase = item.system.checkbase;
@@ -350,7 +349,9 @@ export class SW25Actor extends Actor {
     systemData.shieldDedicated = activeShield?.system.dedicated === true;
     this.items.forEach((item) => {
       if (item.type == "skill") {
-        if (item.name == systemData.dodgeskill) {
+        // evasion classes only (Fighter, Grappler, Fencer, Battle Dancer): another class picked on the
+        // sheet gives nothing; no evasion class = standard value 0
+        if (item.name == systemData.dodgeskill && isEvasionClass(item)) {
           const dodgeAgimod = Math.floor(
             (Number(systemData.abilities.dex.racevalue) +
               Number(systemData.abilities.agi.valuebase) +
@@ -767,7 +768,7 @@ export class SW25Actor extends Actor {
           item.system.checkbase = Number(item.system.checkbase) + allckBonus;
         if (item.type === "weapon") {
           item.system.checkbase = Number(item.system.checkbase) + allckBonus;
-          if (item.name == systemData.hitweapon) systemData.itemhitbase = Number(systemData.itemhitbase) + allckBonus;
+          if (item.name == systemData.hitweapon && systemData.itemname) systemData.itemhitbase = Number(systemData.itemhitbase) + allckBonus;
         }
       });
       if (Number.isFinite(Number(systemData.dodgebase))) systemData.dodgebase = Number(systemData.dodgebase) + allckBonus;
@@ -861,7 +862,7 @@ export class SW25Actor extends Actor {
       // [Round 66] the main-weapon attack panel (itemhitbase/itempowerbase)
       // was copied from this weapon BEFORE these buffs were added, so the
       // sheet's attack button rolled without them. Keep both in sync.
-      const isMainWeapon = item.name == systemData.hitweapon;
+      const isMainWeapon = item.name == systemData.hitweapon && !!systemData.itemname;
       if (hitBonus) {
         item.system.checkbase = Number(item.system.checkbase) + hitBonus;
         if (isMainWeapon)

@@ -26,7 +26,7 @@ import {
 } from "../sw25.mjs";
 import { targetRollDialog } from "../helpers/dialogs.mjs";
 import { isLabel } from "../helpers/utils.mjs";
-import { sameClass, findClassItem } from "../helpers/names.mjs";
+import { sameClass, findClassItem, weaponClassFits, pickCheckClass } from "../helpers/names.mjs";
 
 let quantityWarn = false;
 
@@ -2159,14 +2159,29 @@ export class SW25Item extends Item {
     if (itemData.type === "weapon") {
       // [2026-10-15] builder/ytsheet weapons used to be saved with checkskill "adv" (adventurer level, magic classes included)
       if (sys.checkskill === "adv" && (itemData.flags?.sw25?.builder || itemData.flags?.sw25?.ytsheet)) sys.checkskill = "";
-      // no attack class chosen on the sheet: the highest warrior-type class (Fighter, Grappler, Fencer, Marksman)
-      const chosen = a.attackskill && a.attackskill !== "-" ? a.attackskill : "";   // "-" = nothing picked on the sheet
       if (sys.checkskill === "-") sys.checkskill = "";
       if (sys.powerskill === "-") sys.powerskill = "";
-      const warrior = chosen || itemData.actor.items
-        .filter((i) => i.type === "skill" && i.system.skilltype === "fighterskill")
-        .sort((x, y) => Number(y.system.skilllevel) - Number(x.system.skilllevel))[0]?.name;
-      fill(warrior, "dex", "str");
+      if (itemData.actor.type === "character") {
+        // [ru.11.1] only a warrior-type class that can use this kind of weapon makes the Accuracy
+        // check: the attack class picked on the sheet when it fits, else the highest fitting class; a class on
+        // the weapon that does not fit is ignored; no fitting class = 2d, no ability bonus
+        const items = itemData.actor.items;
+        const fits = (i) => weaponClassFits(i, sys.category);
+        const fitsOwned = (n) => !!n && items.some((i) => i.type === "skill" && i.name === n && Number(i.system.skilllevel) > 0 && fits(i));
+        if (sys.checkskill && sys.checkskill !== "adv" && !fitsOwned(sys.checkskill)) sys.checkskill = "";
+        if (sys.powerskill && sys.powerskill !== "adv" && !fitsOwned(sys.powerskill)) sys.powerskill = "";
+        const warrior = pickCheckClass(items, a.attackskill, fits)?.name;
+        fill(warrior, "dex", "str");
+        if (!sys.checkskill) sys.checkabi = "";
+        if (!sys.powerskill) sys.powerabi = "";
+      } else {
+        // no attack class chosen on the sheet: the highest warrior-type class (Fighter, Grappler, Fencer, Marksman)
+        const chosen = a.attackskill && a.attackskill !== "-" ? a.attackskill : "";   // "-" = nothing picked on the sheet
+        const warrior = chosen || itemData.actor.items
+          .filter((i) => i.type === "skill" && i.system.skilltype === "fighterskill")
+          .sort((x, y) => Number(y.system.skilllevel) - Number(x.system.skilllevel))[0]?.name;
+        fill(warrior, "dex", "str");
+      }
     }
     // [2026-10-07] an evocation made by hand has no check class: Alchemist + Intelligence
     else if (itemData.type === "alchemytech") fill(findClassItem(itemData.actor, "alchemist")?.name, "int", "int");
@@ -2221,8 +2236,8 @@ export class SW25Item extends Item {
       const actorData = itemData.actor.system;
       const actoritemData = itemData.actor.items;
 
-      // Set default skill and ability
-      if (actorData.attackskill != "" && actorData.attackskill != "-") {
+      // Set default skill and ability (characters: done in _applyDefaultRollSkills, warrior classes only)
+      if (itemData.actor.type !== "character" && actorData.attackskill != "" && actorData.attackskill != "-") {
         if (systemData.checkskill == "")
           systemData.checkskill = actorData.attackskill;
         if (systemData.checkabi == "") systemData.checkabi = "dex";

@@ -25,6 +25,24 @@ import { canon } from "./ability-names.mjs";
 const FLAT_HEAL = { "Базовое лечение": 4, "Улучшенное лечение": 8, "Расширенное лечение": 12, "Насыщенное лечение": 6, "Лечебная вода": 4 };
 /* data keywords written by Russian content and by the importers (any language) */
 const SELF_RE = /^(?:Заклинатель|Caster|Self|術者)/i;
+// [ru.11.1] a magitech bullet spell (target «Bullet»): it loads the next gun attack instead of working at once
+const BULLET_RE = /^(?:\d+\s*)?(?:Пул[яи]|Патрон|Bullets?|弾丸|弾)/i;   // «Пуля», «3 Пули», «3 Bullets»
+export const isBulletSpell = (item) => item?.type === "spell" && BULLET_RE.test(String(item.system?.target ?? "").trim());
+/**
+ * [ru.11.1] preCreateChatMessage: an attack card of a gun takes the loaded bullet with it (the bullet is
+ * spent by this shot, hit or miss). The damage of that shot is the bullet's (chatbutton autoDamage).
+ */
+export function bindBullet(doc) {
+  const f = doc.flags?.sw25;
+  if (!f || f.kind !== "check" || f.spellcast || f.contest || !f.itemid || f.bullet) return;
+  const actor = ChatMessage.getSpeakerActor(doc.speaker);
+  const item = actor?.items.get(f.itemid);
+  if (item?.type !== "weapon" || item.system?.category !== "gun") return;
+  const b = actor.flags?.sw25?.bullet;
+  if (!b?.msgId) return;
+  doc.updateSource({ "flags.sw25.bullet": b, content: `${doc.content ?? ""}<div class="sw25-cast-mp"><i class="fa-solid fa-gun"></i> ${Handlebars.escapeExpression(b.name)}</div>` });
+  if (actor.isOwner) actor.update({ "flags.sw25.bullet": null });
+}
 
 /** Apply a flat HP/MP change to a token (owner directly, else via the GM). */
 export async function applyFixedAmount(tok, kind, amount) {
@@ -126,6 +144,26 @@ export async function castSpell(actor, item, opts = {}) {
     await item.updateEmbeddedDocuments("ActiveEffect", choices.map((e) => ({ _id: e.id, "flags.sw25.choiceOff": e.id !== picked })));
   }
 
+  // 0c. [ru.11.1] A spell cast as a Minor Action makes no check: it works, success value 0,
+  // no automatic failure. A spell that may be cast either way asks; a Major Action cast rolls as usual.
+  let minorCast = false;
+  if (item.type === "spell" && item.system.aux && !opts.pay) {
+    minorCast = !item.system.main;
+    if (item.system.main) {
+      const DialogV2 = foundry.applications?.api?.DialogV2;
+      const how = DialogV2 ? await DialogV2.wait({
+        window: { title: item.name },
+        content: `<p>${L2("Как применить?", "How is it cast?")}</p>`,
+        buttons: [
+          { action: "minor", label: L2("Малое действие (без проверки)", "Minor Action (no check)"), default: true },
+          { action: "major", label: L2("Основное действие (с проверкой)", "Major Action (with a check)") },
+        ],
+        rejectClose: false,
+      }).catch(() => null) : "minor";
+      if (!how) return null;   // cancelled: nothing spent
+      minorCast = how === "minor";
+    }
+  }
   // 1. cost: MP for spells; songs/alchemy pass their own payer (rhythm, cards)
   let payLine = "";
   const cost = opts.pay ? 0 : Number(item.system.mpcost) || 0;
@@ -173,13 +211,13 @@ export async function castSpell(actor, item, opts = {}) {
   const contestTargets = canBeContested ? targets.filter((t) => !willingTargets.includes(t)) : [];
   const contested = contestTargets.length > 0;
 
-  // 3. casting check
+  // 3. casting check (a Minor Action cast was decided above: no dice)
   const base = Number(item.system.checkbase) || 0;
-  const formula = base ? `2d6 ${base < 0 ? "-" : "+"} ${Math.abs(base)}` : "2d6";
+  const formula = minorCast ? "0" : base ? `2d6 ${base < 0 ? "-" : "+"} ${Math.abs(base)}` : "2d6";
   const roll = await new Roll(formula, actor.getRollData()).evaluate();
   const dice = roll.dice[0]?.results.map((r) => r.result) ?? [];
-  const critical = dice[0] === 6 && dice[1] === 6 ? 1 : null;
-  const fumble = dice[0] === 1 && dice[1] === 1 ? 1 : null;
+  const critical = !minorCast && dice[0] === 6 && dice[1] === 6 ? 1 : null;
+  const fumble = !minorCast && dice[0] === 1 && dice[1] === 1 ? 1 : null;
 
   const resistData = contested
     ? { name: game.i18n.localize(`SW25.Resist.Check.${key}`), key, result }
@@ -202,6 +240,9 @@ export async function castSpell(actor, item, opts = {}) {
     // and NPCs roll their save automatically on the GM's side
     resist: showResistButton(resistData, contestTargets) ? resistData : null,
   });
+  if (minorCast) content += `<div class="sw25-cast-mp"><i class="fa-solid fa-forward"></i> ${L2("Малое действие: без проверки, значение успеха 0.", "Minor Action: no check, success value 0.")}</div>`;
+  const bullet = isBulletSpell(item);
+  if (bullet) content += `<div class="sw25-cast-mp"><i class="fa-solid fa-gun"></i> ${L2("Пуля заряжена: урон или эффект — при попадании следующего выстрела.", "Bullet loaded: its damage or effect comes with the next shot that hits.")}</div>`;
   if (areaNote) content += `<div class="sw25-cast-mp"><i class="fa-regular fa-circle-dot"></i> ${areaNote}</div>`;
   if (ownMp > 0) content += `<div class="sw25-cast-mp">${L("MpLine", { cost: ownMp, before: mpBefore, after: mpBefore - ownMp })}</div>`;
   if (payLine) content += `<div class="sw25-cast-mp">${payLine}</div>`;
@@ -229,6 +270,8 @@ export async function castSpell(actor, item, opts = {}) {
         choice,
         critical,
         fumble,
+        minorCast,
+        bulletSpell: bullet || undefined,
       },
     },
   };
@@ -236,6 +279,11 @@ export async function castSpell(actor, item, opts = {}) {
   const msg = await ChatMessage.create(chatData);
 
   if (fumble || !msg) return msg;
+  // [ru.11.1] a bullet waits on the caster for the next gun attack (one bullet at a time)
+  if (bullet) {
+    await actor.update({ "flags.sw25.bullet": { msgId: msg.id, itemId: item.id, name: item.name } });
+    return msg;
+  }
   // contested spells: the save (GM for monsters / player for PCs) triggers
   // the damage and effects — see createChatMessage hook + buttonresist.
   // Willing allies of a beneficial spell get it right away.
