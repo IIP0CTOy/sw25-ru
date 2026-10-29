@@ -1,5 +1,10 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌​​​‌​​‌‌​‌​‌​​‌‌​​​‌​​‌‌‌​​​​​‌‌​​‌​​​‌‌‌​​‌⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
- * [Round 92] Shop: drag items (from a compendium, the Items directory or another sheet) into the window,
+ * [Round 92] Shop: drag items (from a compendium, the Items directory or another sheet) into the window,⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌​​​‌​​‌‌​‌​‌​​‌‌​​​‌​​‌‌‌​​​​​‌‌​​‌​​​‌‌‌​​‌​​‌​‌‌​‌​‌‌​​​‌​⁠
  * press «Buy» — the price is taken from system.price and subtracted from the buyer's system.money,
  * the items go into the buyer's inventory (a stack grows if the same item is already there).
  * Replaces the Japanese «買い物» macro. UI follows the system language (ru / en).
@@ -60,7 +65,7 @@ export async function openShop() {
       <select class="shop-buyer" style="flex:1">${list.map((a) => `<option value="${a.id}"${a.id === buyerId ? " selected" : ""}>${esc(a.name)}</option>`).join("")}</select>
       <b>${L2("Деньги", "Money")}: <span class="shop-money"></span> G</b>
     </div>
-    <label style="display:flex;gap:6px;align-items:center;margin-bottom:6px" title="${L2("Позор повышает цены Гильдии (CR II стр. 119)", "Disgrace raises the Guild's prices (CR II p. 119)")}"><input type="checkbox" class="shop-guild" checked> ${L2("Покупка в Гильдии (наценка за позор)", "Buying at the Guild (disgrace surcharge)")}</label>
+    <label style="display:flex;gap:6px;align-items:center;margin-bottom:6px" title="${L2("Позор повышает цены Гильдии", "Disgrace raises the Guild's prices")}"><input type="checkbox" class="shop-guild" checked> ${L2("Покупка в Гильдии (наценка за позор)", "Buying at the Guild (disgrace surcharge)")}</label>
     <div class="shop-drop" style="border:2px dashed #888;border-radius:6px;padding:14px;text-align:center;margin-bottom:6px">${L2("Перетащите сюда предметы (из компендиума, списка предметов или листа)", "Drag items here (from a compendium, the Items directory or a sheet)")}</div>
     <table style="width:100%"><thead><tr><th style="text-align:left">${L2("Предмет", "Item")}</th><th>${L2("Цена, G", "Price, G")}</th><th>${L2("Кол-во", "Qty")}</th><th>${L2("Сумма", "Sum")}</th><th></th></tr></thead><tbody class="shop-rows"></tbody></table>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><button type="button" class="shop-buy" style="width:auto"><i class="fa-solid fa-coins"></i> ${L2("Купить", "Buy")}</button><b>${L2("Итого", "Total")}: <span class="shop-total">0</span> G</b></div>
@@ -68,7 +73,7 @@ export async function openShop() {
 
   let root = null;
   const base = () => cart.reduce((s, l) => s + l.price * l.qty, 0);
-  // disgrace (CR II p. 119): Guild prices go up unless the rank prevents it
+  // disgrace: Guild prices go up unless the rank prevents it
   let guild = true;   // the surcharge / refusal is the Guild's; another merchant sells at the price
   const factor = () => (guild ? priceFactor(actor()) : 1);
   const total = () => Math.ceil(base() * (factor() ?? 1));

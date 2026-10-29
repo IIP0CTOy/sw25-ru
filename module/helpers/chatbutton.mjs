@@ -12,6 +12,8 @@ import { grantLoot, lootToCard } from "./lootroll.mjs";
 import { isLabel } from "./utils.mjs";
 import { L2 } from "./monstergen-i18n.mjs";
 import { isItem } from "./names.mjs";
+import { ammoElements, refundShot } from "./ammo.mjs";
+import { piercedDefense, doubleOn, critBlocked } from "./attackforms.mjs";
 
 /**
  * Execute  chat button click event and return the result.
@@ -65,6 +67,8 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
   ) {
     // [Round 66] opts.targets lets the auto-damage flow roll against a known
     // target without touching the user's current targeting.
+    // [ru.11.3] the item of this card was deleted (or the actor is gone): say so instead of failing silently
+    if (!item) { ui.notifications.warn(L2("Предмет этой карточки больше не существует.", "The item of this card no longer exists.")); return null; }
     const targetTokens = opts.targets ?? game.user.targets;
     let apply = "-";
     if (buttonType == "buttoncheck") apply = item.system.applycheck;
@@ -101,7 +105,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
         for (const [index, token] of Array.from(targetTokens).entries()) {
           const targetToken = new Set([token]);
           await chatRoll(targetToken).then((result) => {
-            chatMessageId.push(result.chatMessageId);
+            if (result?.chatMessageId) chatMessageId.push(result.chatMessageId);
           });
         }
 
@@ -272,9 +276,10 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
       powmod += Number(actor.system.attributes?.powertablemod?.all) || 0;
 
       item.system.powertable = [
-        item.system.power,
-        // [ru.11.2] a declared talent may change the critical value of this attack
-        Number(item.system.totalcvalue) + (Number(chatMessage.flags?.sw25?.featMods?.crit) || 0),
+        // [ru.12] ammunition may change the power of the shot
+        Math.max(0, Number(item.system.power) + (Number(chatMessage.flags?.sw25?.featMods?.pow) || 0)),
+        // [ru.11.2] a declared talent may change the critical value of this attack; [ru.12] a crit-immune target: no critical
+        critBlocked(item, targetTokens, chatMessage) ? 13 : Number(item.system.totalcvalue) + (Number(chatMessage.flags?.sw25?.featMods?.crit) || 0),
         0,
         item.system.pt3,
         item.system.pt4,
@@ -291,7 +296,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
         halfpow,
         halfpowmod,
         Number(lethaltech) + (Number(chatMessage.flags?.sw25?.featMods?.lt) || 0),
-        criticalray,
+        _fixed12 ? "f12" : criticalray,
         pharmtool,
         powup,
         powmod,
@@ -367,6 +372,8 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
       }
 
       let formula = baseformula + "+" + checkbase;
+      // [ru.12] a failed counter: the first 2d of the attack's damage counts as 12
+      if (_fixed12 && /^\s*2d6?\s*$/i.test(String(baseformula))) formula = "12+" + checkbase;
 
       let roll = new Roll(formula, rollData);
       await roll.evaluate();
@@ -503,6 +510,8 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
       let chatHalf = null;
       let chatResults = roll.rawPowerResult;
       let chatTotal = roll.powerResult;
+      // [ru.12] damage ×2 on a margin (the attack form «double»)
+      if (_double) { chatTotal *= 2; label += ` ×2`; }
       let chatExtraRoll = null;
       let chatFumble = null;
       if (roll.halfPow == 1) chatHalf = roll.halfPowMod;
@@ -548,14 +557,16 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
       // [2026-10-07] power cards rolled from a chat button (one-click spells, contest
       // damage) carried no element tags, so weaknesses/resistances were ignored
       const tags = DamageSupporter.createChatTag(
-        DamageSupporter.elementsOf(item),
+        ammoElements(DamageSupporter.elementsOf(item), chatMessage?.flags?.sw25?.ammo),
         actor ? actor.system.attributes?.damage : null,
         actor ? actor.system.classType : null,
         DamageSupporter.getWeaponAttributes(item)
       );
 
+      const fmP = chatMessage?.flags?.sw25?.featMods;
       chatData.flags = {
         sw25: {
+          ...(fmP?.form === "pierce" ? { pierce: { tier: Number(fmP.formArg) || 1, tokenId: fmP.pierceTarget ?? null } } : {}),
           tags: tags,
           formula: chatFormula,
           tooltip: await roll.fakeResult.getTooltip(),
@@ -613,6 +624,8 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
       await ChatMessage.create(chatData).then((chatMessage) => {
         chatMessageId = chatMessage.id;
       });
+      // ammunition lost only on a critical hit: no critical on the damage roll — it goes back
+      if (chatExtraRoll == null && chatMessage?.flags?.sw25?.ammo?.recover === "nocrit") refundShot(chatMessage, "nocrit").catch((e) => console.error("SW25 | ammo", e));
 
       return { roll, chatMessageId };
     }
@@ -1498,8 +1511,8 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
       }
     }
 
-    // reset target
-    game.user.targets.forEach((target) => target.setTarget(false));
+    // [ru.11.3] targets stay after applying (a client setting brings back the old clearing)
+    if (game.settings.get("sw25", "clearTargetsAfterApply")) game.user.targets.forEach((target) => target.setTarget(false));
 
     async function applyExec(targetTokenId) {
       const targetToken = canvas.tokens.get(targetTokenId);
@@ -1544,6 +1557,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
         const out = await applyToSections(targetToken, buttonType, resultValue, {
           section: targetSectionFor(chatMessage, targetTokenId, targetActor),
           all: !!chatMessage.flags.sw25.allSections,
+          defense: (pp) => piercedDefense(pp, chatMessage, targetTokenId).def,
           healReverseBonus: Number(targetActor.system.attributes?.healreversebonus) || 0,
         });
         if (out) {
@@ -1581,7 +1595,22 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
         }
       }
 
+      // [ru.11.3] shot protection: an equipped armor with uses left cuts a gun shot's damage by its own Defense
+      let guardNote = "";
+      if ((buttonType == "buttonmd" || buttonType == "buttonpd") && chatMessage.flags?.sw25?.shot && resultValue > 0) {
+        const armor = targetActor.items.find((i) => i.type === "armor" && i.system?.equip && i.system?.category !== "shield" && Number(i.flags?.sw25?.guard?.left) > 0);
+        if (armor) {
+          const cut = Math.max(0, Number(armor.system.pp) || 0), left = Number(armor.flags.sw25.guard.left) - 1, uses = Number(armor.flags.sw25.guard.uses) || 0;
+          resultValue = Math.max(0, resultValue - cut);
+          if (armor.isOwner) await armor.update({ "flags.sw25.guard.left": left });
+          else emitToGM({ method: "guardUse", targetToken: targetTokenId, itemId: armor.id });
+          guardNote = L2(`${armor.name}: защита от выстрела −${cut} (осталось ${left} из ${uses}).`, `${armor.name}: shot protection −${cut} (${left} of ${uses} left).`);
+        }
+      }
+
       if (buttonType == "buttonpd") {
+        const pc = piercedDefense(targetPP, chatMessage, targetTokenId);
+        if (pc.note) { targetPP = pc.def; guardNote = guardNote ? `${guardNote} ${pc.note}` : pc.note; }
         resultHP = targetHP - Math.max(0, resultValue - targetPP);
         differenceValue = targetHP - resultHP;
       }
@@ -1685,6 +1714,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
           result: result,
         }
       );
+      if (guardNote) chatData.content += `<p class="sw25-guard"><i class="fa-solid fa-shield-halved"></i> ${Handlebars.escapeExpression(guardNote)}</p>`;
 
       await ChatMessage.create(chatData); // awaited: keeps the summary parent context
     }
@@ -1751,8 +1781,8 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
       });
     }
 
-    // reset target
-    game.user.targets.forEach((target) => target.setTarget(false));
+    // [ru.11.3] targets stay after applying (a client setting brings back the old clearing)
+    if (game.settings.get("sw25", "clearTargetsAfterApply")) game.user.targets.forEach((target) => target.setTarget(false));
 
     // Chat message
     const speaker = ChatMessage.getSpeaker({ actor: actor });
@@ -2195,8 +2225,8 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
     if (buttonType == "buttonresist") {
       const doneIds = new Set(
         game.messages
-          .filter((x) => x.flags?.sw25?.contest && x.flags.sw25.attackMessageId === chatMessage.id)
-          .map((x) => x.flags.sw25.targetTokenId)
+          .filter((x) => x.flags?.sw25?.contest && (x.flags.sw25.attackMessageId === chatMessage.id || x.flags.sw25.counterOf === chatMessage.id))
+          .map((x) => x.flags.sw25.counterBy ?? x.flags.sw25.targetTokenId)
       );
       const fresh = selectedTokens.filter((t) => !doneIds.has(t.id) && !_resistLock.has(`${chatMessage.id}:${t.id}`));
       if (fresh.length < selectedTokens.length) ui.notifications.warn(L2("Эта цель уже сопротивлялась этой атаке.", "This target has already resisted this attack."));
@@ -2289,11 +2319,11 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
             }
           }
         }
-        // a familiar resists with its master's Fortitude / Willpower (CR I p. 433)
+        // a familiar resists with its master's Fortitude / Willpower
         const fmKey = checkName == game.i18n.localize("SW25.Resist.Check.Vitres") ? "Vitres" : checkName == game.i18n.localize("SW25.Resist.Check.Mndres") ? "Mndres" : null;
         const fmBase = fmKey ? familiarResistBase(selectActor, fmKey) : null;
         if (fmBase !== null) { checkbase = fmBase; checkformula = "2d6"; checkItem ||= { system: {} }; }
-        // sword shards (CR I p.384): Fortitude / Willpower bonus for a boosted monster
+        // sword shards: Fortitude / Willpower bonus for a boosted monster
         if (checkbase !== undefined && checkName != game.i18n.localize("SW25.Resist.Check.Dodge")) {
           const sh = shardResist(shardsOf(mainActorOf(selectActor) ?? selectActor));
           if (sh) checkbase = Number(checkbase) + sh;
@@ -2619,7 +2649,7 @@ function diceOf(roll) {
 }
 
 /**
- * SW2.5 contest (book I p.99): the attacker is the active side.
+ * SW2.5 contest: the attacker is the active side.
  *  - active 1-1: fails, passive wins;  - passive 6-6: passive wins;
  *  - active 6-6: active wins (unless passive also 6-6);
  *  - passive 1-1: active wins;  - otherwise ties go to the PASSIVE side.
@@ -2637,7 +2667,7 @@ async function resolveContest(attackMsg, defRoll, defToken) {
   const defFumble = d1 === 1 && d2 === 1;
   let atk = Number(f.total) || 0;
   let def = Number(defRoll.total) || 0;
-  // invisibility (CR II p.69): −4 to accuracy against an invisible target, −4 to evasion against an invisible
+  // invisibility: −4 to accuracy against an invisible target, −4 to evasion against an invisible
   // attacker; a blind character treats everyone as invisible. Only for accuracy vs evasion.
   const visNotes = [];
   if (key === "Dodge") {
@@ -2653,6 +2683,9 @@ async function resolveContest(attackMsg, defRoll, defToken) {
   else if (attackCrit) defenderWins = false;
   else if (defFumble) defenderWins = false;
   else defenderWins = def >= atk;
+  const dbl = doubleOn(attackMsg, atk, def, defenderWins);
+  // a missed arrow / quarrel that can be picked up again goes back to its pack
+  if (defenderWins && f.ammo) refundShot(attackMsg, "miss").catch((e) => console.error("SW25 | ammo", e));
 
   const L = (k) => game.i18n.localize(`SW25.Contest.${k}`);
   const result = f.resist?.result;
@@ -2697,6 +2730,7 @@ async function resolveContest(attackMsg, defRoll, defToken) {
       attackMessageId: attackMsg.id,
       targetTokenId: defToken.id,
       defenderWins,
+      ...(dbl ? { double: true } : {}),
       damageMode: hasPower ? damageMode : null,
       followup: followup || undefined,
     },
@@ -2816,10 +2850,22 @@ async function _autoDamage(contestMsg, { auto = false } = {}) {
     const pts = bItem?.system?.powerTypesButton ?? [];
     const heal = pts.length > 0 && pts.every((t) => t === "hr" || t === "mr");
     const type = heal ? (pts.includes("hr") ? "hr" : "mr") : "md";
-    await rollAndApplyDamage(bulletMsg, tok, "full", type);
+    // the cards made for this shot are marked: shot protection of the target's armor applies to them
+    _shotCtx = !heal;
+    try { await rollAndApplyDamage(bulletMsg, tok, "full", type); } finally { _shotCtx = false; }
     return;
   }
-  await rollAndApplyDamage(atkMsg, tok, f.damageMode);
+  _double = !!f.double; _fixed12 = !!f.fixed12;
+  try {
+    // magic arrows / quarrels: magic damage, and shot protection applies
+    if (atkMsg.flags?.sw25?.ammo?.magic) {
+      _shotCtx = true;
+      try { await rollAndApplyDamage(atkMsg, tok, f.damageMode, "md"); } finally { _shotCtx = false; }
+      return;
+    }
+    // a successful counter: the defender's weapon hit (physical damage)
+    await rollAndApplyDamage(atkMsg, tok, f.damageMode, atkMsg.flags?.sw25?.counter ? "pd" : undefined);
+  } finally { _double = false; _fixed12 = false; }
 }
 
 /** Disable the damage button once used (bound from renderChatMessage). */
@@ -2854,7 +2900,7 @@ export async function applyItemEffects(sourceActor, item, tokens, opts = {}) {
     const d = src;
     delete d._id;
     d.disabled = false;
-    // «Сопротивление: сокращение» — a successful save leaves the effect for 1 round only (book II p.128)
+    // «Сопротивление: сокращение» — a successful save leaves the effect for 1 round only
     if (opts.shortened) d.duration = { ...(d.duration ?? {}), value: 1, units: "rounds" };
     d.origin = item.uuid;
     d.flags = {
@@ -2899,6 +2945,8 @@ export async function applyItemEffects(sourceActor, item, tokens, opts = {}) {
 // card. Their buttons stay reachable through the row.
 
 let _parentCtx = null;
+let _shotCtx = false;
+let _double = false, _fixed12 = false;   // [ru.12] attack forms: damage ×2 on a margin; a failed counter (first roll 12)
 export async function withParent(parentId, fn) {
   const prev = _parentCtx;
   _parentCtx = parentId;
@@ -2925,6 +2973,7 @@ export function tagChildMessage(doc) {
   if (_parentCtx && !doc.flags?.sw25?.parentId) {
     doc.updateSource({ "flags.sw25.parentId": _parentCtx });
   }
+  if (_shotCtx && doc.flags?.sw25?.shot === undefined) doc.updateSource({ "flags.sw25.shot": true });
 }
 
 const _rowsCache = new Map();

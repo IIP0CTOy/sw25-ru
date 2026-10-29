@@ -1,5 +1,10 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​‌‌​​​‌‌​‌‌​​​​‌​​‌‌​‌​‌​‌‌​​​‌​​‌‌​​​​‌​​‌‌​​‌‌⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
- * [Round 82] Rest and «once per day» (book I p.183-184).
+ * [Round 82] Rest and «once per day».
  *
  *  - Sleep 3 h: +10 % max HP, + half max MP (rounded up). 6 h (or two rests): 20 % HP, all MP.
  *    No more than 6 h of sleep count per day.
@@ -164,7 +169,7 @@ export async function restActor(actor, mode) {
 export async function openRestDialog() {
   const DV = foundry.applications?.api?.DialogV2;
   const picked = new Set((canvas?.tokens?.controlled ?? []).map((t) => t.actor).filter((a) => a?.type === "character" && a.isOwner));
-  // everyone the user owns; ticked by default: the selected tokens, else the players' characters
+  // everyone the user owns; ticked by default: the selected tokens, else the players' characters⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​‌‌​​​‌‌​‌‌​​​​‌​​‌‌​‌​‌​‌‌​​​‌​​‌‌​​​​‌​​‌‌​​‌‌​​‌​‌‌​‌​‌‌​​​‌​⁠
   const pool = game.actors.filter((a) => a.type === "character" && a.isOwner);
   for (const a of picked) if (!pool.includes(a)) pool.push(a);
   const owned = pool.filter((a) => a.hasPlayerOwner);

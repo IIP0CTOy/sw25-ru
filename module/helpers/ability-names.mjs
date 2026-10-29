@@ -1,11 +1,16 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌‌​​​​​‌‌​‌‌​​​‌‌​​​‌​​‌‌‌​​​​​‌‌‌​​​​​‌‌​‌​​⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
- * [Round 94] English names of the abilities whose automation is keyed by a Russian name
+ * [Round 94] English names of the abilities whose automation is keyed by a Russian name⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌‌​​​​​‌‌​‌‌​​​‌‌​​​‌​​‌‌‌​​​​​‌‌‌​​​​​‌‌​‌​​​​‌​‌‌​‌​‌‌​​​‌​⁠
  * (songs, alchemist cards, flat heals, auto-learned talents, techniques, stratagems, aspects, weaves).
  * Names only — no rules text. `canon(name)` turns any known spelling into the Russian key the tables use.
  */
 import { norm } from "./names.mjs";
 
-/** As printed in the English edition of rulebooks I–III. */
+/** English names of these abilities. */
 const BOOK = {
   "Расслабляющая": ["Ambience"],
   "Какофония": ["Cacophony"],

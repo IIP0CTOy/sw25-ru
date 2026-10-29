@@ -1,3 +1,8 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌​‌​​​​‌‌​‌‌​​​‌‌​‌​‌​‌‌​​‌‌​​​‌‌​​​‌​​‌‌​‌​‌⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
  * [Round 94] Language-neutral names.
  * The rules engine recognises some items by NAME (classes, the death check, a few keywords).
@@ -58,7 +63,7 @@ export const isClass = (name, ...keys) => { const k = classKey(name); return !!k
 /** [ru.11.1] Classes that make an Accuracy check: warrior-type (Fighter, Grappler, Fencer, Marksman, Battle Dancer). */
 export const isAccuracyClass = (it) => !!it && (it.system?.skilltype === "fighterskill" || isClass(it.name, "fighter", "grappler", "fencer", "shooter", "battledancer"));
 /** [ru.11.1] Warrior classes that can attack with a weapon of this category (grapple: Grappler; bow, crossbow,
- * gun: Marksman; thrown: Marksman, Fighter, Fencer; other melee: Fighter, Fencer, Battle Dancer). A GM's own
+ * gun: Marksman; thrown: Marksman, Fighter, Fencer; other melee: Fighter, Fencer, Battle Dancer). A GM's own⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌​‌​​​​‌‌​‌‌​​​‌‌​‌​‌​‌‌​​‌‌​​​‌‌​​​‌​​‌‌​‌​‌​​‌​‌‌​‌​‌‌​​​‌​⁠
  * warrior class (unknown name) fits any category. */
 export const weaponClassFits = (it, category) => {
   if (!isAccuracyClass(it)) return false;

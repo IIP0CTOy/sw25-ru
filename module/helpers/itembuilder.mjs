@@ -1,3 +1,8 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌​​‌​​​‌‌​‌​​​​‌‌​​​‌​​‌‌​‌‌​​​‌‌​​‌‌​​‌‌​‌​​⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
  * [Round 97] Item constructor: weapons, armour and shields, accessories, gear and spells.
  * A small form per kind — numbers and pick-lists, the description is typed by hand — and the
@@ -6,6 +11,7 @@
  */
 import { L2 } from "./monstergen-i18n.mjs";
 import { STATS, statLabel, statById, buildEffects, describeRows, checkBonusKey } from "./effecttext.mjs";
+import { RECOVER } from "./ammo.mjs";
 
 const esc = (s) => foundry.utils.escapeHTML(String(s ?? ""));
 const loc = (k) => game.i18n.localize(k);
@@ -20,6 +26,7 @@ const KINDS = [
   ["armor", "fa-solid fa-shield-halved", ["Броня и щиты", "Armour & shields"]],
   ["accessory", "fa-solid fa-ring", ["Аксессуар", "Accessory"]],
   ["item", "fa-solid fa-flask", ["Предмет", "Item"]],
+  ["ammo", "fa-solid fa-bullseye", ["Боеприпасы", "Ammunition"]],
   ["spell", "fa-solid fa-wand-sparkles", ["Заклинание", "Spell"]],
   ["alchemy", "fa-solid fa-vial", ["Приворот алхимика", "Alchemist evocation"]],
   ["song", "fa-solid fa-music", ["Мелодия барда", "Bard song"]],
@@ -38,6 +45,8 @@ const NOTES = [["up", "↑"], ["down", "↓"], ["charm", "♡"]];
 const SONG_SIDES = [["", ["никого (только ритм)", "nobody (rhythm only)"]], ["foe", ["врагов в 30 м (штраф)", "foes within 30 m (penalty)"]], ["ally", ["союзников в 30 м (бонус)", "allies within 30 m (bonus)"]]];
 const CARD_COLORS = [["red", ["Красные", "Red"]], ["green", ["Зелёные", "Green"]], ["black", ["Чёрные", "Black"]], ["white", ["Белые", "White"]], ["gold", ["Золотые", "Gold"]]];
 const EV_TYPES = [["-", ["ничего", "nothing"]], ["time", ["длительность эффекта, раундов", "effect duration, rounds"]], ["value", ["величину бонуса", "the size of the bonus"]]];
+const AMMO_FOR = [["bow", ["лук", "bow"]], ["crossbow", ["арбалет", "crossbow"]], ["gun", ["ружьё", "gun"]]];
+const AMMO_EL = ["fire", "ice", "thunder", "wind", "earth", "energy", "poison"];
 const kindLabel = (k) => { const e = KINDS.find((x) => x[0] === k); return L2(e[2][0], e[2][1]); };
 
 /** Schools of magic: key -> words the GM may type (any language). The first Russian / English word is shown as a hint. */
@@ -219,6 +228,15 @@ export function buildItem(kind, f, rows = []) {
       usepower: power !== null, power: power ?? 0, cvalue: N(f.cvalue, 10) || 10, applypower: "on" };   // check/damage class + Dex/Str: from the sheet's attack class (item.mjs _applyDefaultRollSkills)
     folder = [L2("Оружие", "Weapons"), category ? loc(C.weaponCategories[category]) : L2("Прочее", "Other"), rankFolder(system.rank)];
     effects = buildEffects(name, "weapon", fxRows, { transfer: true });
+    if (category === "gun" && N(f.magMax) > 0) Object.assign(extra, { mag: { max: Math.floor(N(f.magMax)), loaded: [] } });
+  } else if (kind === "ammo") {
+    const fits = AMMO_FOR.map(([k]) => k).filter((k) => f[`for_${k}`]);
+    if (!fits.length) throw new Error(L2("Отметь, для какого оружия боеприпасы.", "Tick which weapons the ammunition is for."));
+    type = "item";
+    system = { ...base, quantity: Math.max(1, Math.round(N(f.quantity, 12))), type: "" };
+    Object.assign(extra, { ammo: { for: fits, hit: N(f.ahit), dmg: N(f.admg), power: N(f.apower), crit: N(f.acrit), magic: !!f.amagic, silver: !!f.asilver,
+      element: AMMO_EL.includes(f.aelement) ? f.aelement : "", recover: ["never", "always", "miss", "nocrit"].includes(f.recover) ? f.recover : "never" } });
+    folder = [L2("Предметы", "Items"), L2("Боеприпасы", "Ammunition")];
   } else if (kind === "armor") {
     const category = f.acategory in (C.armorCategorys ?? {}) ? f.acategory : "other";
     system = { ...base, category, rank: rankOf(f), reqstr: Math.max(1, N(f.reqstr, 1)), pp: N(f.pp), dodge: N(f.dodge), mpp: N(f.mpp), usage: "" };
@@ -329,7 +347,7 @@ export function buildItem(kind, f, rows = []) {
     type = "item";
     system = { ...base, quantity: 1 };
     folder = [L2("Улучшения", "Upgrades"), f.abyss ? L2("Бездна", "Abyss") : L2("Мастерская", "Workshop")];
-    Object.assign(extra, { enh: { kinds, f: fieldDeltas(f), fx: fxRows.map((r) => [r.key, N(r.value)]), p: f.param || "", price: N(f.price), tag: tag ? { ru: tag, en: tag, ja: tag } : {}, el: {}, abyss: !!f.abyss, ...(f.newOnly ? { newOnly: true } : {}) } });
+    Object.assign(extra, { enh: { kinds, f: fieldDeltas(f), fx: fxRows.map((r) => [r.key, N(r.value)]), p: f.param || "", price: N(f.price), tag: tag ? { ru: tag, en: tag, ja: tag } : {}, el: {}, abyss: !!f.abyss, ...(f.newOnly ? { newOnly: true } : {}), ...(N(f.guardUses) > 0 ? { guard: { uses: N(f.guardUses), repair: N(f.guardRepair) } } : {}) } });
   } else if (kind === "curse") {
     const when = WHEN.some(([k]) => k === f.when) ? f.when : "equip";
     const mech = { f: fieldDeltas(f), fx: fxRows.map((r) => [r.key, N(r.value)]), off: when === "off" };
@@ -372,7 +390,8 @@ export function folderPathForItem(d) {
     case "weapon": return [L2("Оружие", "Weapons"), C.weaponCategories?.[s.category] ? loc(C.weaponCategories[s.category]) : L2("Прочее", "Other"), rank(s.rank)];
     case "armor": return [L2("Броня", "Armour"), s.category === "shield" ? L2("Щиты", "Shields") : loc(C.armorCategorys?.[s.category] ?? C.armorCategorys?.other ?? "Other"), rank(s.rank)];
     case "accessory": return [L2("Аксессуары", "Accessories"), loc(C.accparts?.[s.accpart] ?? C.accparts?.other ?? "Other")];
-    case "item": return [L2("Предметы", "Items"), C.itemTypes?.[s.type] ? loc(C.itemTypes[s.type]) : L2("Разное", "Miscellaneous")];
+    case "item": if (d.flags?.sw25?.ammo) return [L2("Предметы", "Items"), L2("Боеприпасы", "Ammunition")];
+      return [L2("Предметы", "Items"), C.itemTypes?.[s.type] ? loc(C.itemTypes[s.type]) : L2("Разное", "Miscellaneous")];
     case "spell": { const lv = Math.max(1, Math.round(N(s.level, 1))); return [L2("Заклинания", "Spells"), d.flags?.sw25?.schoolText || schoolLabel(s.type || "sorcerer"), L2(`Круг ${lv}`, `Level ${lv}`)]; }
     default: return null;
   }
@@ -391,7 +410,7 @@ export async function createBuiltItem(kind, f, rows = [], actor = null) {
   return { item, folder: built.folder, notes: built.notes };
 }
 
-/* ------------------------------------------------------------------ *
+/* ------------------------------------------------------------------ *⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌​​‌​​​‌‌​‌​​​​‌‌​​​‌​​‌‌​‌‌​​​‌‌​​‌‌​​‌‌​‌​​​​‌​‌‌​‌​‌‌​​​‌​⁠
  *  Window
  * ------------------------------------------------------------------ */
 const opt = (v, label, cur) => `<option value="${esc(v)}"${String(v) === String(cur ?? "") ? " selected" : ""}>${esc(label)}</option>`;
@@ -413,7 +432,19 @@ function formHtml(kind) {
       + fld(L2("Тип урона", "Damage type"), `<select name="wtype">${opt("", L2("по категории", "by category"), "")}${cfgOpts(C.weaponTypes, "")}</select>`, 2)
       + fld(L2("Мин. Сила", "Min. Strength"), num("reqstr", 1, 'min="1"')) + fld(L2("Дальность", "Range"), `<input type="text" name="wrange" placeholder="${L2("напр. 20 м", "e.g. 20 m")}">`)
       + fld(L2("Точность ±", "Accuracy ±"), num("hit", 0)) + fld(L2("Мощность", "Power"), num("power", 10, 'min="0"'))
-      + fld(L2("Крит", "Crit"), num("cvalue", 10, 'min="2" max="13"')) + fld(L2("Доп. урон ±", "Extra damage ±"), num("dmod", 0));
+      + fld(L2("Крит", "Crit"), num("cvalue", 10, 'min="2" max="13"')) + fld(L2("Доп. урон ±", "Extra damage ±"), num("dmod", 0))
+      + fld(L2("Ружьё: макс. магазин", "Gun: max magazine"), num("magMax", "", 'min="0"'), 2);
+  } else if (kind === "ammo") {
+    const els = AMMO_EL.map((k) => opt(k, loc(C.spellProps?.[k] ?? k), "")).join("");
+    body = `<div class="ib-f" style="grid-column:span 4"><span>${L2("Для какого оружия", "For which weapons")}</span><div style="display:flex;gap:12px">`
+      + AMMO_FOR.map(([k, l]) => `<label><input type="checkbox" name="for_${k}"${k === "bow" ? " checked" : ""}> ${L2(l[0], l[1])}</label>`).join("") + `</div></div>`
+      + fld(L2("Количество", "Quantity"), num("quantity", 12, 'min="1"'))
+      + fld(L2("Точность ±", "Accuracy ±"), num("ahit", 0)) + fld(L2("Урон ±", "Damage ±"), num("admg", 0)) + fld(L2("Мощность ±", "Power ±"), num("apower", 0))
+      + fld(L2("Крит ±", "Crit ±"), num("acrit", 0)) + fld(L2("Стихия", "Element"), `<select name="aelement">${opt("", "—", "")}${els}</select>`)
+      + fld(L2("После выстрела", "After the shot"), `<select name="recover">${RECOVER.map(([v, l]) => opt(v, L2(l[0], l[1]), "never")).join("")}</select>`, 2)
+      + `<label class="ib-f" style="grid-column:span 2"><span>&nbsp;</span><span><input type="checkbox" name="amagic"> ${L2("магический урон (защита от выстрелов снижает)", "magic damage (shot protection reduces it)")}</span></label>`
+      + `<label class="ib-f" style="grid-column:span 2"><span>&nbsp;</span><span><input type="checkbox" name="asilver"> ${L2("посеребрённые", "silvered")}</span></label>`
+      + `<small style="grid-column:span 4;opacity:.75">${L2("Для ружья пуля только заряжается в магазин; урон ружья даёт заклинание-пуля.", "For a gun the bullet is only loaded into the magazine; the gun's damage comes from the bullet spell.")}</small>`;
   } else if (kind === "armor") {
     body = fld(L2("Вид", "Kind"), `<select name="acategory">${cfgOpts(C.armorCategorys, "nonmetalarmor")}</select>`, 2)
       + fld(L2("Ранг", "Rank"), rankSel()) + fld(L2("Мин. Сила", "Min. Strength"), num("reqstr", 1, 'min="1"'))
@@ -505,6 +536,8 @@ function formHtml(kind) {
       + fld(L2("Метка в названии", "Tag in the name"), `<input type="text" name="tag" placeholder="${L2("напр. Посеребренный", "e.g. Silvered")}">`, 2)
       + `<label class="ib-f" style="grid-column:span 2"><span>&nbsp;</span><span><input type="checkbox" name="abyss"> ${L2("улучшение Бездны (нужно проклятие)", "Abyss enhancement (needs a curse)")}</span></label>`
       + `<label class="ib-f" style="grid-column:span 2"><span>&nbsp;</span><span><input type="checkbox" name="newOnly"> ${L2("только при покупке (кузница не делает на уже купленном)", "only when buying (the smithy won't add it to an owned item)")}</span></label>`
+      + fld(L2("Броня: защита от выстрелов, раз", "Armor: shot protection, uses"), num("guardUses", "", 'min="0"'), 2)
+      + fld(L2("Ремонт за раз, G", "Repair per use, G"), num("guardRepair", "", 'min="0"'), 2)
       + deltas();
   } else if (kind === "curse") {
     body = fld(L2("Номер (2d: 11–66)", "Number (2d: 11–66)"), num("code", "", 'min="11" max="66"'))
@@ -518,6 +551,7 @@ function formHtml(kind) {
     : kind === "alchemy" ? `<small style="grid-column:span 4;opacity:.75">${L2("Если ранг карт задаёт величину бонуса — число в строке заменится значением ранга (впиши любое, например 1). Если длительность — эффект продлится столько раундов.", "If the card rank sets the size of the bonus, the number in the row is replaced by the rank value (type any, e.g. 1). If it sets the duration, the effect lasts that many rounds.")}</small>`
     : kind === "spell" ? fld(L2("Длительность эффекта, р. (пусто — как у заклинания)", "Effect duration, rd. (empty — same as the spell)"), `<input type="number" name="fxRounds" value="" min="0">`, 3)
     : ["enh", "curse"].includes(kind) ? `<small style="grid-column:span 4;opacity:.75">${L2("Бонусы и штрафы персонажу, пока предмет надет (проклятие — по «Когда действует»).", "Bonuses and penalties to the character while the item is equipped (a curse: per «When it works»).")}</small>`
+    : kind === "ammo" ? `<small style="grid-column:span 4;opacity:.75">${L2("Боеприпасы берут числа из полей выше; строки бонусов не используются.", "Ammunition uses the fields above; bonus rows are not used.")}</small>`
     : kind === "golempart" ? `<small style="grid-column:span 4;opacity:.75">${L2("Детали голема берут числа из полей выше; строки бонусов не используются.", "Golem parts use the fields above; bonus rows are not used.")}</small>`
     : kind === "item" ? fld(L2("Длительность эффекта, р.", "Effect duration, rd."), `<input type="number" name="fxRounds" value="" min="0">`, 2) + `<label class="ib-f" style="grid-column:span 2"><span>&nbsp;</span><span><input type="checkbox" name="worn"> ${L2("действует, пока предмет при себе", "works while carried")}</span></label>`
     : `<small style="grid-column:span 4;opacity:.75">${L2("Бонусы действуют, пока предмет надет.", "Bonuses apply while the item is equipped.")}</small>`;

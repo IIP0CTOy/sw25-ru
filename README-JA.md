@@ -79,6 +79,6 @@ https://github.com/IIP0CTOy/sw25-ru/releases/latest/download/system.json
 
 ## ライセンス
 
-プログラムのコード：[MIT](LICENSE.txt)。ライセンスはコードだけに適用され、『ソード・ワールド2.5』のゲーム・用語・世界観は権利者のものです。例外：複数部位の魔物のコード（`module/helpers/sections.mjs`）は 2.4.1-ru.8 から別ライセンス（All rights reserved、[LICENSE-SECTIONS.txt](LICENSE-SECTIONS.txt)）です。
+プログラムのコード：[MIT](LICENSE.txt)。ライセンスはコードだけに適用され、『ソード・ワールド2.5』のゲーム・用語・世界観は権利者のものです。例外：本システム独自のモジュール（複数部位の魔物は 2.4.1-ru.8 から、特技・アイテムのコンストラクター、鍛冶屋、魔物ジェネレーター、キャラクター作成ウィザード、新しいシートなどは 2.4.1-ru.11.3 から）は別ライセンス（All rights reserved）です。卓での使用は自由ですが、他のパッケージへのコピーはできません。対象ファイルは [LICENSE-RESERVED.txt](LICENSE-RESERVED.txt) を参照してください。
 
 権利者の方で、変更や削除をご希望の場合は、Issue または作者までご連絡ください。

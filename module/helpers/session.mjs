@@ -1,8 +1,13 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌​​‌‌​​‌‌​‌​‌​‌‌​​‌‌​​‌‌​​​‌‌​​‌‌​​‌‌​​‌‌‌​​​⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
- * [Round 74] End of session, book I p.188-192.
+ * [Round 74] End of session.
  *   Experience: 1000 if the goal was reached (500 if not)
- *               + 10 × level of every defeated monster (p.384)
- *               + 50 for every automatic failure (1-1) of the character (p.91)
+ *               + 10 × level of every defeated monster
+ *               + 50 for every automatic failure (1-1) of the character
  *   Money: the loot sold, split between the characters.
  *   Reputation: each sword shard -> 1d6 (every character rolls all shards).
  *   Growth: one growth roll per character (existing growth card).
@@ -134,7 +139,7 @@ export async function sessionEnd() {
   const shards = Math.max(0, Number(form.shards) || 0);
   const toSheets = form.mode !== "chat";
   const reset = toSheets || !!form.reset;
-  // book I p.192: every character gets the same reputation — one roll for the party
+  // every character gets the same reputation — one roll for the party⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌​​‌‌​​‌‌​‌​‌​‌‌​​‌‌​​‌‌​​​‌‌​​‌‌​​‌‌​​‌‌‌​​​​​‌​‌‌​‌​‌‌​​​‌​⁠
   let rep = 0, repDice = "";
   if (shards) {
     const r = await new Roll(`${shards}d6`).evaluate();

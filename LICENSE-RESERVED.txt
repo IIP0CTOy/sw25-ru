@@ -1,0 +1,61 @@
+Sword World 2.5 Plus (sw25-ru) — reserved files
+Copyright (c) 2026 IIP0CTOy. All rights reserved.
+
+The files listed below are NOT covered by the MIT License of this repository:
+- module/helpers/sections.mjs — starting with version 2.4.1-ru.8;
+- module/helpers/ammo.mjs, module/helpers/attackforms.mjs — starting with version 2.4.1-ru.12 (their first version);
+- every other file in the list — starting with version 2.4.1-ru.11.3.
+Earlier versions of these files were published under the MIT License, and those
+earlier versions remain under it. This licence applies to the versions named above
+and to all later versions.
+
+You may:
+- download, install and use these files as part of the sw25-ru system in your own
+  Foundry VTT games, private or public.
+
+Without prior written permission from the author you may not:
+- copy, modify, translate or adapt these files or any part of them;
+- include these files, or code taken from them, in other systems, modules or packages;
+- redistribute, sell or sublicense them, alone or as part of another package.
+
+Files:
+  module/helpers/sections.mjs
+  module/helpers/ability-names.mjs
+  module/helpers/ammo.mjs
+  module/helpers/attackforms.mjs
+  module/helpers/catalog.mjs
+  module/helpers/chargen.mjs
+  module/helpers/classcast.mjs
+  module/helpers/classfeatures.mjs
+  module/helpers/deathcheck.mjs
+  module/helpers/dualattack.mjs
+  module/helpers/effecttext.mjs
+  module/helpers/equipreq.mjs
+  module/helpers/feats.mjs
+  module/helpers/golemparts.mjs
+  module/helpers/guide.mjs
+  module/helpers/guide-ja.mjs
+  module/helpers/itembuilder.mjs
+  module/helpers/itempiles.mjs
+  module/helpers/ja-strings.mjs
+  module/helpers/mako.mjs
+  module/helpers/monstergen.mjs
+  module/helpers/monstergen-i18n.mjs
+  module/helpers/names.mjs
+  module/helpers/ranks.mjs
+  module/helpers/rest.mjs
+  module/helpers/samples.mjs
+  module/helpers/session.mjs
+  module/helpers/shards.mjs
+  module/helpers/shop.mjs
+  module/helpers/spellcast.mjs
+  module/helpers/starter.mjs
+  module/helpers/summons.mjs
+  module/helpers/upgrades.mjs
+  module/helpers/ytspell.mjs
+  module/sheets/actor-sheet-new.mjs
+  templates/actor/actor-character-sheet-new.hbs
+  css/sw25-sheet-new.css
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+Contact: https://github.com/IIP0CTOy

@@ -2,6 +2,7 @@ import { effectInitPC, effectVitResPC, effectMndResPC, effectMKnowPC } from "../
 import { PT } from "../helpers/powerroll.mjs";
 import { effectHitMon, effectDmgMon, effectDodgeMon, rpt } from "../sw25.mjs";
 import { isClass, isItem, isEvasionClass, pickCheckClass } from "../helpers/names.mjs";
+import { L2 } from "../helpers/monstergen-i18n.mjs";
 /**
  * Extend the base Actor document by defining a custom roll data structure which is ideal for the Simple system.
  * @extends {Actor}
@@ -15,6 +16,8 @@ const REPREP_MASK = [
 /** [ru.11] Foundry v14 effect changes carry «type» ("add", "subtract", …); the numeric «mode» is a deprecated shim. */
 const CHANGE_MODE = { custom: 0, multiply: 1, add: 2, subtract: 2, downgrade: 3, upgrade: 4, override: 5 };
 const changeMode = (c) => (c?.type != null ? CHANGE_MODE[c.type] ?? 0 : c?.mode);
+/** The old numeric modes, kept locally: reading CONST.ACTIVE_EFFECT_MODES warns in v14 and goes away in v16. */
+const MODE = { CUSTOM: 0, MULTIPLY: 1, ADD: 2, DOWNGRADE: 3, UPGRADE: 4, OVERRIDE: 5 };
 const changeValue = (c) => Number(c?.value) * (c?.type === "subtract" ? -1 : 1);
 
 export class SW25Actor extends Actor {
@@ -29,35 +32,20 @@ export class SW25Actor extends Actor {
 
   /**
    * @override
-   * v14 workaround: Foundry core's own Active Effect application
-   * (`applyActiveEffects(phase)`) currently throws — "Cannot set
-   * properties of undefined (setting 'initial'/'final')" on the first
-   * call for either phase, and "ActiveEffect application phase ... has
-   * already completed" on later calls in the same or a later cycle —
-   * even for brand-new actors with zero effects. Core now calls this
-   * TWICE per prepareData() cycle (phase "initial" from inside
-   * prepareEmbeddedDocuments(), phase "final" directly at the end of
-   * prepareData() itself), so guarding just prepareEmbeddedDocuments()
-   * was not enough; overriding applyActiveEffects() itself catches both
-   * call sites regardless of who calls it. This looks like a genuine
-   * v14 core regression in the new phase-based AE application (Foundry's
-   * own changelogs show several "phase" bugfixes landing across
-   * 14.349-14.365 — worth checking you're on the latest v14 build).
-   * Left unguarded, the exception aborts prepareData() before it ever
-   * reaches prepareDerivedData() — which is why HP/MP/abilities/items on
-   * the sheet looked completely empty. Catch it here so the rest of data
-   * preparation still runs; Active Effects (buffs/debuffs from items)
-   * may not apply correctly until Foundry fixes the underlying bug, but
-   * the character sheet itself works.
+   * Safety net: an effect that cannot be applied must not stop the whole preparation of the actor
+   * (the sheet would come up empty). The real cause of the old v14 crash was the missing
+   * super.prepareBaseData() call (fixed below); this guard stays for broken effects in old data.
+   * The GM is told once per session, the details go to the console.
    */
   applyActiveEffects(phase) {
     try {
       return super.applyActiveEffects(phase);
     } catch (err) {
-      console.error(
-        `SW25 | applyActiveEffects("${phase}") failed (likely a Foundry v14 core bug, see actor.mjs) — skipping this phase for this cycle:`,
-        err
-      );
+      console.error(`SW25 | ${this.name}: active effects ("${phase}") could not be applied:`, err);
+      if (game.user?.isGM && !SW25Actor._fxWarned) {
+        SW25Actor._fxWarned = true;
+        ui.notifications?.warn(L2(`${this.name}: не удалось применить эффекты — подробности в консоли (F12).`, `${this.name}: active effects could not be applied — see the console (F12).`));
+      }
     }
   }
 
@@ -169,6 +157,9 @@ export class SW25Actor extends Actor {
     //Calcurate Exp & AdvLevel & MgLevel
     // recomputed from the items each time (a second prepareData() used to double it)
     systemData.attributes.useexp = 0;
+    // [ru.11.3] the levels too: a magic level used to grow by the class levels on every extra prepareData()
+    systemData.attributes.advlevel.value = 0;
+    systemData.attributes.mglevel.value = 0;
     this.items.forEach((item) => {
       if (item.type == "skill") {
         // Exp
@@ -335,7 +326,7 @@ export class SW25Actor extends Actor {
     systemData.barempp = 0;
     systemData.baredreduce = 0;
     systemData.skillagidodge = 0;
-    // Shields (Core Rulebook I, pp. 147-148): a shield takes a hand, so it does not
+    // Shields: a shield takes a hand, so it does not
     // count while a two-handed weapon (2H, 2Hᵴ, 2Hᵱ, 2H*; not 2H#) or a 1HW grappling
     // weapon is equipped; with several shields equipped only one applies (the best one).
     const equippedShields = this.items.filter((i) =>
@@ -945,6 +936,8 @@ export class SW25Actor extends Actor {
       { type: "abyssal", cast: "abcast", power: "abpower", pwmod: "efabpwmod" },
       { type: "bibliomancer", cast: "bmcast", power: "bmpower", pwmod: "efbmpwmod" },
     ];
+    // [ru.11.3] a school whose class is gone (or never chosen) has no base: «—», not NaN
+    for (const sp of spellSchoolPower) for (const k of [sp.cast, sp.power]) if (Number.isNaN(systemData.attributes[k])) systemData.attributes[k] = null;
     const efmpwallBonus = Number(systemData.attributes.efmpwall) || 0;
     // Round 25 addendum: bonuses aimed at ONE named spell rather than a
     // whole school ("Напряженный финал" — Bard technique, "+10 Мощность"
@@ -1152,21 +1145,21 @@ export class SW25Actor extends Actor {
       if (rule) {
         let value = Number(effects.value);
         switch (effects.mode) {
-          case CONST.ACTIVE_EFFECT_MODES.MULTIPLY:
+          case MODE.MULTIPLY:
             totals[rule.target] *= value;
             break;
 
-          case CONST.ACTIVE_EFFECT_MODES.ADD:
+          case MODE.ADD:
             totals[rule.target] += value;
             break;
   
-          case CONST.ACTIVE_EFFECT_MODES.OVERRIDE:
+          case MODE.OVERRIDE:
             totals[rule.target] = value;
             break;
   
-          case CONST.ACTIVE_EFFECT_MODES.DOWNGRADE:
-          case CONST.ACTIVE_EFFECT_MODES.UPGRADE:
-          case CONST.ACTIVE_EFFECT_MODES.CUSTOM:
+          case MODE.DOWNGRADE:
+          case MODE.UPGRADE:
+          case MODE.CUSTOM:
             //未実装
             break;
   
@@ -1832,21 +1825,21 @@ export class SW25Actor extends Actor {
 
         let newValue = currentValue;
         switch (effects.mode) {
-          case CONST.ACTIVE_EFFECT_MODES.MULTIPLY:
+          case MODE.MULTIPLY:
             newValue = Number(currentValue) * value;
             break;
 
-          case CONST.ACTIVE_EFFECT_MODES.ADD:
+          case MODE.ADD:
             newValue = Number(currentValue) + value;
             break;
   
-          case CONST.ACTIVE_EFFECT_MODES.OVERRIDE:
+          case MODE.OVERRIDE:
             newValue = value;
             break;
   
-          case CONST.ACTIVE_EFFECT_MODES.DOWNGRADE:
-          case CONST.ACTIVE_EFFECT_MODES.UPGRADE:
-          case CONST.ACTIVE_EFFECT_MODES.CUSTOM:
+          case MODE.DOWNGRADE:
+          case MODE.UPGRADE:
+          case MODE.CUSTOM:
             //未実装
             break;
   

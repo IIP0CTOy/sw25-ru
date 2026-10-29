@@ -1,3 +1,8 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌‌​​​​​‌‌​‌​​​​‌‌​​​‌​​‌‌​‌​‌​‌‌​​‌‌​​​‌‌‌​​‌⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
  * [Round 95] Starter compendiums.
  * The public system ships without rulebook content, but the character wizard and the sheets need
@@ -168,7 +173,7 @@ async function askAndBuild() {
       { action: "cancel", label: L2("Отмена", "Cancel"), callback: () => null },
     ],
   }).catch(() => null);
-  // rebuilt in the language of this client (samples keep the language they were made in)
+  // rebuilt in the language of this client (samples keep the language they were made in)⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌‌​​​​​‌‌​‌​​​​‌‌​​​‌​​‌‌​‌​‌​‌‌​​‌‌​​​‌‌‌​​‌​​‌​‌‌​‌​‌‌​​​‌​⁠
   if (choice === "samples") return game.sw25?.samples?.build?.({ force: true });
   if (["ru", "en", "ja"].includes(choice)) return buildStarter({ language: choice, force: true });
   return null;

@@ -38,6 +38,7 @@ import { registerItemBuilder } from "./helpers/itembuilder.mjs";
 import { registerFeats } from "./helpers/feats.mjs";
 import { registerShards } from "./helpers/shards.mjs";
 import { registerUpgrades } from "./helpers/upgrades.mjs";
+import { registerAmmo } from "./helpers/ammo.mjs";
 import { registerRanks } from "./helpers/ranks.mjs";
 import { registerSummons } from "./helpers/summons.mjs";
 import { registerSamples } from "./helpers/samples.mjs";
@@ -391,6 +392,14 @@ function registerSystemSettings() {
     type: Boolean,
     default: true,
   });
+  game.settings.register("sw25", "clearTargetsAfterApply", {
+    name: L2("Снимать цели после применения урона и эффектов", "Clear targets after applying damage and effects"),
+    hint: L2("Выключено: цель остаётся выбранной после удара, можно бить дальше. Включено: как раньше, цели снимаются.", "Off: the target stays selected after a hit, keep attacking. On: targets are cleared, as before."),
+    scope: "client",
+    config: true,
+    type: Boolean,
+    default: false,
+  });
   game.settings.register("sw25", "autoCastSpells", {
     name: "SETTING.autoCastSpells.name",
     hint: "SETTING.autoCastSpells.hint",
@@ -497,7 +506,7 @@ Hooks.once("init", function () {
     { id: "sw25confused", name: "SW25.Status.Confused", img: "icons/svg/stoned.svg" },
     { id: "sw25restrained", name: "SW25.Status.Restrained", img: "icons/svg/net.svg" },
     { id: "sw25silenced", name: "SW25.Status.Silenced", img: "icons/svg/silenced.svg" },
-    // Round 52: SW25 core p.184 — 0 or less HP => unconscious, threatened
+    // Round 52: 0 or less HP => unconscious, threatened
     // with death, Проверка Смерти begins. Same "icon-only" caveat as the
     // four above: Foundry shows it on the token/combat tracker on its
     // own, but nothing here stops an "unconscious" token from being
@@ -579,6 +588,7 @@ Hooks.once("setup", () => {
   registerEffectText(); // [Round 93] effects from text + manual fix dialog (item sheet header)
   registerShards(); // monsters boosted with sword shards
   registerUpgrades(); // weapon / armour upgrades, Abyss enhancement
+  registerAmmo(); // ammunition, gun magazines
   registerRanks(); // adventurer rank and disgrace
   registerSummons(); // golems, undead, familiars
   registerFeats(); // talent constructor (combat feats, racial abilities)
@@ -586,7 +596,7 @@ Hooks.once("setup", () => {
   registerAutoGrant(); // [2026-10-07] «выдавать автоматически» on talent sheets
   registerSamples(); // [Round 99] built-in sample characters and monsters
   registerStarter(); // [Round 95] starter compendiums (classes, checks, racial abilities, techniques)
-  registerEquipRequirement(); // minimum Strength to equip (book I p.151/153), GM may override
+  registerEquipRequirement(); // minimum Strength to equip, GM may override
   registerCardButton(); // [Round 87] «+» in the material card table
   readSystemSettings();
 });
@@ -665,7 +675,7 @@ Hooks.once("ready", async () => {
 /**
  * combat hook.
  */
-// [Round 74] class level-ups: XP check (book I p.188) and talent hint
+// [Round 74] class level-ups: XP check and talent hint
 Hooks.on("preUpdateItem", (item, changes, options, userId) => {
   if (userId !== game.user.id || item.type !== "skill" || item.actor?.type !== "character") return;
   const lvl = foundry.utils.getProperty(changes, "system.skilllevel");
@@ -942,8 +952,17 @@ Hooks.on("updateCombat", async (combat, changes, options, userId) => {
  * is touched — only items that (a) have their own equip toggle and
  * (b) carry at least one transfer:true effect are affected.
  */
-async function syncEquipEffects(item, equip) {
+// [ru.11.3] one sync at a time per item, reading the CURRENT equip state: a quick off/on/off no longer leaves the effects out of step
+const _equipSync = new Map();
+function syncEquipEffects(item, _equip) {
+  const run = (_equipSync.get(item.uuid) ?? Promise.resolve()).then(() => _syncEquipEffects(item));
+  _equipSync.set(item.uuid, run);
+  run.finally(() => { if (_equipSync.get(item.uuid) === run) _equipSync.delete(item.uuid); });
+  return run;
+}
+async function _syncEquipEffects(item) {
   if (!item.effects?.size) return;
+  const equip = item.system?.equip === true;
   const transferEffects = item.effects.filter((e) => e.transfer === true && !e.flags?.sw25?.carried);   // Abyss curses «while carried» stay on
   if (!transferEffects.length) return;
   const off = (e) => (e.flags?.sw25?.whenOff ? !!equip : !equip);   // whenOff: an Abyss curse that works only while the item is not in use
@@ -977,7 +996,7 @@ Hooks.on("updateItem", (item, changes, options, userId) => {
   syncEquipEffects(item, foundry.utils.getProperty(changes, "system.equip") === true);
 });
 
-// [Round 52] SW25 core p.184: 0 or less HP => unconscious, Проверка
+// [Round 52] 0 or less HP => unconscious, Проверка
 // Смерти begins (see helpers/deathcheck.mjs for the roll itself). This
 // pair of hooks only manages the "sw25unconscious" status marker and the
 // deathchecks counter as HP crosses the 0 line — split across
@@ -1430,9 +1449,12 @@ Hooks.once("ready", async function () {
       const key = resistKeyOf(f.resist);
       if (!key || key === "input") return;
       const scene = game.scenes.get(message.speaker?.scene);
+      // [ru.12] a monster that may counter this melee attack waits for the GM (buttons on the card)
+      const { counterCandidates } = await import("./helpers/attackforms.mjs");
+      const waits = new Set((await counterCandidates(message)).map((td) => td.id));
       const ids = f.target.filter((id) => {
         const td = canvas.tokens.get(id)?.document ?? scene?.tokens.get(id);
-        return td?.actor && td.actor.type !== "character";
+        return td?.actor && td.actor.type !== "character" && !waits.has(id);
       });
       if (!ids.length) return;
       await chatButton(message, "buttonresist", { onlyTokens: ids });
@@ -1473,6 +1495,7 @@ Hooks.once("ready", async function () {
     try { renderSummaryFromFlags(chatMessage, html?.[0] ?? html); } catch (err) { console.error("SW25 | summary render", err); }
     bindGrowthButtons(chatMessage, html);
     markContestButtons(chatMessage, html);
+    import("./helpers/attackforms.mjs").then((m) => m.bindCounterButton(chatMessage, html)).catch((err) => console.error("SW25 | counter button", err));
     filterViewerOnly(html);
     if (chatMessage.flags?.sw25?.parentId && game.settings.get("sw25", "compactCards")) {
       html.addClass("sw25-child-hidden");
@@ -1777,7 +1800,7 @@ function applyBuiltinPowerRows() {
           type: "check",
           system: {
             description: "",
-            // [Round 71] book I p.104: Scout level + Agility bonus
+            // [Round 71] Scout level + Agility bonus
             checkskill: findClassItem(actor, "scout")?.name ?? className("scout"),
             checkabi: "agi",
             showbtcheck: true,
@@ -1790,7 +1813,7 @@ function applyBuiltinPowerRows() {
           type: "check",
           system: {
             description: "",
-            // [Round 71] Sage level + Int bonus (Rider too, book III)
+            // [Round 71] Sage level + Int bonus (Rider too)
             checkskill: L2("Мудрец или Всадник", "Sage or Rider"),
             checkabi: "int",
             showbtcheck: true,
@@ -1960,7 +1983,7 @@ Hooks.on("renderSW25ActorSheet", (app, html, data) => {
     const path = "system." + textarea.data("path");
     const displaypath = "system.display" + textarea.data("path");
     const content = textarea.val();
-    const displaycontent = content.replace(/\n/g, "<br>");
+    const displaycontent = foundry.utils.escapeHTML(String(content ?? "")).replace(/\n/g, "<br>");   // [ru.11.3] shown as raw HTML: escape what was typed
     const updateData = {};
     updateData[path] = content;
     updateData[displaypath] = displaycontent;
@@ -1973,7 +1996,7 @@ Hooks.on("renderSW25ItemSheet", (app, html, data) => {
     const path = "system." + textarea.data("path");
     const displaypath = "system.display" + textarea.data("path");
     const content = textarea.val();
-    const displaycontent = content.replace(/\n/g, "<br>");
+    const displaycontent = foundry.utils.escapeHTML(String(content ?? "")).replace(/\n/g, "<br>");   // [ru.11.3] shown as raw HTML: escape what was typed
     const updateData = {};
     updateData[path] = content;
     updateData[displaypath] = displaycontent;

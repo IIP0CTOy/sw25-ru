@@ -1,7 +1,12 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​‌‌​​‌‌​​‌‌​​‌​​​​‌‌​‌​​​​‌‌​‌‌‌​‌‌​​‌‌​​​‌‌​‌‌​⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
  * [Round 52] "Проверка смерти" (Death Check) as a repeatable process, not
- * just a single roll — SW25 core rulebook I, p.109 ("Проверка смерти") +
- * p.184-185 ("Проверки потери сознания и смерти").
+ * just a single roll — "Проверка смерти" +
+ * "Проверки потери сознания и смерти".
  *
  * Ported from studying how Pathfinder 2e (foundryvtt/pf2e,
  * src/module/actor/creature/document.ts#rollRecovery +
@@ -22,11 +27,11 @@
  *  - Roll 2d + the character's "Проверка смерти" checkbase (already wired
  *    correctly as of Round 49 — checkskill "adv", checkabi "vit").
  *  - Double 6s: automatic success AND the character wakes immediately at
- *    1 HP (p.109, explicit, regardless of the counter below).
- *  - Double 1s: automatic failure (p.90's general auto-fail rule — the
+ *    1 HP (explicit, regardless of the counter below).
+ *  - Double 1s: automatic failure (the general auto-fail rule — the
  *    book doesn't special-case it away for this one check).
  *  - Plain success: stays unconscious but alive.
- *  - p.184 additionally says six successful checks within the hour
+ *  - additionally, six successful checks within the hour
  *    (~ one every 10 in-fiction minutes) wake the character at 1 HP —
  *    tracked here as a simple counter (system.attributes.deathchecks),
  *    since Foundry has no built-in in-fiction clock to pace the "every
@@ -35,7 +40,7 @@
  *  - Plain failure: the character dies. This function does NOT touch hp,
  *    toggle "defeated" on the token, or otherwise mark the actor dead —
  *    death has consequences this system doesn't model yet (resurrection
- *    cost/eligibility, Шрамы души, see p.185 and the Round 50 audit), so
+ *    cost/eligibility, Шрамы души, see the Round 50 audit), so
  *    it only announces the result clearly in chat and leaves the actual
  *    bookkeeping to the GM. Same conservative rule this project has
  *    followed everywhere else — see sw25-named-abilities-coverage.md,
@@ -101,7 +106,7 @@ async function _rollDeathCheck(actor) {
     ) ?? game.items?.find(
       (i) => i.type === "check" && isItem(i.name, "deathcheck")
     );
-    // [Round 95] worlds that keep the checks only in a compendium (content pack or starter pack)
+    // [Round 95] worlds that keep the checks only in a compendium (content pack or starter pack)⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​‌‌​​‌‌​​‌‌​​‌​​​​‌‌​‌​​​​‌‌​‌‌‌​‌‌​​‌‌​​​‌‌​‌‌​​​‌​‌‌​‌​‌‌​​​‌​⁠
     if (!sourceItem) {
       try {
         const pack = starterPack("checks");

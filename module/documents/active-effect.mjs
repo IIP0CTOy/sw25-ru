@@ -24,6 +24,16 @@ export class SW25ActiveEffect extends ActiveEffect {
     return super.isSuppressed;
   }
 
+  /** [ru.12] a change with an empty or broken key (old data) is skipped with a console note instead of failing. */
+  static applyChange(targetDoc, change, options) {
+    if (!change || typeof change.key !== "string" || !change.key.trim()) {
+      const k = targetDoc?.uuid ?? "?";
+      if (!(SW25ActiveEffect._noKey ??= new Set()).has(k)) { SW25ActiveEffect._noKey.add(k); console.warn(`SW25 | ${targetDoc?.name ?? "?"}: an effect change without a key was skipped`, change); }
+      return {};
+    }
+    return super.applyChange(targetDoc, change, options);
+  }
+
   /** @override */
   prepareDerivedData() {
     // preparation methods overridden (such as prepareBaseData()).

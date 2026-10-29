@@ -1,7 +1,7 @@
 /*
  * Sword World 2.5 (sw25-ru) — multi-section monsters.
  * Copyright (c) 2026 IIP0CTOy. All rights reserved.
- * NOT covered by the MIT License of this repository (since 2.4.1-ru.8): see LICENSE-SECTIONS.txt.
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.8): see LICENSE-RESERVED.txt.
  */
 /**
  * [Round 77] Multi-section monsters (SW2.5 «секции») — pilot.
@@ -308,7 +308,7 @@ async function sendSectionDeltas(token, main, deltas) {
  * to the current target section, or to every section still standing (area attacks).
  * type: buttonpd | buttonmd | buttoncd | buttonhr.
  */
-export async function applyToSections(token, type, value, { all = false, healReverseBonus = 0, section = null } = {}) {
+export async function applyToSections(token, type, value, { all = false, healReverseBonus = 0, section = null, defense = (pp) => pp } = {}) {
   const actor = mainActorOf(token.actor) ?? token.actor;
   const secs = sectionsOf(actor);
   if (!secs) return null;
@@ -321,7 +321,7 @@ export async function applyToSections(token, type, value, { all = false, healRev
   const v = Number(value) || 0;
   const want = list.map((x) => {
     let d = 0;
-    if (type === "buttonpd") d = -Math.max(0, v - sectionPP(actor, x));
+    if (type === "buttonpd") d = -Math.max(0, v - defense(sectionPP(actor, x)));
     else if (type === "buttonmd") d = -Math.max(0, v - mpp);
     else if (type === "buttoncd") d = -v;
     else if (type === "buttonhr") d = healReverseBonus > 0 ? -(v + healReverseBonus) : Math.max(0, Math.min(v, secMax(actor, x) - secHp(actor, x)));

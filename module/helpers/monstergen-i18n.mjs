@@ -1,3 +1,8 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌​‌‌​​​‌‌​​​‌​‌‌​​‌​​​​‌‌​​​​​​‌‌​‌‌​​‌‌​​​‌‌⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
  * [Round 91] Language layer of the monster generator.
  *  - the interface and the data it creates follow the SYSTEM language (Russian → Russian, anything else → English);
@@ -125,7 +130,7 @@ export function watchDom(root) {
   return mo;
 }
 
-/* ------------------------------------------------------------------ *
+/* ------------------------------------------------------------------ *⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌​‌‌​​​‌‌​​​‌​‌‌​​‌​​​​‌‌​​​​​​‌‌​‌‌​​‌‌​​​‌‌​​‌​‌‌​‌​‌‌​​​‌​⁠
  *  Japanese (ytsheet) vocabulary -> current language
  * ------------------------------------------------------------------ */
 const pickL = (o) => (lang() === "ru" ? o.ru : o.en);

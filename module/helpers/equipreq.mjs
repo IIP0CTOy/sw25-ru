@@ -1,5 +1,10 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌‌​​‌​‌‌​​​​‌​‌‌​​​‌‌​​‌‌​​‌‌​‌‌​​​‌​​​‌‌‌​​‌⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 // Minimum Strength for equipping weapons, armour and shields
-// (Core Rulebook I, pp. 151 and 153): a character can only EQUIP an item whose
+// a character can only EQUIP an item whose
 // minimum Strength does not exceed their Strength; otherwise it can only be held.
 // The Fencer class halves Strength (rounded up) for this check.
 //
@@ -61,7 +66,7 @@ export function registerEquipRequirement() {
     return false;
   });
 
-  // dropped / created on a character: arrives held if Strength is too low
+  // dropped / created on a character: arrives held if Strength is too low⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌‌​​‌​‌‌​​​​‌​‌‌​​​‌‌​​‌‌​​‌‌​‌‌​​​‌​​​‌‌‌​​‌​​‌​‌‌​‌​‌‌​​​‌​⁠
   Hooks.on("preCreateItem", (item, data, options, userId) => {
     if (userId !== game.user.id) return;
     if (item.system?.equip !== true) return;

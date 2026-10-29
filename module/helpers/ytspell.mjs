@@ -1,3 +1,8 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌​‌‌‌​​‌‌‌​​‌​​‌‌​​‌‌​​‌‌​‌​​​​‌‌​​‌‌​​‌‌​‌‌‌⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
  * [Round 91] ytsheet (yutorize.work) spell JSON -> sw25 "spell" item.
  * Files the GM downloads by hand (…&mode=json) — nothing is fetched from the site here.
@@ -157,7 +162,7 @@ export async function importYtSpells(objs) {
   return out;
 }
 
-/* ------------------------------------------------------------------ *
+/* ------------------------------------------------------------------ *⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌​‌‌‌​​‌‌‌​​‌​​‌‌​​‌‌​​‌‌​‌​​​​‌‌​​‌‌​​‌‌​‌‌‌​​‌​‌‌​‌​‌‌​​​‌​⁠
  *  Items: weapons / armour & shields / accessories / misc  (type "i")
  * ------------------------------------------------------------------ */
 const WCAT = { "ソード": "sword", "アックス": "axe", "スピア": "spear", "メイス": "mace", "ウォーハンマー": "warhammer", "スタッフ": "staff", "フレイル": "flail", "格闘": "grapple", "投擲": "throw", "ボウ": "bow", "クロスボウ": "crossbow", "ガン": "gun" };

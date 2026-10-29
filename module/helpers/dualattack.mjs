@@ -1,5 +1,10 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌​​‌‌​‌‌​​​‌‌​​‌‌​‌‌‌​‌‌​​‌​‌​​‌‌​‌​‌​​‌‌​​‌​⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
- * [Dual Wielding] (Core Rulebook I, p. 254): one weapon "1H" (not 1H#) with
+ * [Dual Wielding]: one weapon "1H" (not 1H#) with
  * Min STR 20 or less in each hand, one attack with each in the same Major
  * Action, -2 Accuracy on each, same target.
  *
@@ -106,7 +111,7 @@ function rowOf(atkId, tokenId) {
 }
 
 /**
- * "Apply damage (all hits)": every hit is applied on its own (Defense each time),
+ * "Apply damage (all hits)": every hit is applied on its own (Defense each time),⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌​​‌‌​‌‌​​​‌‌​​‌‌​‌‌‌​‌‌​​‌​‌​​‌‌​‌​‌​​‌‌​​‌​​​‌​‌‌​‌​‌‌​​​‌​⁠
  * then the total is written on the dual card. `autoDamage(contestMsg)` comes from chatbutton.mjs.
  */
 export async function dualDamage(dualMsg, autoDamage) {

@@ -67,7 +67,7 @@
           </div>
           {{#unless system.toFellow}}
           {{#if (lte system.hp.value 0)}}
-          {{!-- [Round 53] SW25 core p.109/184 — Проверка смерти while unconscious (0 or less HP).
+          {{!-- [Round 53] Проверка смерти while unconscious (0 or less HP).
                [Round 56] moved below both ОЖ/ОМ bars instead of wedged between them — reads as a
                status row under the vitals, not a third resource bar. --}}
           <div class="deathcheck-row" data-tooltip="{{localize "SW25.DeathCheck.Tooltip"}}">

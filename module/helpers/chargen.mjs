@@ -1,5 +1,10 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​‌‌​​‌‌​​‌‌​​​‌‌​​‌‌​​​​​​‌‌‌​​​​‌‌​​‌‌​​​‌‌​‌‌​⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
- * [Round 85] Character creation wizard (book I p.62-74, races of books II and III).
+ * [Round 85] Character creation wizard.
  *
  * Steps: name and race → background (pick or roll 2d) → ability dice A–F (three sets to choose
  * from, as the book recommends) → classes within the starting experience (no class above
@@ -66,7 +71,7 @@ const dispClasses = (str) => (lang() === "ru"
   : isJa() ? str.split(/\s*([|&])\s*/).map((t) => (t === "|" ? "または" : t === "&" ? "と" : disp(t))).join("") || "なし"
   : str.split(/\s*([|&])\s*/).map((t) => (t === "|" ? "or" : t === "&" ? "and" : disp(t))).join(" ") || "none");
 const START_MONEY = 1200;
-// High-level creation (Core III pp.72-76): [column, growth rolls, extra exp, money, reputation, abyss shards, average-growth scheme]
+// High-level creation: [column, growth rolls, extra exp, money, reputation, abyss shards, average-growth scheme]
 const HIGH = [
   ["3-4", 2, 2500, 2500, 30, 1, [1, 1, 0, 0, 0, 0]], ["4-5", 5, 7000, 6000, 80, 2, [1, 1, 1, 1, 1, 0]],
   ["5-6", 9, 13000, 14000, 150, 3, [2, 2, 2, 2, 1, 0]], ["6-7", 13, 20000, 24000, 250, 5, [3, 3, 2, 2, 2, 1]],
@@ -77,7 +82,7 @@ const HIGH = [
   ["15+ A", 90, 197000, 450000, 3500, 57, [20, 17, 15, 15, 13, 10]], ["15+ B", 100, 217000, 500000, 4000, 66, [22, 19, 17, 17, 14, 11]],
   ["15+ C", 110, 247000, 550000, 4500, 75, [25, 22, 18, 18, 15, 12]],
 ].map(([col, growth, exp, money, rep, abyss, avg]) => ({ col, growth, exp, money, rep, abyss, avg }));
-// cumulative experience of a class level (Core III p.68): major (A) / minor (B) classes
+// cumulative experience of a class level: major (A) / minor (B) classes
 const EXP_A = [0, 1000, 2000, 3500, 5000, 7000, 9500, 12500, 16500, 21500, 27500, 35000, 44000, 54500, 66500, 80000];
 const EXP_B = [0, 500, 1500, 2500, 4000, 5500, 7500, 10000, 13000, 17000, 22000, 28000, 35500, 44500, 55000, 67000];
 const esc = (v) => foundry.utils.escapeHTML(String(v ?? ""));
@@ -194,7 +199,7 @@ async function stepAbilities(raceName, base) {
   }
 }
 
-/** High level: the growth rolls (Core III p.74), spread over the six abilities (average-table scheme as a start). */
+/** High level: the growth rolls, spread over the six abilities (average-table scheme as a start). */
 async function stepGrowth(high, base, dice) {
   const vals = AB.map(([k, L, g]) => ({ k, v: base[g] + dice[L] }));
   const order = [...vals].sort((a, b) => b.v - a.v).map((x) => x.k);
@@ -214,7 +219,7 @@ async function stepGrowth(high, base, dice) {
   }
 }
 
-/** Combat feat slots: one on each odd adventurer level (Core III p.76). */
+/** Combat feat slots: one on each odd adventurer level. */
 const slotsFor = (lv) => Math.max(1, Math.ceil(Math.max(1, lv) / 2));
 /** Combat feats the world has (made in the talent constructor or imported); auto-granted ones are skipped. */
 async function stepFeats(advLv) {
@@ -240,7 +245,7 @@ async function stepFeats(advLv) {
   return (Array.isArray(res) ? res : []).slice(0, slots).map((id) => game.items.get(id)).filter(Boolean);
 }
 
-// classes a race cannot take (Core I, «Restricted Classes»): Tabbits and Runefolk cannot be Priests
+// classes a race cannot take: Tabbits and Runefolk cannot be Priests⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​‌‌​​‌‌​​‌‌​​​‌‌​​‌‌​​​​​​‌‌‌​​​​‌‌​​‌‌​​​‌‌​‌‌​​​‌​‌‌​‌​‌‌​​​‌​⁠
 const RACE_BANS = { "Таббит": ["priest"], "Рунфолк": ["priest"] };
 async function stepClasses(birthInfo, raceName, high = null) {
   const banned = RACE_BANS[raceName] ?? [];

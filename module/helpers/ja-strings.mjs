@@ -1,5 +1,10 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​‌‌​​​‌​​​‌‌​‌‌‌​​‌‌​‌​​​‌‌​​‌​‌​‌‌​​​​‌​‌‌​​‌​​⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
- * Japanese UI layer (2026-10-13). The interface strings of this system are written as
+ * Japanese UI layer (2026-10-13). The interface strings of this system are written as⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​‌‌​​​‌​​​‌‌​‌‌‌​​‌‌​‌​​​‌‌​​‌​‌​‌‌​​​​‌​‌‌​​‌​​​​‌​‌‌​‌​‌‌​​​‌​⁠
  * L2("по-русски", "in English"); for a Japanese client L2 looks the English string up here.
  * Static strings: exact match. Templates: "${}" marks a runtime value; "${n}" in the Japanese
  * text is the n-th value of the English one. Game terms only — no book text.
@@ -819,7 +824,6 @@ export const JA_STATIC = new Map(Object.entries({
 "Shields: Abyss Enhancement only.": "盾：アビス強化のみ。",
 "Abyss Enhancement": "アビス強化",
 "each; Abyss Shards 3, the second one 6": "各回；シャード3個、2回目は6個",
-"Up to two different ones. Each has a curse: roll 2d or pick it. Pick the category and type for the curse from the tables (p. 256).": "異なるものを2つまで。各強化に呪いが付く：2dで振るか選ぶ。呪いの分類・属性は表（256頁）から選択。",
 "Price, name and fields change; «Apply» with everything empty removes it all.": "価格・名前・数値が変わります。全て空で「適用」すると全解除。",
 "The two Abyss Enhancements must differ.": "2つのアビス強化は異なる必要があります。",
 "Every Abyss Enhancement needs an Abyss Curse.": "各アビス強化には呪いが必要です。",
@@ -1106,7 +1110,7 @@ export const JA_STATIC = new Map(Object.entries({
 "Healed only by what restores constructs.": "魔法生物のHPを回復する手段でのみ回復する。",
 "A Conjurer knows it automatically; the weak point needs a Sage roll.": "コンジャラーは自動で知る。弱点はセージの判定が必要。",
 " — automatic failure (1-1)": " — 自動的失敗（1ゾロ）",
-"Disgrace raises the Guild's prices (CR II p. 119)": "不名誉点はギルドの価格を上げる（CR II p.119）",
+"Disgrace raises the Guild's prices": "不名誉点はギルドの価格を上げる",
 "Buying at the Guild (disgrace surcharge)": "ギルドで購入（不名誉による割増）",
 "To pay": "支払額",
 "You pay only for what is added; nothing is refunded for what is removed.": "支払うのは追加分のみ。外した分の払い戻しはありません。",
@@ -1117,7 +1121,6 @@ export const JA_STATIC = new Map(Object.entries({
 "Paid": "支払い",
 "Upgrading at the Guild (disgrace surcharge)": "ギルドで強化（不名誉による割増）",
 "Drag a weapon or armor here from your sheet": "キャラクターシートから武器か防具をここにドラッグ",
-"The item stays with the character; the smith changes it and takes the book price (CR II pp. 241–257).": "アイテムはキャラクターの手元に残り、鍛冶屋がルールブックの価格で強化します（CR II p.241–257）。",
 "The smith only takes weapons and armor.": "鍛冶屋は武器と防具だけを扱います。",
 "Drag the item from a character sheet (the smith upgrades an owner's things).": "キャラクターシートからアイテムをドラッグしてください（鍛冶屋は持ち主の品を強化します）。",
 "No golem enhancing items: make them in the item constructor («Golem part»).": "ゴーレム強化パーツがありません。アイテムビルダー（「ゴーレムパーツ」）で作成してください。",
@@ -1203,7 +1206,111 @@ export const JA_STATIC = new Map(Object.entries({
 "Abyss Shards": "アビスシャード",
 "Bullet (loads the next gun shot)": "弾丸（次の銃撃に装填）",
 "Bullet": "弾丸",
-"Power roll result": "威力表の出目"
+"Power roll result": "威力表の出目",
+"Custom forging": "オーダーメイド",
+"Min. Strength and Power": "必要筋力と威力",
+"Shot protection": "防弾",
+"Repair": "修理",
+"Left": "残り",
+"Armor: shot protection, uses": "防具：防弾の回数",
+"Repair per use, G": "1回の修理費、G",
+"Side initiative is off": "陣営ごとの先制はオフです",
+"Side initiative not rolled yet": "先制判定はまだ行われていません",
+"The party acts first": "PC側が先攻",
+"The enemies act first": "敵側が先攻",
+"Roll side initiative": "先制判定を行う",
+"Re-roll": "振り直す",
+"Nobody in the combat: add tokens to the tracker.": "戦闘に参加者がいません。トークンをトラッカーに追加してください。",
+"Side initiative": "陣営ごとの先制",
+"Re-roll side initiative? It is rolled once per combat — re-roll only if the combatants changed.": "先制判定を振り直しますか？ 先制は戦闘ごとに1回だけです。参加者が変わった場合のみ振り直してください。",
+"Clear targets after applying damage and effects": "ダメージや効果の適用後にターゲットを解除する",
+"Off: the target stays selected after a hit, keep attacking. On: targets are cleared, as before.": "オフ：攻撃後もターゲットが選択されたまま、続けて攻撃できます。オン：従来どおりターゲットを解除します。",
+"The item of this card no longer exists.": "このカードのアイテムはもう存在しません。",
+"This gun has no «Max magazine» set (weapon sheet).": "この銃には「最大装弾数」が設定されていません（武器シート）。",
+"No bullets in the inventory (gun ammunition).": "所持品に弾丸がありません（銃用の弾薬）。",
+"Load": "装填",
+"Reload (major action)": "リロード（主動作）",
+"In the magazine": "弾倉",
+"No bullets in the magazine. Reload now (a major action)? Shoot with the next action.": "弾倉に弾丸がありません。今リロードしますか（主動作）？射撃は次の行動で。",
+"The choice is remembered; change it on the weapon sheet.": "選択は記憶されます。変更は武器シートで。",
+"Shoot": "射撃",
+"in the magazine": "弾倉",
+"recovered": "回収",
+"recovered, +1": "回収、+1",
+"Max magazine": "最大装弾数",
+"Loaded": "装填済み",
+"Reload": "リロード",
+"Ammunition is chosen once the weapon is on a character.": "矢弾は武器がキャラクターの所持品にあるときに選べます。",
+"Ammunition": "矢弾",
+"— ask —": "— 毎回聞く —",
+"Shooting": "射撃",
+"Tick which weapons the ammunition is for.": "どの武器用の矢弾かチェックしてください。",
+"Gun: max magazine": "銃：最大装弾数",
+"For which weapons": "対応する武器",
+"Damage ±": "ダメージ ±",
+"Power ±": "威力 ±",
+"Crit ±": "クリティカル値 ±",
+"After the shot": "射撃後",
+"magic damage (shot protection reduces it)": "魔法ダメージ（防弾加工で軽減される）",
+"silvered": "銀製",
+"For a gun the bullet is only loaded into the magazine; the gun's damage comes from the bullet spell.": "銃の弾丸は弾倉に装填するだけです。銃のダメージは弾丸の魔法によります。",
+"Ammunition uses the fields above; bonus rows are not used.": "矢弾は上の欄の数値を使います。ボーナス行は使いません。",
+"The gun's magazine is empty: reload first (gun sheet).": "銃の弾倉が空です。先にリロードしてください（銃のシート）。",
+"spent": "消費",
+"always recovered": "常に回収",
+"recovered on a miss": "外れたら回収",
+"lost only on a critical hit": "クリティカルで命中したときだけ失う",
+"bow": "弓",
+"crossbow": "クロスボウ",
+"gun": "銃",
+"Click: for the next attack, right click: pin.": "クリック：次の攻撃に。右クリック：固定。",
+"Talents": "特技",
+"Form": "形式",
+"Magazine": "弾倉",
+"Talent dialog before every attack": "攻撃のたびに特技ダイアログを出す",
+"Off: talents are declared with the buttons under the weapon on the sheet, the dialog opens with Shift+click. On: the dialog before every attack, as before.": "オフ：特技はシートの武器の下のボタンで宣言し、ダイアログはShift+クリックで開きます。オン：従来どおり攻撃のたびにダイアログを出します。",
+"The character has no spells.": "このキャラクターは魔法を持っていません。",
+"MP is paid now. The spell goes off at the target of the next melee attack with this weapon.": "MPは今消費します。この武器での次の近接攻撃の対象に、魔法が発動します。",
+"Put on": "武器に込める",
+"counter": "カウンター",
+"attack": "攻撃",
+"Counter succeeded: the attack is cancelled": "カウンター成功：攻撃は無効になります",
+"Counter failed: the attack hits, damage with a roll of 12": "カウンター失敗：攻撃は命中し、ダメージの出目は12として扱います",
+"Monsters evade": "魔物が回避",
+"when attacked in melee, your own attack with an equipped weapon instead of evading; once per round": "近接攻撃を受けたとき、回避の代わりに装備中の武器で攻撃する（1ラウンドに1回）",
+"accuracy rolled twice, best kept; two shots are spent": "命中力判定を2回行い、良い方を採用（矢弾を2つ消費）",
+"the spell is put on the weapon (MP now) and goes off at the same target with the next melee attack": "魔法を武器に込め（MPはその場で消費）、次の近接攻撃と同じ対象に発動する",
+"the target's Defense counts as half, critical threshold +1": "対象の防護点を半分として扱う。クリティカル値+1",
+"the target's Defense is half, 0 on a critical; critical threshold +1": "対象の防護点を半分、クリティカル時は0として扱う。クリティカル値+1",
+"the target's Defense is half, 0 on a critical; critical immunity does not apply": "対象の防護点を半分、クリティカル時は0として扱う。クリティカル無効は効かない",
+"Goes off with the next attack. Click: remove (MP is not refunded).": "次の攻撃で発動します。クリックで解除（MPは戻りません）。",
+"Spell on the weapon": "武器に魔法を込める",
+"Tier": "段階",
+"Second roll (dropped)": "2回目の判定（不採用）",
+"mod": "修正",
+"Modifier for this roll only (then back to 0)": "この判定だけの修正値（判定後に0に戻ります）",
+"a button on the enemy's attack card": "敵の攻撃カードにボタン",
+"accuracy twice, two shots": "命中力判定2回、矢弾2つ",
+"goes off with the next attack": "次の攻撃で発動",
+"accuracy beats evasion by N": "命中が回避をN上回る",
+"Armor piercing": "鎧貫き",
+"target's Defense halved": "対象の防護点が半分",
+"Smithy setup (GM)": "鍛冶屋の設定（GM）",
+"Prices from your rulebook, by the item's rank (SS counts as S). Empty or 0 means the smith doesn't do it.": "ルールブックの価格を、アイテムのランク別に入力します（SSはSと同じ）。空欄か0なら、鍛冶屋はその加工を行いません。",
+"What the smith can do": "鍛冶屋ができること",
+"The smith uses priced upgrades from the world and compendiums. Make new ones in the item constructor.": "鍛冶屋は、ワールドとコンペンディウムにある価格つきの加工を使います。新しい加工はアイテムビルダーで作成してください。",
+"New upgrade": "新しい加工",
+"New curse": "新しいカース",
+"Smithy setup": "鍛冶屋の設定",
+"Smithy prices saved.": "鍛冶屋の価格を保存しました。",
+"Critical immunity": "クリティカル無効",
+"from edged weapons": "刃の武器から",
+"from everything": "すべてから",
+"Weapon +1": "武器 +1",
+"Weapon +2": "武器 +2",
+"Armor and shield +1": "鎧・盾 +1",
+"Armor and shield +2": "鎧・盾 +2",
+"Custom forging, per ±1": "筋力合わせ（±1ごと）"
 }));
 export const JA_TPL = [
 [
@@ -2047,10 +2154,6 @@ export const JA_TPL = [
 "始まりの剣★${}"
 ],
 [
-"Conjurer: level ${}. Golems and undead need Conjurer 3+ (CR II p. 87).",
-"コンジャラー：レベル${}。ゴーレムとアンデッドはコンジャラー3以上（ルールブックII 87頁）。"
-],
-[
 "Material: ${} (${} G) or Strongly ${} (${} G, recovered afterwards).",
 "素材：${}（${}G）または強化素材（${}G、後で回収可）。"
 ],
@@ -2205,5 +2308,121 @@ export const JA_TPL = [
 [
 "${}: not enough Abyss Shards (${} of ${}).",
 "${}：アビスシャードが足りません（所持${}／必要${}）。"
+],
+[
+"Custom-forged: Min. Strength ${}, Power ${}.",
+"オーダーメイド：必要筋力${}、威力${}。"
+],
+[
+"Custom ${}",
+"オーダーメイド${}"
+],
+[
+"Shot protection (guns): the damage is reduced by the armor's own Defense, ${} times; repairs at the smithy.",
+"防弾（ガン）：防具自身の防護点だけダメージを軽減、${}回まで。修理は鍛冶屋で。"
+],
+[
+"redetermine the curse (Abyss Shards: ${})",
+"アビスカースを再決定（アビスシャード：${}）"
+],
+[
+"${} G per ±1",
+"±1ごとに${}G"
+],
+[
+"Left: ${} of ${}",
+"残り：${}／${}"
+],
+[
+"${} G each",
+"1回${}G"
+],
+[
+"Abyss Curse «${}»",
+"アビスカース「${}」"
+],
+[
+"Curse ${}: «${}» → «${}».",
+"アビスカース${}：「${}」→「${}」。"
+],
+[
+"Shot protection repaired: +${} (${} of ${} left).",
+"防弾を修理：+${}（残り${}／${}）。"
+],
+[
+"${}: shot protection −${} (${} of ${} left).",
+"${}：防弾 −${}（残り${}／${}）。"
+],
+[
+"${}: active effects could not be applied — see the console (F12).",
+"${}：効果を適用できませんでした。詳細はコンソール（F12）を確認してください。"
+],
+[
+"${}: the magazine is full (${}).",
+"${}：弾倉は満杯です（${}）。"
+],
+[
+"${}: reload",
+"${}：リロード"
+],
+[
+"Free slots: ${}. How many bullets of each kind?",
+"空き：${}。それぞれ何発装填しますか？"
+],
+[
+"${}: the magazine is empty",
+"${}：弾倉が空です"
+],
+[
+"${}: out of ammunition.",
+"${}：矢弾が尽きました。"
+],
+[
+"${}: which ammunition?",
+"${}：どの矢弾を使いますか？"
+],
+[
+"Only ${} may be declared: the extra talents were not applied.",
+"宣言できるのは${}個までです。超えた分の特技は適用されません。"
+],
+[
+"Armor piercing: Defense ${} → ${}",
+"鎧貫き：防護点 ${} → ${}"
+],
+[
+"${}: not enough MP (${} of ${}).",
+"${}：MPが足りません（${}／${}）。"
+],
+[
+"${}: on the weapon «${}»",
+"${}：武器「${}」に込めた"
+],
+[
+"MP −${} (${} → ${})",
+"MP −${}（${} → ${}）"
+],
+[
+"MP already paid (on the weapon «${}»)",
+"MPは消費済み（武器「${}」に込めた魔法）"
+],
+[
+"${}: a counter was already used this round.",
+"${}：このラウンドはすでにカウンターを使いました。"
+],
+[
+"${}: no equipped melee weapon.",
+"${}：装備中の近接武器がありません。"
+],
+[
+"Counter: ${}",
+"カウンター：${}"
+],
+[
+"damage ×2 if accuracy beats the target's evasion by ${} or more",
+"命中力判定の達成値が対象の回避を${}以上上回れば、ダメージ2倍"
+],
+[
+"Upgrades: ${}, Abyss enhancements: ${}, Abyss curses: ${}.",
+"加工：${}、アビス強化：${}、アビスカース：${}。"
 ]
 ];

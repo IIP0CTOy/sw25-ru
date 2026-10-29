@@ -1,6 +1,11 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌​‌‌​​‌‌​​​‌​​‌‌​​​‌​​‌‌​​‌‌​​​‌‌​‌‌‌​​‌‌​​​‌⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
  * Optional data from an active module that declares `flags.sw25.data` (a JSON path inside the module)
- * in its module.json. Without one everything works with what the GM makes in the constructors
+ * in its module.json. Without one everything works with what the GM makes in the constructors⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌​‌‌​​‌‌​​​‌​​‌‌​​​‌​​‌‌​​‌‌​​​‌‌​‌‌‌​​‌‌​​​‌​​‌​‌‌​‌​‌‌​​​‌​⁠
  * (items flagged below).
  *
  * Flags read from items (world items and Item compendiums):

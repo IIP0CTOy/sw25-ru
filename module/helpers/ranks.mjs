@@ -1,5 +1,10 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌​​‌​​​‌‌‌​​‌​​‌‌​‌​‌​​‌‌​​‌‌​‌‌​​‌‌​​​‌‌‌​​‌⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
- * Adventurer rank and disgrace (Core Rulebook II, pp. 110-120).
+ * Adventurer rank and disgrace.
  *  - Ranks cost reputation (system.attributes.honer.value); several ranks at once are allowed.
  *    Past «Sword of Genesis ★3», every 500 more gives another ★ (free value +50).
  *  - «Free»: famous items whose reputation cost is not above this value cost no reputation.
@@ -127,7 +132,7 @@ export async function openRanks(actor) {
   root.querySelectorAll("[data-up]").forEach((b) => b.addEventListener("click", async () => {
     const to = N(b.dataset.up), cost = total(to) - total(cur);
     if (cost > repOf(actor)) return ui.notifications.warn(L2("Не хватает репутации.", "Not enough reputation."));
-    // famous items bought for reputation that are now under «Free» give it back — by hand, see p. 116
+    // famous items bought for reputation that are now under «Free» give it back — by hand⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌​​‌​​​‌‌‌​​‌​​‌‌​‌​‌​​‌‌​​‌‌​‌‌​​‌‌​​​‌‌‌​​‌​​‌​‌‌​‌​‌‌​​​‌​⁠
     await setRank(actor, to, repOf(actor) - cost, disgraceOf(actor));
     await say(actor, L2(`<b>${esc(actor.name)}</b>: ранг «${esc(T(rankRow(to)[0]))}» (−${cost} репутации). Прославленные предметы с ценой в репутации до ${rankRow(to)[2]} возвращают её.`, `<b>${esc(actor.name)}</b>: rank «${esc(T(rankRow(to)[0]))}» (−${cost} reputation). Famous items whose reputation cost is up to ${rankRow(to)[2]} give it back.`));
     reopen();

@@ -1,3 +1,8 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​‌‌​​​‌​​​‌‌‌​​​​​‌‌‌​​‌​‌‌​​​‌‌​‌‌​​​​‌​‌‌​​​​‌⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
  * Golem enhancing items. The system ships no list of them: the GM makes them in the item constructor
  * (kind «Golem part»), or module data adds a compendium (catalog.mjs).
@@ -84,7 +89,7 @@ export function partRecord(item) {
 /** GM tool on a monster sheet: a saved enhanced copy of a golem (template untouched). */
 export async function openPartsCopy(actor) {
   if (!game.user.isGM || actor?.type !== "monster") return;
-  // every golem part the GM has: world items and Item compendiums
+  // every golem part the GM has: world items and Item compendiums⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​‌‌​​​‌​​​‌‌‌​​​​​‌‌‌​​‌​‌‌​​​‌‌​‌‌​​​​‌​‌‌​​​​‌​​‌​‌‌​‌​‌‌​​​‌​⁠
   const docs = (await Promise.all((await flaggedItems("golemPart")).map((e) => fromUuid(e.uuid)))).filter((d) => partOf(d));
   if (!docs.length) return ui.notifications.warn(L2("Нет ни одного улучшающего предмета голема: сделайте их в конструкторе предметов («Деталь голема»).", "No golem enhancing items: make them in the item constructor («Golem part»)."));
   const { DialogV2 } = foundry.applications.api;

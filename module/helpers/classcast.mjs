@@ -1,16 +1,21 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌‌​​​​‌‌​​​​‌​​‌‌​​‌‌​​‌‌‌​​‌​​‌‌​​​‌​​‌‌​​‌​⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
  * [Round 69] One-click Bard songs / finales and Alchemist evocations.
  *
  * Song (Волшебная мелодия), click on the icon:
  *   2d6 + Сила Барда -> base rhythm is added to the bard's rhythm counters,
  *   plus the extra rhythm when the result reaches the flourish value
- *   (Значение Процветания) — book II p.188. The effect condition
+ *   (Значение Процветания). The effect condition
  *   (Условие эффекта) is checked against the rhythm the bard already has.
  * Finale (Финальный аккорд): refuses when the rhythm is not enough, spends it,
  *   then goes through the spell pipeline (check -> Willpower save -> power).
  * Evocation (Приворот): pick the card rank (B/A/S/SS), the material cards are
  *   spent, rank values go into the effect / fixed amount, then the spell
- *   pipeline (targets, save, effects) — book III p.189.
+ *   pipeline (targets, save, effects).
  * Missing rhythm counters are created on the actor automatically.
  */
 import { castSpell, applyFixedAmount } from "./spellcast.mjs";
@@ -56,9 +61,9 @@ async function addNotes(actor, delta) {
 const fmt = (o) => NOTE_KINDS.filter((k) => Number(o[k])).map((k) => `${NOTE_SYM[k]}${o[k]}`).join(" ") || "—";
 const pick3 = (s, suffix) => Object.fromEntries(NOTE_KINDS.map((k) => [k, Number(s[`${k}${suffix}`] ?? 0)]));
 
-// [Round 69] song effects (book II p.188-194, book III p.176-177): who they
-// hit and what they change. Songs sound for everyone within 30 m (book II
-// p.121 example «все области (радиус 30 м)»); a debuff only takes hostile
+// [Round 69] song effects: who they
+// hit and what they change. Songs sound for everyone within 30 m
+// («все области (радиус 30 м)»); a debuff only takes hostile
 // listeners, a buff only friendly ones. Lasts while the bard keeps playing
 // (re-perform each round) -> 1 round.
 const K = {
@@ -372,7 +377,7 @@ const TAC_FX = {
   "Нарастающее Наступление IV: Пламя": { ch: [[KT.dmg, 3]] },
   "Нарастающее Наступление IV: Лучезарные удары": { ch: [[KT.hit, 1], [KT.dmg, 1]] },
   "Нарастающее Наступление V: Тайфун": { ch: [[KT.hit, 2], [KT.dmg, 2]] },
-  // inspire
+  // inspire⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌‌​​​​‌‌​​​​‌​​‌‌​​‌‌​​‌‌‌​​‌​​‌‌​​​‌​​‌‌​​‌​​​‌​‌‌​‌​‌‌​​​‌​⁠
   "Поиск Недостатков": { free: 2, note: ["+1 к доп. урону по обнаруженному слабому месту — учитывается вручную.", "+1 extra damage against a revealed weak point — track manually."] },
   "Позиция Божественной Скорости": { ch: [[KT.move, 5]], free: 2 },
   "Гимн храбрых": { free: 2, selfOnly: true, note: ["Мелодии Тактика в этот раунд действуют только на выбранную сторону — вручную.", "This round the Tactician's songs affect only the chosen side — apply manually."] },

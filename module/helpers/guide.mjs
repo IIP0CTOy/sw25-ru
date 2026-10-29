@@ -1,5 +1,10 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​‌‌​​‌‌​​‌‌​​​‌‌​​‌‌​​​​​​‌‌​‌‌​​​‌‌​​‌​​​‌‌​​​​⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
- * [2026-10-07] Built-in guide: how to make items, spells, talents, alchemist cards and monsters
+ * [2026-10-07] Built-in guide: how to make items, spells, talents, alchemist cards and monsters⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​‌‌​​‌‌​​‌‌​​​‌‌​​‌‌​​​​​​‌‌​‌‌​​​‌‌​​‌​​​‌‌​​​​​​‌​‌‌​‌​‌‌​​​‌​⁠
  * with the tools of this system. Written for this system (it describes its windows and buttons);
  * it contains no rulebook text. starter.mjs turns it into a Journal compendium of the world.
  * Every page is a [ru, en] pair.

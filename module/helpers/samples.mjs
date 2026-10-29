@@ -1,3 +1,8 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​‌‌​​​‌​​​‌‌​​‌​​​‌‌‌​​​​​‌‌​‌‌​​​‌‌​​‌‌​‌‌​​​‌‌⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
  * [Round 99] Built-in sample characters and monsters.
  * One ready-to-play character per class and a ladder of monsters from trivial to a ten-section
@@ -124,7 +129,7 @@ const MONSTERS = [
     ] },
 ];
 
-/* ------------------------------------------------------------------ *
+/* ------------------------------------------------------------------ *⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​‌‌​​​‌​​​‌‌​​‌​​​‌‌‌​​​​​‌‌​‌‌​​​‌‌​​‌‌​‌‌​​​‌‌​​‌​‌‌​‌​‌‌​​​‌​⁠
  *  Building
  * ------------------------------------------------------------------ */
 let _starter = null;

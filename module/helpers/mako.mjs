@@ -1,5 +1,10 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌​​‌​​‌‌​​​‌‌​​‌‌​‌​‌​‌‌​​​‌‌​​‌‌‌​​​​​‌‌​​‌‌⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
- * Mako stones (Core Rulebook I, p. 158; shop list p. 295): a stone pays all or part of an MP cost
+ * Mako stones: a stone pays all or part of an MP cost⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌​​‌​​‌‌​​​‌‌​​‌‌​‌​‌​‌‌​​​‌‌​​‌‌‌​​​​​‌‌​​‌‌​​‌​‌‌​‌​‌‌​​​‌​⁠
  * (spells, techniques, other MP costs), not MP damage. One stone per cost. The stone's points go
  * down; at 0 it breaks. No action needed, but it must be on the character (not deep in a bag).
  *
@@ -29,7 +34,7 @@ export const stonesOf = (actor) => (actor?.items ?? []).filter((i) => isMako(i) 
 
 /**
  * Ask how much of `cost` a stone pays, and how much the familiar's MP pays (the master may use it
- * while touching it, CR I p. 433). Returns { mp, use } (use = { item, x, pts, fam, fx } or null),
+ * while touching it). Returns { mp, use } (use = { item, x, pts, fam, fx } or null),
  * or null when the dialog was cancelled. Nothing to offer / no cost → { mp: cost, use: null } at once.
  */
 export async function makoSplit(actor, cost, label = "") {

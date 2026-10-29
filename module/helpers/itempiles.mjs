@@ -1,5 +1,10 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌​‌​‌​​‌‌​‌​‌​​‌‌​‌‌​​‌‌​​​‌‌​​‌‌​​‌​​​‌‌​​​​⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
- * Item Piles integration: tells the Item Piles module how this system stores quantity, price and money,
+ * Item Piles integration: tells the Item Piles module how this system stores quantity, price and money,⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌​‌​‌​​‌‌​‌​‌​​‌‌​‌‌​​‌‌​​​‌‌​​‌‌​​‌​​​‌‌​​​​​​‌​‌‌​‌​‌‌​​​‌​⁠
  * so piles, merchants and trading work without manual setup (and the "system not supported" notice goes away).
  */
 const NOT_LOOT = ["spell", "enhancearts", "magicalsong", "ridingtrick", "alchemytech", "phasearea", "tactics", "infusion",

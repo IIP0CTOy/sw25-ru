@@ -22,7 +22,7 @@ export async function lootRoll(actor) {
     .map((line) => line.trim())
     .filter((line) => line !== "");
 
-  // sword shards of a boosted monster: always dropped (CR I p.384)
+  // sword shards of a boosted monster: always dropped
   const shards = shardsOf(actor);
   // the keyword must be one the parser below knows (not the Japanese UI word)
   if (shards) lootLines.unshift(`${lang() === "ru" ? "Всегда" : "Always"}: ${shardLootLine(shards)}`);

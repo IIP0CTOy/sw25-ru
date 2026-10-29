@@ -1,10 +1,15 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​‌‌​​‌​​​​‌‌​​​‌​​‌‌​‌​‌​​‌‌​​‌‌​​‌‌‌​​‌​​‌‌​‌‌​⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 import { isClass, CLASS, className } from "./names.mjs";
 import { L2 } from "./monstergen-i18n.mjs";
 import { canon } from "./ability-names.mjs";
 /**
  * [Round 62] Auto-grant "Автоматически приобретаемые" (auto-learned, zero
  * player choice) class combat talents the instant a character's class
- * level reaches the book's required threshold — SW25 core rulebooks I/II/
+ * level reaches the book's required threshold
  * III. Sibling pattern to helpers/deathcheck.mjs's auto-embed-if-missing
  * fix from Round 61, applied to a whole table instead of one fixed item.
  *
@@ -24,8 +29,8 @@ import { canon } from "./ability-names.mjs";
  * i.system.condtype === "learn").length === 20`), matching the book
  * page-count catalog's 4+8+8 tally in
  * the project notes on talents ("Автоматически приобретаемые
- * пассивные боевые таланты" sections, ОКП I p.265 / ОКП II p.209-211 /
- * ОКП III p.204-205) — strong signal this table is the complete set, not
+ * пассивные боевые таланты" sections
+ * ) — strong signal this table is the complete set, not
  * a partial scan.
  *
  * WHY A HAND-WRITTEN TABLE, NOT A system.cond PARSER: each item's own
@@ -129,7 +134,7 @@ async function findSource(name) {
   return null;
 }
 
-/* ------------------------------------------------------------------ *
+/* ------------------------------------------------------------------ *⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​‌‌​​‌​​​​‌‌​​​‌​​‌‌​‌​‌​​‌‌​​‌‌​​‌‌‌​​‌​​‌‌​‌‌​​​‌​‌‌​‌​‌‌​​​‌​⁠
  *  [2026-10-07] Auto-grant rule stored on the talent itself
  *  flags.sw25.autoGrant = { cls: <class key from names.mjs | "magic">, level: N }
  * ------------------------------------------------------------------ */

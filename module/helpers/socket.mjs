@@ -31,12 +31,12 @@ export function emitToGM(data) {
 
 /**
  * Resolve a token id to its (synthetic, for unlinked tokens) actor.
- * Search order: the given scene, the GM's current canvas, all scenes.
+ * With a known scene only that scene counts; without one: the GM's current canvas, then all scenes.
  */
 export function resolveTokenActor(tokenId, sceneId) {
   if (!tokenId) return null;
-  const fromScene = game.scenes.get(sceneId)?.tokens.get(tokenId);
-  if (fromScene?.actor) return fromScene.actor;
+  const scene = sceneId ? game.scenes.get(sceneId) : null;
+  if (scene) return scene.tokens.get(tokenId)?.actor ?? null;
   const fromCanvas = canvas?.tokens?.get(tokenId);
   if (fromCanvas?.actor) return fromCanvas.actor;
   for (const scene of game.scenes) {
@@ -53,9 +53,9 @@ export function resolveTokenActor(tokenId, sceneId) {
  * otherwise fall back to the absolute value (old behaviour).
  */
 function nextValue(current, result, before, max) {
-  if (result === undefined || result === null) return undefined;
+  if (result === undefined || result === null || !Number.isFinite(Number(result))) return undefined;
   const cur = Number(current) || 0;
-  if (before === undefined || before === null) return Number(result);
+  if (before === undefined || before === null || !Number.isFinite(Number(before))) return Number(result);
   const delta = Number(result) - Number(before);
   if (!delta) return cur;
   let next = cur + delta;
@@ -65,15 +65,15 @@ function nextValue(current, result, before, max) {
 }
 
 /** GM-side handler. Registered once from the `ready` hook. */
+let _queue = Promise.resolve();
 export function registerSocketHandler() {
-  game.socket.on(socketName(), async (data) => {
+  game.socket.on(socketName(), (data, senderId) => {
     // Only the single active GM processes requests (no double apply).
     if (!game.user.isGM || game.user !== game.users.activeGM) return;
-    try {
-      await handle(data);
-    } catch (err) {
-      console.error("SW25 | socket request failed", data, err);
-    }
+    // [ru.11.3] requests from a known user only; handled one at a time (two quick hits no longer interleave)
+    const uid = senderId ?? data?.userId;
+    if (!data || typeof data !== "object" || (uid && !game.users.get(uid))) return;
+    _queue = _queue.then(() => handle(data)).catch((err) => console.error("SW25 | socket request failed", data, err));
   });
 }
 
@@ -130,6 +130,15 @@ async function handle(data) {
     case "familiarHp": {
       const { handleSummonSocket } = await import("./summons.mjs");
       return handleSummonSocket(data);
+    }
+
+    case "guardUse": {
+      // [ru.11.3] shot protection used up once (the target's owner may be offline)
+      const target = resolveTokenActor(data.targetToken, data.sceneId);
+      const it = target?.items.get(data.itemId);
+      const g = it?.flags?.sw25?.guard;
+      if (g) await it.update({ "flags.sw25.guard.left": Math.max(0, (Number(g.left) || 0) - 1) });
+      return;
     }
 
     case "updateChat": {

@@ -1,5 +1,25 @@
 # CHANGELOG
 
+## 2.4.1-ru.12
+- Shooting: ammunition made in the item constructor (for bows, crossbows or guns: accuracy, damage, power and critical modifiers, magic damage, silvered, element, recovery after the shot).
+- Bow and crossbow attacks spend the chosen ammunition and apply its modifiers; recoverable ammunition comes back on a miss; magic arrows deal magic damage and shot protection reduces it.
+- Guns: a max magazine on the weapon sheet, loaded bullets, reload (a major action); a shot or a bullet spell needs a loaded bullet.
+- Attack buttons under each weapon on the sheet: declared talents and attack forms are armed for the next attack (right click pins one), ammunition is picked there too — no dialog on every attack. Shift+click, or a client setting, brings the talent dialog back.
+- Talent constructor: the remaining attack forms work — attack instead of evading (a button on the enemy's melee attack card, for characters and monsters), two accuracy rolls with the better one kept, damage ×2 on a margin, armor piercing (tiers I–III), a spell put on the weapon that goes off with the next melee attack.
+- Monster generator: critical immunity (from edged weapons or from everything), also recognised in ability text; armor piercing III ignores it.
+- Smithy: a GM setup window with prices by item rank and the count of upgrades and curses the smith can use.
+- Check rows on the «Battle» tab: a one-off modifier field for the next roll.
+- Fix: the new character sheet's tabs (abilities, items, spells, effects, description) lost their card background in 2.4.1-ru.11.3.
+
+## 2.4.1-ru.11.3
+- Smithy: custom forging of weapons (Min. Strength and Power together, up to ±3); armor shot protection with a number of uses, cutting gun shot damage, and repairs; redetermining an Abyss curse for Abyss Shards.
+- Smithy: what an item already has is no longer charged again.
+- Combat tracker: a side initiative bar shows who acts first; the GM rolls it with a button there.
+- Targets stay selected after damage or an effect is applied (a client setting brings back the old clearing).
+- Licence: the system's own modules are now under their own licence (all rights reserved, free to use in games) — see LICENSE-RESERVED.txt. Font licence (OFL) added.
+- Console: no more deprecation warnings about effect modes.
+- Fixes: the magic level no longer grows on repeated recalculation; player requests to the GM are handled one at a time; equipment effects stay in step on quick toggling; a card whose item was deleted says so; typed notes are shown safely.
+
 ## 2.4.1-ru.11.2
 - Declared talents: their damage bonus also counts when the damage is rolled from the sheet (an attack without a target).
 - Talent constructor: new "Power roll result" stat; a declared talent's critical value change now works; a "1 round" talent's accuracy bonus counts for the attack it is declared with.

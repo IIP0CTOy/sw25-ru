@@ -1,3 +1,8 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌​​​​​‌‌​​‌​​​‌‌​​​​‌​‌‌​​​​‌​​‌‌​‌​‌​​‌‌​‌‌‌⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
  * [Round 93] "Effects from text": recognise simple numeric modifiers in an item / spell text
  * ("Accuracy +1", «Уклонение −2», 「命中力+1」, duration) and turn them into an ActiveEffect,
@@ -112,7 +117,7 @@ export function parseEffectText(text, durationText = "") {
     });
   }
   if (/場合|とき|時に|のみ|に対して|если|только|против|while|if |only|against/.test(low) && rows.length) notes.push(L2("в тексте есть условие («если», «против…») — эффект поставлен без условия", "the text has a condition — the effect is created unconditional"));
-  // 「…のいずれかを+6」 / «одну из … на выбор»: one of the rows is picked when the effect is applied
+  // 「…のいずれかを+6」 / «одну из … на выбор»: one of the rows is picked when the effect is applied⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌​​​​​‌‌​​‌​​​‌‌​​​​‌​‌‌​​​​‌​​‌‌​‌​‌​​‌‌​‌‌‌​​‌​‌‌​‌​‌‌​​​‌​⁠
   const choice = rows.length > 1 && /いずれか|どれか1つ|どれか一つ|одн\S+ из|на выбор|one of|choose/.test(low);
   if (choice) notes.push(L2("в тексте выбор одного из вариантов — сделан отдельный эффект на каждый", "the text offers a choice — one effect per option is created"));
   return { rows, rounds: roundsOf(durationText) ?? roundsOf(text), notes, choice };

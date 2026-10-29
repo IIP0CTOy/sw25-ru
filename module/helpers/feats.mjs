@@ -1,3 +1,8 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌‌​​​​​‌‌​‌‌​​​‌‌​​‌‌​‌‌​​‌​‌​‌‌​​‌​‌​‌‌​​​​‌⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
  * Talent constructor and talent rules (combat feats and racial abilities).
  *
@@ -68,12 +73,13 @@ const FORMS = {
   multi: ["≋", ["Несколько целей", "Several targets"], ["одна точность, урон по каждой", "one accuracy roll, damage to each"]],
   miss: ["↻", ["Ещё атака после промаха", "Another attack after a miss"], ["если цель уклонилась", "if the target evaded"]],
   hit: ["⤳", ["Ещё атака после попадания", "Another attack after a hit"], ["тем же оружием", "with the same weapon"]],
-  counter: ["⇄", ["Атака вместо уклонения", "Attack instead of evading"], ["пока вручную", "manual for now"]],
-  best: ["⚄", ["Два броска, лучший", "Two rolls, best"], ["пока вручную", "manual for now"]],
-  combo: ["✦", ["Атака + заклинание", "Attack + spell"], ["пока вручную", "manual for now"]],
-  double: ["×2", ["Урон ×2 при перевесе", "Damage ×2 on a margin"], ["пока вручную", "manual for now"]],
+  counter: ["⇄", ["Атака вместо уклонения", "Attack instead of evading"], ["кнопка на карточке атаки врага", "a button on the enemy's attack card"]],
+  best: ["⚄", ["Два броска, лучший", "Two rolls, best"], ["точность дважды, два боеприпаса", "accuracy twice, two shots"]],
+  combo: ["✦", ["Заклинание на оружие", "Spell on the weapon"], ["срабатывает со следующей атакой", "goes off with the next attack"]],
+  double: ["×2", ["Урон ×2 при перевесе", "Damage ×2 on a margin"], ["точность выше уклонения на N", "accuracy beats evasion by N"]],
+  pierce: ["⛨", ["Пробой брони", "Armor piercing"], ["защита цели — половина", "target's Defense halved"]],
 };
-const AUTO_FORMS = ["none", "two", "multi", "miss", "hit"];
+const AUTO_FORMS = ["none", "two", "multi", "miss", "hit", "counter", "best", "combo", "double", "pierce"];
 const AFTER = { flip: ["Перевернуть оба кубика (1↔6, 2↔5, 3↔4)", "Flip both dice (1↔6, 2↔5, 3↔4)"] };
 const LIMIT = { none: ["без лимита", "no limit"], day: ["раз в день", "once a day"], ndays: ["N раз в день", "N times a day"], rounds: ["N раундов в день", "N rounds a day"], hours: ["раз в час", "once an hour"] };
 const WHERE_FEAT = { any: ["любая атака оружием", "any weapon attack"], melee: ["ближний бой", "melee"], ranged: ["стрельба и метание", "shooting and throwing"], wcat: ["оружие категории…", "weapon category…"], grip2: ["оружие 2Р", "2H weapon"], dual: ["парная атака", "dual attack"], all: ["всегда, во всём", "always, everything"] };
@@ -221,10 +227,11 @@ export function featSentence(f, name) {
       multi: L2(`одна проверка точности по ${f.formN} целям, урон по каждой отдельно`, `one accuracy roll against ${f.formN} targets, damage to each`),
       miss: L2("если цель уклонилась — ещё одна атака тем же оружием в ту же цель", "if the target evaded, another attack with the same weapon at the same target"),
       hit: L2("после попадания — ещё одна атака тем же оружием", "after a hit, another attack with the same weapon"),
-      counter: L2("вместо уклонения — своя атака (пока вручную)", "attack instead of evading (manual for now)"),
-      best: L2("точность бросается дважды, берётся лучший (пока вручную)", "accuracy rolled twice, best kept (manual for now)"),
-      combo: L2("атака и заклинание одним действием (пока вручную)", "attack and spell in one action (manual for now)"),
-      double: L2(`урон ×2 при перевесе ${f.doubleN}+ (пока вручную)`, `damage ×2 on a margin of ${f.doubleN}+ (manual for now)`),
+      counter: L2("когда тебя атакуют в ближнем бою — вместо уклонения своя атака надетым оружием; раз за раунд", "when attacked in melee, your own attack with an equipped weapon instead of evading; once per round"),
+      best: L2("точность бросается дважды, берётся лучший; тратится два боеприпаса", "accuracy rolled twice, best kept; two shots are spent"),
+      combo: L2("заклинание садится на оружие (ОМ сразу) и срабатывает в ту же цель со следующей атакой ближнего боя", "the spell is put on the weapon (MP now) and goes off at the same target with the next melee attack"),
+      double: L2(`урон ×2, если точность выше уклонения цели на ${f.doubleN} и больше`, `damage ×2 if accuracy beats the target's evasion by ${f.doubleN} or more`),
+      pierce: [null, L2("защита цели считается половиной, порог крита +1", "the target's Defense counts as half, critical threshold +1"), L2("защита цели — половина, при крите — 0; порог крита +1", "the target's Defense is half, 0 on a critical; critical threshold +1"), L2("защита цели — половина, при крите — 0; иммунитет к критам не действует", "the target's Defense is half, 0 on a critical; critical immunity does not apply")][N(f.apN, 1)] ?? "",
     }[f.form ?? "none"];
     const wPar = w ? ` (${w})` : "";
     if (f.how === "always") t = w ? L2(`Пока у персонажа есть ${nm}, ${w}: ${effT}.`, `While the character has ${nm}, ${w}: ${effT}.`) : L2(`Пока у персонажа есть ${nm}: ${effT}.`, `While the character has ${nm}: ${effT}.`);
@@ -386,9 +393,18 @@ function declaredThisTurn(actor) {
 export async function attackMods(actor, weapon, ctx = {}) {
   if (!actor || weapon?.type !== "weapon") return { hit: 0, dmg: 0, form: "none", names: [] };
   const pass = passiveMods(actor, weapon, ctx);
-  const decl = ctx.dual || ctx.noDeclare ? [] : activeFeats(actor).filter(({ f }) => f.kind === "feat" && f.how === "declare" && weaponMatches(f, weapon, ctx));
+  const decl = ctx.dual || ctx.noDeclare ? [] : activeFeats(actor).filter(({ f }) => f.kind === "feat" && f.how === "declare" && f.form !== "combo" && weaponMatches(f, weapon, ctx));
   let chosen = [];
-  if (decl.length) {
+  // talents armed with the chips on the sheet: no dialog (Shift+click or the client setting bring the dialog back)
+  const useChips = decl.length && !ctx.ask && !talentDialogOn();
+  if (useChips) {
+    const left = Math.max(0, declLimit(actor) - declaredThisTurn(actor));
+    const a = armedOf(actor, weapon.id);
+    const want = decl.filter(({ item }) => a.on.includes(item.id) || a.pin.includes(item.id));
+    if (want.length > left) ui.notifications.warn(left ? L2(`Заявить можно только ${left}: лишние таланты не применены.`, `Only ${left} may be declared: the extra talents were not applied.`) : L2("В этот ход талант уже заявлен.", "A talent was already declared this turn."));
+    chosen = want.slice(0, left);
+    if (a.on.length && actor.isOwner) await actor.update({ [`flags.sw25.armed.${weapon.id}.on`]: [] });
+  } else if (decl.length) {
     const left = Math.max(0, declLimit(actor) - declaredThisTurn(actor));
     const rows = decl.map(({ item, f }, i) => `<label class="sw25-decl-row"><input type="checkbox" name="d${i}" ${left ? "" : "disabled"}> <b>${esc(item.name)}</b><br><small>${esc(featSentence(f, item.name))}</small></label>`).join("");
     const head = left ? L2(`Можно заявить: ${left}`, `You may declare: ${left}`) : L2("В этот ход талант уже заявлен.", "A talent was already declared this turn.");
@@ -419,7 +435,7 @@ export async function attackMods(actor, weapon, ctx = {}) {
     // a «1 round» talent is an effect from now on; this roll's accuracy formula was read before it, so add it here too
     if (f.dur === "round") { if (f.rules?.length) roundFx.push({ item, f, rules: f.rules }); out.hit += s.hit ?? 0; }
     else { out.hit += s.hit ?? 0; out.dmg += s.dmg ?? 0; out.crit += s.crit ?? 0; out.lt += s.lethal ?? 0; }
-    if (f.form && f.form !== "none") { out.form = f.form; out.formN = N(f.formN) || 0; }
+    if (f.form && f.form !== "none") { out.form = f.form; out.formN = N(f.formN) || 0; out.formArg = f.form === "double" ? N(f.doubleN, 3) || 3 : f.form === "pierce" ? N(f.apN, 1) || 1 : 0; }
     out.names.push(item.name);
     if (f.risk?.length) roundFx.push({ item, f, rules: f.risk, risk: true });
   }
@@ -428,8 +444,111 @@ export async function attackMods(actor, weapon, ctx = {}) {
     const k = turnKey();
     if (k && actor.isOwner) await actor.update({ "flags.sw25.declTurn": { key: k, n: declaredThisTurn(actor) + chosen.length } });
   }
+  // armor piercing I / II: critical threshold +1
+  if (out.form === "pierce" && out.formArg < 3) out.crit += 1;
   out.label = out.names.length ? out.names.join(", ") : "";
   return out;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Attack chips: talents, forms and ammunition armed on the sheet
+ * ------------------------------------------------------------------ */
+const talentDialogOn = () => { try { return !!game.settings.get("sw25", "talentDialog"); } catch (_e) { return false; } };
+/** Talents armed for the next attack with this weapon ({ on: once, pin: every attack }). */
+export function armedOf(actor, wid) {
+  const a = actor?.flags?.sw25?.armed?.[wid] ?? {};
+  return { on: Array.isArray(a.on) ? a.on : [], pin: Array.isArray(a.pin) ? a.pin : [] };
+}
+const CHIP_CSS = `
+.sw25-chips{display:flex;flex-direction:column;gap:3px;margin:3px 0 2px 38px}
+.sw25-chips .row{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.sw25-chips .lb{font-size:11px;color:#6b5a3e;min-width:72px}
+.sw25-chip{font-size:12px;line-height:18px;padding:0 8px;border-radius:9px;border:1px solid #b9a27a;background:#f6eedc;color:#3b2a10;cursor:pointer;white-space:nowrap;user-select:none}
+.sw25-chip:hover{border-color:#7a5300}
+.sw25-chip small{opacity:.7}
+.sw25-chip.on{background:#3d6fa8;color:#fff;border-color:#2c5280}
+.sw25-chip.pin{background:#4d7a2e;color:#fff;border-color:#3a5e21}
+.sw25-chip.ammo.on{background:#b88a1e;color:#fff;border-color:#8a6510}
+.sw25-chip.off{opacity:.4;cursor:not-allowed}
+.sw25-chip.btn{background:transparent;border-style:dashed}
+.sw25-chip.on small,.sw25-chip.pin small{color:#fff}`;
+function chipStyle() {
+  if (document.getElementById("sw25-chip-css")) return;
+  const st = document.createElement("style"); st.id = "sw25-chip-css"; st.textContent = CHIP_CSS; document.head.appendChild(st);
+}
+async function chipsHtml(actor, weapon) {
+  const all = activeFeats(actor).filter(({ f }) => f.kind === "feat" && f.how === "declare" && weaponMatches(f, weapon, {}));
+  const decl = all.filter(({ f }) => f.form !== "combo");
+  const combo = all.find(({ f }) => f.form === "combo");
+  const a = armedOf(actor, weapon.id);
+  const left = Math.max(0, declLimit(actor) - declaredThisTurn(actor));
+  const armedN = decl.filter(({ item }) => a.on.includes(item.id) || a.pin.includes(item.id)).length;
+  const chip = ({ item, f }) => {
+    const st = a.pin.includes(item.id) ? "pin" : a.on.includes(item.id) ? "on" : armedN >= left ? "off" : "";
+    const tip = `${featSentence(f, item.name)}\n${L2("Клик — на следующую атаку, правый клик — закрепить.", "Click: for the next attack, right click: pin.")}`;
+    return `<span class="sw25-chip ${st}" data-feat="${item.id}" data-tooltip="${esc(tip)}">${esc(item.name)}${st === "pin" ? ' <i class="fa-solid fa-thumbtack"></i>' : ""}</span>`;
+  };
+  const talents = decl.filter(({ f }) => !f.form || f.form === "none"), forms = decl.filter(({ f }) => f.form && f.form !== "none");
+  const rows = [];
+  if (talents.length) rows.push(`<div class="row"><span class="lb">${L2("Таланты", "Talents")}</span>${talents.map(chip).join("")}</div>`);
+  if (forms.length) rows.push(`<div class="row"><span class="lb">${L2("Форма", "Form")}</span>${forms.map(chip).join("")}</div>`);
+  if (combo && !RANGED_CATS.includes(weapon.system?.category)) {
+    const ws = actor.flags?.sw25?.weaponSpell;
+    const sp = ws?.weaponId === weapon.id ? actor.items.get(ws.spellId) : null;
+    rows.push(`<div class="row"><span class="lb">${esc(combo.item.name)}</span>${sp ? `<span class="sw25-chip on" data-tooltip="${esc(L2("Сработает со следующей атакой. Клик — снять (ОМ не вернутся).", "Goes off with the next attack. Click: remove (MP is not refunded)."))}" data-unspell="1">${esc(sp.name)} <i class="fa-solid fa-xmark"></i></span>` : `<span class="sw25-chip btn" data-spell="${combo.item.id}"><i class="fa-solid fa-wand-sparkles"></i> ${L2("Заклинание на оружие", "Spell on the weapon")}</span>`}</div>`);
+  }
+  const cat = weapon.system?.category;
+  if (["bow", "crossbow", "gun"].includes(cat)) {
+    const am = await import("./ammo.mjs");
+    const m = cat === "gun" ? am.magOf(weapon) : null;
+    if (m) rows.push(`<div class="row"><span class="lb">${L2("Магазин", "Magazine")}</span><span class="sw25-chip ammo ${m.loaded.length ? "on" : ""}">${m.loaded.length}/${m.max}${m.loaded.length ? ` <small>${esc(m.loaded[0].name)}</small>` : ""}</span><span class="sw25-chip btn" data-reload="1"><i class="fa-solid fa-rotate"></i> ${L2("Перезарядить", "Reload")}</span></div>`);
+    else if (cat !== "gun") {
+      const stacks = (actor.items ?? []).filter((i) => (am.ammoOf(i)?.for ?? []).includes(cat));
+      const cur = weapon.flags?.sw25?.ammoId;
+      if (stacks.length) rows.push(`<div class="row"><span class="lb">${L2("Боеприпасы", "Ammunition")}</span>${stacks.map((s) => `<span class="sw25-chip ammo ${s.id === cur ? "on" : ""}${Number(s.system.quantity) > 0 ? "" : " off"}" data-ammo="${s.id}">${esc(s.name)} <b>${Number(s.system.quantity) || 0}</b></span>`).join("")}</div>`);
+    }
+  }
+  return rows.length ? `<div class="sw25-chips">${rows.join("")}</div>` : "";
+}
+async function toggleChip(actor, wid, fid, pin) {
+  const a = armedOf(actor, wid);
+  let on = a.on.filter((x) => x !== fid), pins = a.pin.filter((x) => x !== fid);
+  const was = pin ? a.pin.includes(fid) : a.on.includes(fid) || a.pin.includes(fid);
+  if (!was) (pin ? pins : on).push(fid);
+  await actor.update({ [`flags.sw25.armed.${wid}`]: { on, pin: pins } });
+}
+async function renderChips(app, html) {
+  const actor = app.actor ?? app.document;
+  if (actor?.type !== "character" || !actor.isOwner) return;
+  const root = html instanceof HTMLElement ? html : html?.[0];
+  if (!root) return;
+  chipStyle();
+  for (const li of root.querySelectorAll("li.item[data-item-id]")) {
+    const w = actor.items.get(li.dataset.itemId);
+    if (w?.type !== "weapon" || !li.querySelector(".rollable[data-resist]")) continue;
+    li.querySelector(":scope > .sw25-chips")?.remove();
+    const h = await chipsHtml(actor, w);
+    if (!h) continue;
+    const box = document.createElement("div"); box.innerHTML = h;
+    const el = box.firstElementChild;
+    const main = li.querySelector(":scope > .n-row-main");
+    if (main) main.after(el); else li.appendChild(el);
+    el.addEventListener("click", async (ev) => {
+      const c = ev.target.closest(".sw25-chip"); if (!c || c.classList.contains("off")) return;
+      ev.preventDefault(); ev.stopPropagation();
+      if (c.dataset.feat) return toggleChip(actor, w.id, c.dataset.feat, false);
+      if (c.dataset.ammo) { await w.update({ "flags.sw25.ammoId": c.dataset.ammo }); return app.render(false); }
+      if (c.dataset.reload) { const am = await import("./ammo.mjs"); await am.reloadGun(actor, w); return app.render(false); }
+      if (c.dataset.spell) { const af = await import("./attackforms.mjs"); return af.loadWeaponSpell(actor, w, actor.items.get(c.dataset.spell)); }
+      if (c.dataset.unspell) return actor.update({ "flags.sw25.weaponSpell": null });
+    });
+    el.addEventListener("contextmenu", (ev) => {
+      const c = ev.target.closest(".sw25-chip[data-feat]"); if (!c) return;
+      ev.preventDefault(); ev.stopPropagation();
+      if (c.classList.contains("off") && !c.classList.contains("pin")) return;
+      toggleChip(actor, w.id, c.dataset.feat, true);
+    });
+  }
 }
 
 /** An Active Effect on the actor for 1 round (risk, or a «1 round» declared talent). */
@@ -448,7 +567,7 @@ async function roundEffect(actor, item, rules, weapon, risk) {
   }]);
 }
 
-/* ------------------------------------------------------------------ *
+/* ------------------------------------------------------------------ *⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌‌​​​​​‌‌​‌‌​​​‌‌​​‌‌​‌‌​​‌​‌​‌‌​​‌​‌​‌‌​​​​‌​​‌​‌‌​‌​‌‌​​​‌​⁠
  *  Dual attack hooks
  * ------------------------------------------------------------------ */
 /** The talent giving the dual attack (constructor «two» form or the known name), or null. */
@@ -485,7 +604,7 @@ export function forbidden(actor, what) {
 async function payMp(actor, n, label = "") {
   n = N(n);
   if (!n) return true;
-  // a Mako Stone pays MP of any cost, not only spells (CR I p. 158 «or other reasons»)
+  // a Mako Stone pays MP of any cost, not only spells
   const { makoSplit, makoCommit } = await import("./mako.mjs");
   const split = await makoSplit(actor, n, label);
   if (!split) return false;
@@ -679,7 +798,7 @@ export async function openFeatBuilder(startKind = "feat") {
   const root = dlg.element.querySelector(".sw25-fb");
   let S;
   const log = [];
-  const blank = (kind) => ({ kind, name: "", how: "always", dur: "action", form: "none", formN: 3, doubleN: 3, where: kind === "race" ? "all" : "any", wArg: "sword", whereCheck: "", who: "self", rules: [], risk: [], g6: [], g11: [], on: "minor", off: "major", mpc: 0, limit: "none", limitN: 1, forbid: [], after: "flip", prereq: "", twoDecl: false, otherT: false });
+  const blank = (kind) => ({ kind, name: "", how: "always", dur: "action", form: "none", formN: 3, doubleN: 3, apN: 1, where: kind === "race" ? "all" : "any", wArg: "sword", whereCheck: "", who: "self", rules: [], risk: [], g6: [], g11: [], on: "minor", off: "major", mpc: 0, limit: "none", limitN: 1, forbid: [], after: "flip", prereq: "", twoDecl: false, otherT: false });
   const load = (k) => {
     const e = EX[k]; S = { ...blank(e.kind), ...foundry.utils.deepClone(e), name: T(e.label) }; S.ex = k; delete S.label;
     for (const list of [S.rules, S.risk, S.g6, S.g11]) for (const r of list ?? []) if (Array.isArray(r.x)) r.x = T(r.x);
@@ -758,7 +877,8 @@ export async function openFeatBuilder(startKind = "feat") {
     const fs = root.querySelector(".fb-formsub");
     if (fs) fs.innerHTML = S.form === "multi" ? `<div class="sub"><label class="fld"><span>${L2("До скольких целей", "Up to how many targets")}</span><input type="number" class="fb-formn" min="2" value="${N(S.formN, 3)}" style="width:60px"></label></div>`
       : S.form === "two" ? `<div class="sub"><label><input type="checkbox" class="fb-othert" ${S.otherT ? "checked" : ""}> ${L2("вторую атаку можно в другую цель", "the second attack may go to another target")}</label></div>`
-      : S.form === "double" ? `<div class="sub"><label class="fld"><span>${L2("Перевес не меньше", "Margin at least")}</span><input type="number" class="fb-dbln" min="1" value="${N(S.doubleN, 3)}" style="width:60px"></label></div>` : "";
+      : S.form === "double" ? `<div class="sub"><label class="fld"><span>${L2("Перевес не меньше", "Margin at least")}</span><input type="number" class="fb-dbln" min="1" value="${N(S.doubleN, 3)}" style="width:60px"></label></div>`
+      : S.form === "pierce" ? `<div class="sub"><label class="fld"><span>${L2("Ступень", "Tier")}</span><select class="fb-apn">${[1, 2, 3].map((n) => `<option value="${n}"${N(S.apN, 1) === n ? " selected" : ""}>${["I", "II", "III"][n - 1]}</option>`).join("")}</select></label></div>` : "";
     // rules
     const RL = root.querySelector(".fb-rules");
     if (!S.rules.length) RL.innerHTML = `<div class="note">${S.form && S.form !== "none" ? L2("Можно оставить пустым: форма атаки уже всё делает.", "May stay empty: the attack form does the work.") : L2("Пока ничего.", "Nothing yet.")}</div>`;
@@ -836,6 +956,7 @@ export async function openFeatBuilder(startKind = "feat") {
   });
   root.addEventListener("change", (ev) => {
     const t = ev.target;
+    if (t.classList.contains("fb-apn")) { S.apN = N(t.value, 1); return sentence(); }
     if (t.classList.contains("fb-on")) S.on = t.value;
     if (t.classList.contains("fb-off")) S.off = t.value;
     if (t.classList.contains("fb-after")) S.after = t.value;
@@ -854,6 +975,12 @@ export async function openFeatBuilder(startKind = "feat") {
  *  Registration
  * ------------------------------------------------------------------ */
 export function registerFeats() {
+  game.settings.register("sw25", "talentDialog", {
+    name: L2("Окно талантов перед каждой атакой", "Talent dialog before every attack"),
+    hint: L2("Выключено: таланты заявляются кнопками под оружием на листе, окно — по Shift+клик. Включено: окно перед каждой атакой, как раньше.", "Off: talents are declared with the buttons under the weapon on the sheet, the dialog opens with Shift+click. On: the dialog before every attack, as before."),
+    scope: "client", config: true, type: Boolean, default: false,
+  });
+  Hooks.on("renderActorSheet", (app, html) => { renderChips(app, html).catch((err) => console.error("SW25 | attack chips", err)); });
   game.sw25 = Object.assign(game.sw25 ?? {}, { feats: { open: openFeatBuilder, build: buildFeatItem, featOf, activeFeats, attackMods, sentence: featSentence } });
   Hooks.on("renderItemDirectory", (app, htmlEl) => {
     const root = htmlEl instanceof HTMLElement ? htmlEl : htmlEl?.[0];

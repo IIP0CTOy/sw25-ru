@@ -21,6 +21,8 @@ import { dailyCheck, dailyMark } from "../helpers/rest.mjs";
 import { L2 } from "../helpers/monstergen-i18n.mjs";
 import { dualWeapons, dualAttack } from "../helpers/dualattack.mjs";
 import { attackMods, featOf, useFeat } from "../helpers/feats.mjs";
+import { pickShot, spendShot, ammoElements } from "../helpers/ammo.mjs";
+import { betterRoll, pierceTarget, fireWeaponSpell, critBlocked } from "../helpers/attackforms.mjs";
 
 /**
  * Extend the basic ActorSheet with some very simple modifications
@@ -1130,12 +1132,16 @@ export class SW25ActorSheet extends ActorSheet {
       const wid = dataset.itemid ?? element.closest("[data-item-id]")?.dataset.itemId;
       const w = wid ? this.actor.items.get(wid) : null;
       if (w?.type === "weapon" && dataset.resist) {
-        featCtx = await attackMods(this.actor, w);
+        featCtx = await attackMods(this.actor, w, { ask: !!event.shiftKey });
         if (!featCtx) return;
         if (featCtx.form === "multi" && featCtx.formN && targetTokens.size > featCtx.formN) {
           ui.notifications.warn(L2(`Не больше ${featCtx.formN} целей.`, `No more than ${featCtx.formN} targets.`));
           return;
         }
+        // [ru.12] bow / crossbow / gun: which ammunition goes (null = cancelled / nothing to shoot)
+        const shot = await pickShot(this.actor, w);
+        if (shot === null) return;
+        if (shot) featCtx.shot = shot;
       }
     }
     if (dataset.apply == "-" || !dataset.apply || targetTokens.size === 0) {
@@ -1161,7 +1167,7 @@ export class SW25ActorSheet extends ActorSheet {
         for (const [index, token] of Array.from(targetTokens).entries()) {
           const targetToken = new Set([token]);
           await this._onRollExec(event, targetToken, featCtx).then((result) => {
-            chatMessageId.push(result.chatMessageId);
+            if (result?.chatMessageId) chatMessageId.push(result.chatMessageId);
           });
         }
 
@@ -1265,8 +1271,14 @@ export class SW25ActorSheet extends ActorSheet {
 
       let roll;
       try {
-        roll = new Roll(featCtx?.hit ? `${dataset.roll}+${featCtx.hit}` : dataset.roll, rollData);
+        const hitMod = (Number(featCtx?.hit) || 0) + (Number(featCtx?.shot?.spec?.hit) || 0);
+        roll = new Roll(hitMod ? `${dataset.roll}+${hitMod}` : dataset.roll, rollData);
         await roll.evaluate();
+        // [ru.12] attack form «two rolls, best»: a second roll, the better one counts
+        if (featCtx?.form === "best") {
+          const r2 = await new Roll(roll.formula, rollData).evaluate();
+          [roll, featCtx.dropped] = betterRoll(roll, r2);
+        }
       } catch (err) {
         // v14: a malformed/blank formula (e.g. a modifier that wasn't
         // computed for this actor/item this cycle) used to throw an
@@ -1288,7 +1300,20 @@ export class SW25ActorSheet extends ActorSheet {
       if (featCtx?.label) label += ` [${featCtx.label}]`;
 
       let chatresuse;
-      if (dataset.resuse) {
+      // [ru.12] the shot spends its ammunition (the old «resource» link is skipped for the same item)
+      let shotFlag = null;
+      if (featCtx?.shot) {
+        const w = this.actor.items.get(itemId);
+        let sp = w ? await spendShot(this.actor, w, featCtx.shot) : null;
+        // «two rolls, best» shoots two at once
+        if (sp && featCtx.form === "best" && featCtx.shot.source === "pack" && featCtx.shot.spec?.recover !== "always") {
+          const q1 = Number(featCtx.shot.item.system.quantity) + 1;
+          sp = (await spendShot(this.actor, w, featCtx.shot)) ?? sp;
+          sp.line = `${foundry.utils.escapeHTML(featCtx.shot.name)}: ${q1} >>> ${Number(featCtx.shot.item.system.quantity)}`;
+        }
+        if (sp) { shotFlag = sp.flag; chatresuse = `<div style="text-align: right;">${sp.line}</div>`; }
+      }
+      if (dataset.resuse && !(shotFlag && featCtx.shot.item?.id === dataset.resuse)) {
         const resuseid = dataset.resuse;
         const resusequantity = dataset.resusequantity;
         const resuseitem = this.actor.items.get(resuseid);
@@ -1356,7 +1381,7 @@ export class SW25ActorSheet extends ActorSheet {
       }
 
       const item = itemId ? this.actor.items.get(itemId) : null;
-      const elements = item ? DamageSupporter.elementsOf(item) : null;
+      const elements = item ? ammoElements(DamageSupporter.elementsOf(item), shotFlag) : null;
       const damage = this.actor ? this.actor.system.attributes.damage : null;
       const classType = this.actor ? this.actor.system.classType : null;
       const isWeapon = DamageSupporter.getWeaponAttributes(item);
@@ -1381,7 +1406,8 @@ export class SW25ActorSheet extends ActorSheet {
           // [Round 66] for contest resolution / one-click damage
           kind: "check",
           itemid: itemId,
-          featMods: featCtx && (featCtx.dmg || featCtx.crit || featCtx.lt || featCtx.form !== "none") ? { dmg: featCtx.dmg, crit: featCtx.crit || 0, lt: featCtx.lt || 0, form: featCtx.form, names: featCtx.names } : null,
+          featMods: featCtx && (featCtx.dmg || featCtx.crit || featCtx.lt || featCtx.form !== "none" || shotFlag) ? { dmg: (Number(featCtx.dmg) || 0) + (shotFlag?.dmg || 0), crit: (featCtx.crit || 0) + (shotFlag?.crit || 0), lt: featCtx.lt || 0, pow: shotFlag?.power || 0, form: featCtx.form, formArg: featCtx.formArg || 0, ...(featCtx.form === "pierce" && targetTokens?.size > 1 ? { pierceTarget: pierceTarget(targetTokens) } : {}), names: featCtx.names } : null,
+          ...(shotFlag ? { ammo: shotFlag } : {}),
           critical: chatCritical,
           fumble: chatFumble,
         },
@@ -1410,10 +1436,13 @@ export class SW25ActorSheet extends ActorSheet {
         }
       );
 
+      if (featCtx?.dropped) chatData.content += `<div class="sw25-cast-mp"><i class="fa-solid fa-dice"></i> ${L2("Второй бросок (отброшен)", "Second roll (dropped)")}: <s>${featCtx.dropped.total}</s></div>`;
       let chatMessageId;
       await ChatMessage.create(chatData).then((chatMessage) => {
         chatMessageId = chatMessage.id;
       });
+      // [ru.12] a spell put on this melee weapon goes off now, at the same targets
+      if (featCtx && item?.type === "weapon") await fireWeaponSpell(this.actor, item);
 
       return { roll, chatMessageId };
     }
@@ -1445,7 +1474,7 @@ export class SW25ActorSheet extends ActorSheet {
         for (const [index, token] of Array.from(targetTokens).entries()) {
           const targetToken = new Set([token]);
           await this._onPowerRollExec(event, targetToken).then((result) => {
-            chatMessageId.push(result.chatMessageId);
+            if (result?.chatMessageId) chatMessageId.push(result.chatMessageId);
           });
         }
 
@@ -1491,17 +1520,22 @@ export class SW25ActorSheet extends ActorSheet {
     // [ru.11.1] declared talents (e.g. a damage bonus) of the latest attack with this weapon also count when
     // the damage is rolled from the sheet (an attack without a target has no damage button on its card)
     let featNote = "";
+    let pierceFlag = null;
     if (itemId && powertable.length > 13) {
       const own = (m) => m.speaker?.actor === this.actor.id && m.flags?.sw25?.kind === "check" && !m.flags.sw25.spellcast && m.flags.sw25.itemid === itemId;
       const last = game.messages.contents.slice(-30).reverse().find(own);
       const fm = last?.flags?.sw25?.featMods;
-      if ((fm?.dmg || fm?.crit || fm?.lt) && !fm.used) {
+      if ((fm?.dmg || fm?.crit || fm?.lt || fm?.pow) && !fm.used) {
         powertable[13] = String((Number(powertable[13]) || 0) + (Number(fm.dmg) || 0));
+        if (fm.pow) powertable[0] = String(Math.max(0, (Number(powertable[0]) || 0) + Number(fm.pow)));
         if (fm.crit) powertable[1] = String((Number(powertable[1]) || 0) + Number(fm.crit));
         if (fm.lt) powertable[16] = String((Number(powertable[16]) || 0) + Number(fm.lt));
-        featNote = (fm.names ?? []).join(", ");
+        featNote = [...(fm.names ?? []), last.flags.sw25.ammo?.name].filter(Boolean).join(", ");
         if (last.isOwner) last.update({ "flags.sw25.featMods.used": true });
       }
+      // [ru.12] armor piercing of that attack; a crit-immune target: no critical
+      if (fm?.form === "pierce") pierceFlag = { tier: Number(fm.formArg) || 1, tokenId: fm.pierceTarget ?? null };
+      if (critBlocked(this.actor.items.get(itemId), targetTokens ?? game.user.targets, last)) powertable[1] = "13";
     }
     let roll;
     try {
@@ -1625,6 +1659,7 @@ export class SW25ActorSheet extends ActorSheet {
 
     chatData.flags = {
       sw25: {
+        ...(pierceFlag ? { pierce: pierceFlag } : {}),
         formula: chatFormula,
         tooltip: await roll.fakeResult.getTooltip(),
         power: chatPower,
@@ -1774,8 +1809,8 @@ export class SW25ActorSheet extends ActorSheet {
       });
     }
 
-    // reset target
-    game.user.targets.forEach((target) => target.setTarget(false));
+    // [ru.11.3] targets stay after applying (a client setting brings back the old clearing)
+    if (game.settings.get("sw25", "clearTargetsAfterApply")) game.user.targets.forEach((target) => target.setTarget(false));
 
     // Chat message
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });

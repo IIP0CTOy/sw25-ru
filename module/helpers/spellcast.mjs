@@ -1,10 +1,15 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌‌​​​​‌‌​​‌​‌​​‌‌​​​​​​‌‌​​​‌​‌‌​​‌​​​‌‌​​​​‌⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
  * [Round 66] One-click spell casting.
  *
  * Click on a spell's icon:
  *  1. MP: if the caster has less MP than the spell costs, nothing is cast
  *     (warning). Otherwise the cost is paid immediately — by the rules MP is
- *     spent whether the spell succeeds or not (book I p.95).
+ *     spent whether the spell succeeds or not.
  *  2. Casting check: 2d6 + the spell's check base (school magic power).
  *  3. Targets with a resistance (Стойкость/Воля, result half/negate/shorten):
  *     the card carries targets + resist, so the active GM auto-rolls the save
@@ -73,6 +78,11 @@ export async function castSpell(actor, item, opts = {}) {
     const { forbidden } = await import("./feats.mjs");
     const fb = forbidden(actor, "spell");
     if (fb) { ui.notifications.warn(L2(`${fb}: пока включено, заклинания нельзя.`, `${fb}: no spells while it is on.`)); return null; }
+  }
+  // [ru.12] a bullet spell needs a loaded bullet in a gun whose magazine is counted
+  if (isBulletSpell(item)) {
+    const { bulletReady } = await import("./ammo.mjs");
+    if (!bulletReady(actor)) { ui.notifications.warn(L2("Магазин ружья пуст — сначала перезарядка (лист ружья).", "The gun's magazine is empty: reload first (gun sheet).")); return null; }
   }
   const L = (k, d) => (d ? game.i18n.format(`SW25.Cast.${k}`, d) : game.i18n.localize(`SW25.Cast.${k}`));
   let targets = Array.from(game.user.targets);
@@ -174,7 +184,7 @@ export async function castSpell(actor, item, opts = {}) {
     if (paid === null || paid === false) return null;
     payLine = paid || "";
   } else {
-    // a mako stone may pay part of the cost (CR I p. 158)
+    // a mako stone may pay part of the cost
     const split = await makoSplit(actor, cost, item.name);
     if (!split) return null;
     if (split.mp > mpBefore) {
@@ -193,7 +203,7 @@ export async function castSpell(actor, item, opts = {}) {
   const info = item.system.resistinfo ?? {};
   const result = info.result || "none";
   let key = info.type || (item.system.hpresist ? "Vitres" : "Mndres");
-  // [Round 66] book I p.167: a Willpower check is made only "if the target
+  // [Round 66] a Willpower check is made only "if the target
   // wants to resist". For BENEFICIAL spells (healing, pure buffs) allies
   // accept: only hostile targets get a save. Damage spells: everybody in
   // the area wants to resist, allies included.
@@ -302,10 +312,10 @@ export async function castSpell(actor, item, opts = {}) {
   const casterDisp = casterToken?.document.disposition ?? 1;
   const isHostile = (tok) => tok.document.disposition === -casterDisp && casterDisp !== 0;
   // "По желанию" (any): a target that does not want it resists automatically
-  // (book I p.167) -> it only works on non-hostile targets
+  // -> it only works on non-hostile targets
   const willing = result === "any" ? targets.filter((t) => !isHostile(t)) : targets;
   if (willing.length) await applyItemEffects(actor, item, willing, { choice });
-  // [Round 70] flat heals «Мощность магии + N» (fairy magic, book II)
+  // [Round 70] flat heals «Мощность магии + N» (fairy magic)
   // [Round 98] the item constructor stores its own flat heal: flags.sw25.flatHeal = N («Magic Power + N»)
   const ownFlat = item.flags?.sw25?.flatHeal;
   const flat = Number.isFinite(Number(ownFlat)) && ownFlat !== null && ownFlat !== "" ? Number(ownFlat) : FLAT_HEAL[canon(item.name)];
@@ -342,7 +352,7 @@ export async function castSpell(actor, item, opts = {}) {
 }
 
 /**
- * [Round 84] Damage that repeats at the end of the victim's turn (e.g. Молниеносная привязка:
+ * [Round 84] Damage that repeats at the end of the victim's turn (e.g. Молниеносная привязка:⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌‌​​​​‌‌​​‌​‌​​‌‌​​​​​​‌‌​​​‌​‌‌​​‌​​​‌‌​​​​‌​​‌​‌‌​‌​‌‌​​​‌​⁠
  * «Мощность 20 + мощь магии» every round). The effect template carries
  * flags.sw25.periodic = { kind: "power" }; the power is rolled from the caster's last cast
  * of the spell the effect came from. Runs on the active GM.

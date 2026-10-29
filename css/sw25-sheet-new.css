@@ -1,3 +1,8 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​‌‌​​‌​‌​​‌‌​‌​‌​​‌‌​‌​​​‌‌​​​‌​​​‌‌‌​​‌​‌‌​​​​‌⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /* SW25-RU — new character sheet, theme "Steel & Brass" (redesign layer 1).
    Everything is scoped under .sw25n so the old sheet, monster and NPC sheets are untouched.
    Fonts are local (see @font-face below). */
@@ -363,7 +368,7 @@
 .sw25n .n-checks-card .items-list > .item { break-inside: avoid; }
 .sw25n .n-checks-card .items-list > .items-header { column-span: all; }
 
-/* --- features / items: one card per group --- */
+/* --- features / items: one card per group --- ⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​‌‌​​‌​‌​​‌‌​‌​‌​​‌‌​‌​​​‌‌​​​‌​​​‌‌‌​​‌​‌‌​​​​‌​​‌​‌‌​‌​‌‌​​​‌​⁠ */
 .sw25n .n-body > .tab.features > div, .sw25n .n-body > .tab.items > div, .sw25n .n-body > .tab.effects > div, .sw25n .n-body > .tab.description > div,
 .sw25n .n-body > .tab.spells > div {
   background: var(--sw-vellum); color: var(--sw-ink); border: 1px solid var(--sw-vellum-line); border-radius: var(--sw-r); padding: 4px 8px 6px; margin: 0; min-width: 0; }
@@ -635,6 +640,7 @@
 .sw25n .n-chk-row > img { flex: 0 0 24px; width: 24px; height: 24px; border: 0; border-radius: 4px; object-fit: cover; }
 .sw25n .n-chk-name { flex: 1 1 auto; min-width: 0; font-size: 12.5px; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .sw25n .n-chk-row .n-btn { flex: 0 0 auto; min-height: 26px; min-width: 36px; padding: 0 6px; justify-content: center; }
+.sw25n .n-chk-row input.n-chk-mod { flex: 0 0 46px; width: 46px; height: 24px; padding: 0 2px; text-align: center; font-size: 12px; background: rgba(255,255,255,.7); border: 1px solid var(--sw-vellum-line); border-radius: var(--sw-r-s); color: var(--sw-ink); }
 .sw25n .n-chk-x, .sw25n .n-body a.n-chk-x { flex: 0 0 16px; text-align: center; font-size: 10px; color: var(--sw-vellum-line); cursor: pointer; }
 .sw25n .n-chk-x:hover, .sw25n .n-body a.n-chk-x:hover { color: var(--sw-hp-neg); text-shadow: none; }
 .sw25n .n-chk > .n-empty { grid-column: 1 / -1; text-align: left; padding: 8px 10px; }

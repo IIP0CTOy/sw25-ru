@@ -1,3 +1,8 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​‌‌​​​‌​​​‌‌​‌​​​‌‌​​‌​​​​‌‌​‌​​​‌‌​​‌​‌​​‌‌​​‌​⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
  * [Round 91] GM monster generator — «Генератор монстров».
  *
@@ -189,6 +194,12 @@ export function extractMagic(m) {
     return false;
   });
   if (m.magic.length) m.usespell = true;
+  // [ru.12] «immune to criticals (from edged weapons)» in an ability text → the critical-immunity setting
+  if (!m.critImmune) {
+    const t = m.abilities.map((a) => `${a.name ?? ""} ${a.text ?? ""}`).join(" ");
+    if (/immune to criticals|критическ[\p{L}]*\s+(?:удар[\p{L}]*\s+)?не\s+(?:получа|действу|срабатыва)|не\s+получает\s+критическ|クリティカル(?:を)?無効/iu.test(t))
+      m.critImmune = /edged|режущ|斬/iu.test(t) ? "edged" : "all";
+  }
   return m;
 }
 
@@ -420,7 +431,7 @@ export async function createMonster(m, { open = true, folder = null, pack = null
       part: multi ? String(rows.length) : 0, gminfo: gm.join(""), loot: m.loot, usespell: !!m.usespell,
     },
     items,
-    flags: { sw25: { generated: "r91", ...(m.creation ? { creation: m.creation } : {}) } },
+    flags: { sw25: { generated: "r91", ...(m.creation ? { creation: m.creation } : {}), ...(["edged", "all"].includes(m.critImmune) ? { critImmune: m.critImmune } : {}) } },
   };
   const we = weaknessEffect(m);
   if (we) data.effects = [we];
@@ -505,7 +516,7 @@ function rowRow(r, i) {
 }
 
 /**
- * [ru.11] Live preview of the monster being edited (left panel of the generator): the stat block as it will
+ * [ru.11] Live preview of the monster being edited (left panel of the generator): the stat block as it will⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​‌‌​​​‌​​​‌‌​‌​​​‌‌​​‌​​​​‌‌​‌​​​‌‌​​‌​‌​​‌‌​​‌​​​‌​‌‌​‌​‌‌​​​‌​⁠
  * read — header, info lines, the section table (one row = an ordinary monster, several = a multi-section one),
  * abilities with their marks, weakness and loot. Only what is in the form; nothing is computed from a book.
  */
@@ -732,7 +743,7 @@ export async function openMonsterGenerator(opts = {}) {
         <small>${L2("Шаблон для окна «Создания» на листе персонажа: числа из вашей книги.", "A template for the «Creations» window on a character sheet: numbers from your rulebook.")}</small>
         <div class="mg-crbox"></div></details>
       <div class="mg-fields" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px"></div>
-      <div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap"><b>Класс:</b> <select data-f="classType">${sel(CLASS_OPTS, "Other")}</select> <label><input type="checkbox" data-f="usespell"> Использует заклинания</label> <small class="mg-magic" style="flex-basis:100%"></small> <b>Слабость:</b>
+      <div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap"><b>Класс:</b> <select data-f="classType">${sel(CLASS_OPTS, "Other")}</select> <label><input type="checkbox" data-f="usespell"> Использует заклинания</label> <label>${L2("Иммунитет к критам", "Critical immunity")} <select data-f="critImmune">${[["", L2("нет", "none")], ["edged", L2("от режущего оружия", "from edged weapons")], ["all", L2("от всего", "from everything")]].map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}</select></label> <small class="mg-magic" style="flex-basis:100%"></small> <b>Слабость:</b>
         <select data-f="weakKind">${sel(WEAK_OPTS, "")}</select> +<input data-f="weakValue" type="number" value="0" style="width:48px">
         <small>создаётся выключенный эффект «Слабое место…», включается при опознании монстра. Распознаётся из текста автоматически.</small></div>
       <table style="width:100%;margin-top:6px"><thead><tr><th>Секция / бой. стиль</th><th>Точн.</th><th>Урон +N</th><th>Уклон.</th><th>Защ.</th><th>ОЖ</th><th>ОМ</th><th></th></tr></thead><tbody class="mg-rows"></tbody></table>
@@ -817,6 +828,7 @@ export async function openMonsterGenerator(opts = {}) {
       root.querySelectorAll("[data-f=loot]").forEach((e) => (e.value = x.loot ?? ""));
       root.querySelector("[data-f=classType]").value = x.classType || "Other";
       root.querySelector("[data-f=usespell]").checked = !!x.usespell;
+      root.querySelector("[data-f=critImmune]").value = x.critImmune ?? "";
       $(".mg-magic").textContent = x.magic?.length ? tr("Магия (уйдёт в текст «Магия» в GM-информации): ") + x.magic.join(" • ") : "";
       root.querySelector("[data-f=weakKind]").value = x.weakKind ?? "";
       root.querySelector("[data-f=weakValue]").value = x.weakValue ?? 0;

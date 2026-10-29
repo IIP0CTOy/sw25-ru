@@ -1,10 +1,15 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​‌‌​​​‌​​​‌‌​​‌​​​‌‌​​​‌​‌‌​​‌‌​​​‌‌‌​​‌​​‌‌​​‌​⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
- * Monsters boosted with sword shards (Core Rulebook I, pp. 384-385):
+ * Monsters boosted with sword shards:
  *  - +5 max HP and +1 max MP per shard;
  *  - Fortitude and Willpower +1 (1-5 shards), +2 (6-10), +3 (11-15), +4 (16+);
  *  - a multi-section monster: the GM spreads the HP and MP over any sections, the resistance bonus counts
  *    the total number of shards for every section;
- *  - the shards are an «always» loot of the monster (sold for 200 G each, CR II).
+ *  - the shards are an «always» loot of the monster (sold for 200 G each).
  *
  * Stored on the monster: flags.sw25.shards = { n, hp: { sectionId: x }, mp: { sectionId: x } }.
  * The core section (or a monster without sections) gets an Active Effect «Sword Shards ×N»;
@@ -130,11 +135,11 @@ export async function openShardDialog(actor) {
   ui.notifications.info(res.n ? L2(`${actor.name}: осколков меча ${res.n}.`, `${actor.name}: ${res.n} Sword Shards.`) : L2(`${actor.name}: осколки убраны.`, `${actor.name}: shards removed.`));
 }
 
-/** «Always» loot line for the shards (CR II: 200 G each). */
+/** «Always» loot line for the shards (200 G each). */
 export const shardLootLine = (n) => L2(`Осколок меча (200G) x${N(n)}`, `Sword Shard (200G/-) x${N(n)}`);
 
 export function registerShards() {
-  // GM button in the monster sheet header
+  // GM button in the monster sheet header⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​‌‌​​​‌​​​‌‌​​‌​​​‌‌​​​‌​‌‌​​‌‌​​​‌‌‌​​‌​​‌‌​​‌​​​‌​‌‌​‌​‌‌​​​‌​⁠
   Hooks.on("getActorSheetHeaderButtons", (app, buttons) => {
     const actor = app.actor ?? app.document;
     if (!game.user.isGM || actor?.type !== "monster") return;

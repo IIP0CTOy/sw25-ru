@@ -3,7 +3,7 @@ import { isClass, classLevel } from "../helpers/names.mjs";
 import { L2 } from "../helpers/monstergen-i18n.mjs";
 
 /**
- * [Round 71] Side initiative, book I p.104 / p.121-124.
+ * [Round 71] Side initiative.
  *  - Every PC with Scout rolls the Initiative check (2d6 + Scout + Agility
  *    bonus; 6-6 is just 12, 1-1 still fails). Nobody with Scout -> one plain
  *    2d6 for the party (direct roll).
@@ -58,8 +58,14 @@ export class SW25Combat extends Combat {
     return super.rollNPC(options);
   }
 
-  /** One initiative for the whole fight, book I p.121. */
+  /** One initiative for the whole fight. */
   async rollSideInitiative({ messageOptions = {} } = {}) {
+    // [ru.12] a second click while the roll is still running does not roll again
+    if (this._sideRolling) return this;
+    this._sideRolling = true;
+    try { return await this._rollSideInitiative({ messageOptions }); } finally { this._sideRolling = false; }
+  }
+  async _rollSideInitiative({ messageOptions = {} } = {}) {
     const party = this.combatants.filter((c) => isPartySide(c) && c.actor);
     const enemies = this.combatants.filter((c) => !isPartySide(c) && c.actor);
     // 1.3 monster knowledge comes before 1.4 initiative
@@ -159,11 +165,50 @@ export class SW25Combat extends Combat {
   }
 }
 
+/** The side initiative bar at the top of the tracker: who acts first; the GM's roll / re-roll / switch-on button. */
+function sideBar(root, combat) {
+  root.querySelector(".sw25-side-bar")?.remove();
+  if (!combat) return;
+  const on = game.settings.get("sw25", "sideInitiative"), gm = game.user.isGM;
+  if (!on && !gm) return;
+  const pf = combat.flags?.sw25?.partyFirst;
+  const bar = document.createElement("div");
+  bar.className = "sw25-side-bar";
+  bar.style.cssText = "display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:4px 6px;margin:2px 0;border-radius:4px;background:rgba(0,0,0,.25)";
+  const status = !on ? L2("Инициатива сторонами выключена", "Side initiative is off")
+    : pf === undefined ? L2("Инициатива сторон ещё не брошена", "Side initiative not rolled yet")
+    : pf ? L2("Первой ходит партия", "The party acts first") : L2("Первыми ходят враги", "The enemies act first");
+  const color = !on || pf === undefined ? "" : pf ? "color:#9ae6b4" : "color:#feb2b2";
+  bar.innerHTML = `<i class="fa-solid fa-flag"></i><b style="flex:1;${color}">${foundry.utils.escapeHTML(status)}</b>`;
+  if (gm) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.style.cssText = "flex:0 0 auto;width:auto;line-height:1.6;padding:0 8px";
+    btn.innerHTML = !on ? `<i class="fa-solid fa-toggle-on"></i> ${L2("Включить", "Turn on")}`
+      : pf === undefined ? `<i class="fa-solid fa-dice"></i> ${L2("Бросить инициативу сторон", "Roll side initiative")}`
+      : `<i class="fa-solid fa-rotate"></i> ${L2("Перебросить", "Re-roll")}`;
+    btn.addEventListener("click", async (ev) => {
+      ev.preventDefault(); ev.stopPropagation();
+      if (!on) { await game.settings.set("sw25", "sideInitiative", true); return ui.combat?.render(); }
+      if (!combat.combatants.size) return ui.notifications.warn(L2("В бою никого нет: добавьте токены в трекер.", "Nobody in the combat: add tokens to the tracker."));
+      if (pf !== undefined) {
+        const ok = await foundry.applications.api.DialogV2.confirm({ window: { title: L2("Инициатива сторон", "Side initiative") }, content: `<p>${L2("Перебросить инициативу сторон? По правилам её бросают один раз за бой — переброс нужен, если состав боя изменился.", "Re-roll side initiative? It is rolled once per combat — re-roll only if the combatants changed.")}</p>` });
+        if (!ok) return;
+      }
+      await combat.rollSideInitiative();
+    });
+    bar.append(btn);
+  }
+  const anchor = root.querySelector("ol.combat-tracker, .combat-tracker, #combat-tracker");
+  if (anchor) anchor.before(bar); else root.prepend(bar);
+}
+
 /** GM: flag icon on each tracker row -> this combatant acts now. */
 export function registerSideInitiativeUI() {
   Hooks.on("renderCombatTracker", (app, html) => {
     const root = html instanceof HTMLElement ? html : html?.[0];
     const combat = app.viewed ?? game.combat;
+    if (root) sideBar(root, combat);
     if (!root || !combat || !game.user.isGM || !game.settings.get("sw25", "sideInitiative")) return;
     const pf = combat.flags?.sw25?.partyFirst;
     for (const li of root.querySelectorAll("[data-combatant-id]")) {
@@ -187,10 +232,10 @@ export function registerSideInitiativeUI() {
 }
 
 /**
- * [Round 74] 1.3 Monster knowledge (book I p.121, p.104): every Sage (or
- * Rider, book III) rolls once per kind of monster; the best result vs the
+ * [Round 74] 1.3 Monster knowledge: every Sage (or
+ * Rider) rolls once per kind of monster; the best result vs the
  * monster's Репутация identifies it, vs Слабость switches its «Слабое место»
- * effect on (off otherwise). 6-6: automatic success (+5, p.91), 1-1: fail.
+ * effect on (off otherwise). 6-6: automatic success (+5), 1-1: fail.
  */
 async function monsterKnowledge(party, enemies) {
   const K = (k, d) => (d ? game.i18n.format(`SW25.Know.${k}`, d) : game.i18n.localize(`SW25.Know.${k}`));

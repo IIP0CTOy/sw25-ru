@@ -402,12 +402,12 @@ export class SW25Item extends Item {
     }
     // [Round 49] checkskill supports: a single exact skill (class) name;
     // the sentinel "adv" (Уровень Авантюриста — max level across any
-    // owned class skill, per SW25 core p.90: "некоторые проверки умений
+    // owned class skill: "некоторые проверки умений
     // являются универсальными для Авантюристов и используют уровень
     // авантюриста вместо уровня класса"); the sentinels "Боевой тип" and
     // "Магический тип (Мощность магии)" (max level restricted to
     // fighterskill / magicuserskill classes respectively, e.g. "Точность"
-    // p.102 and "Заклинания" p.107); or a book-style "X или Y[, или Z]"
+    // and "Заклинания"); or a book-style "X или Y[, или Z]"
     // list of alternative class names (e.g. "Разведчика или Рейнджера"),
     // in which case the character's highest level among the *named*
     // alternatives applies — RAW says "or", meaning whichever you have,
@@ -585,7 +585,7 @@ export class SW25Item extends Item {
       Number(systemData.efallacmod ?? 0) +
       Number(levelmod) +
       Number(abimod);
-    // [Round 68] SW2.5 кн.1 стр.91 «Прямой бросок»: без нужного класса
+    // [Round 68] «Прямой бросок»: без нужного класса
     // стандартное значение = 0 (модификатор характеристики не добавляется).
     systemData.directroll =
       itemData.actor?.type === "character" &&
@@ -2714,7 +2714,7 @@ export class SW25Item extends Item {
           for (const [index, token] of Array.from(targetTokens).entries()) {
             const targetToken = new Set([token]);
             await this.rollExec(targetToken).then((result) => {
-              chatMessageId.push(result.chatMessageId);
+              if (result?.chatMessageId) chatMessageId.push(result.chatMessageId);
             });
           }
 

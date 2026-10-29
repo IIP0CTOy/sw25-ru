@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ---
-Exception: the file module/helpers/sections.mjs (multi-section monsters) is not
-covered by this MIT License starting with version 2.4.1-ru.8. It is licensed
-separately — see LICENSE-SECTIONS.txt.
+Exception: the files listed in LICENSE-RESERVED.txt are not covered by this MIT
+License (module/helpers/sections.mjs starting with version 2.4.1-ru.8, the other
+listed files starting with version 2.4.1-ru.11.3). They are licensed separately —
+see LICENSE-RESERVED.txt. Earlier versions of those files remain under MIT.

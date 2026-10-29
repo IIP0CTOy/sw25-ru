@@ -75,6 +75,6 @@ Open an [issue](https://github.com/IIP0CTOy/sw25-ru/issues) with the Foundry ver
 
 ## Licence
 
-Program code: [MIT](LICENSE.txt). The licence covers the code only, not the Sword World 2.5 game, its terms or its world, which belong to their owners. Exception: the multi-section monsters code (`module/helpers/sections.mjs`) has its own licence since 2.4.1-ru.8 — all rights reserved, see [LICENSE-SECTIONS.txt](LICENSE-SECTIONS.txt).
+Program code: [MIT](LICENSE.txt). The licence covers the code only, not the Sword World 2.5 game, its terms or its world, which belong to their owners. Exception: the system's own modules (multi-section monsters since 2.4.1-ru.8; the talent and item constructors, smithy, monster generator, character wizard, new sheet and others since 2.4.1-ru.11.3) are under their own licence — all rights reserved: use in your games is free, copying them into other packages is not. The list of files is in [LICENSE-RESERVED.txt](LICENSE-RESERVED.txt).
 
 If you are a rights holder and want something changed or removed, please open an issue or write to the maintainer.

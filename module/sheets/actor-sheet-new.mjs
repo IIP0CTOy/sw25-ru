@@ -1,3 +1,8 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌‌​​​​​‌‌​​​‌​​‌‌​​‌​​‌‌​​‌‌​​​‌‌‌​​‌​​‌‌​​​​⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 import { SW25ActorSheet } from "./actor-sheet.mjs";
 import { dailyCheck, dailyMark } from "../helpers/rest.mjs";
 import { isItem, findClassItem } from "../helpers/names.mjs";
@@ -165,7 +170,7 @@ export async function useTechnique(actor, item) {
   }
 
   if (effects.length) {
-    // using the same technique again refreshes it instead of stacking
+    // using the same technique again refreshes it instead of stacking⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌‌​​​​​‌‌​​​‌​​‌‌​​‌​​‌‌​​‌‌​​​‌‌‌​​‌​​‌‌​​​​​​‌​‌‌​‌​‌‌​​​‌​⁠
     const dup = actor.effects.filter((x) => x.origin === item.uuid).map((x) => x.id);
     if (dup.length) await actor.deleteEmbeddedDocuments("ActiveEffect", dup);
     await actor.createEmbeddedDocuments("ActiveEffect", effects);
@@ -254,7 +259,19 @@ export class SW25CharacterSheetNew extends SW25ActorSheet {
         return used;
       }
     }
-    return super._onRoll(event);
+    // [ru.12] one-off modifier typed in a check row of the «Battle» tab: added to this roll only
+    const row = el?.closest?.(".n-chk-row");
+    const mod = row ? Math.round(Number(this._chkMod?.[row.dataset.itemId]) || 0) : 0;
+    if (!mod || !el.classList.contains("rollable")) return super._onRoll(event);
+    const { roll, label } = el.dataset;
+    el.dataset.roll = `${roll}${mod > 0 ? "+" : ""}${mod}`;
+    el.dataset.label = `${label ?? ""} [${L2("мод.", "mod")} ${mod > 0 ? "+" : ""}${mod}]`;
+    try { return await super._onRoll(event); }
+    finally {
+      el.dataset.roll = roll; el.dataset.label = label;
+      delete this._chkMod[row.dataset.itemId];
+      const inp = row.querySelector(".n-chk-mod"); if (inp) inp.value = 0;
+    }
   }
 
   /** @override */
@@ -263,6 +280,20 @@ export class SW25CharacterSheetNew extends SW25ActorSheet {
 
     const root = html[0];
     if (!root) return;
+
+    // [ru.12] a one-off modifier field (with arrows) in each check row of the «Battle» tab
+    this._chkMod ??= {};
+    for (const row of root.querySelectorAll(".n-skillchecks li.n-chk-row")) {
+      const btn = row.querySelector("a.rollable");
+      if (!btn) continue;
+      const inp = document.createElement("input");
+      inp.type = "number"; inp.step = "1"; inp.className = "n-chk-mod";
+      inp.value = this._chkMod[row.dataset.itemId] ?? 0;
+      inp.dataset.tooltip = L2("Модификатор только на этот бросок (потом сбросится в 0)", "Modifier for this roll only (then back to 0)");
+      inp.addEventListener("change", (ev) => { ev.stopPropagation(); this._chkMod[row.dataset.itemId] = Math.round(Number(inp.value) || 0); inp.value = this._chkMod[row.dataset.itemId]; });
+      inp.addEventListener("input", () => { this._chkMod[row.dataset.itemId] = Math.round(Number(inp.value) || 0); });
+      btn.before(inp);
+    }
 
     // [ru.11.1] header XP field (settings mode); it has no form name so it does not clash with the
     // same field on the «Checks» tab

@@ -1,6 +1,11 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​​‌‌​​​‌​​‌‌​​‌​​​‌‌​‌​​​​‌‌​​​‌​‌‌​​‌​​​​‌‌​‌‌‌⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
- * Golems, undead and familiars made by a character (Core Rulebook II pp. 87-92, III p. 432;
- * familiars: CR I pp. 432-434, III pp. 430-432).
+ * Golems, undead and familiars made by a character.
+ *
  *
  * «Creations» button on a character sheet: pick what to make → the MP is paid (mako stone / familiar
  * MP allowed), the Conjurer level is checked against the table, the normal material is taken from
@@ -183,7 +188,7 @@ export async function openSummons(actor) {
     const err = pre.length ? checkParts(pre, p.max) : "";
     if (err) return ui.notifications.warn(err);
   }
-  // MP
+  // MP⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌​​​‌​​‌‌​​‌​​​‌‌​‌​​​​‌‌​​​‌​‌‌​​‌​​​​‌‌​‌‌‌​​‌​‌‌​‌​‌‌​​​‌​⁠
   let line = "";
   if (p.mp && !res.paid) {
     const split = await makoSplit(actor, p.mp, p.label);
@@ -290,7 +295,7 @@ export async function dismiss(a) {
     const ids = s.tokens.filter((t) => t.actorId === a.id).map((t) => t.id);
     if (ids.length) await s.deleteEmbeddedDocuments("Token", ids);
   }
-  // the enhancement items come back to the creator (CR II p. 92)
+  // the enhancement items come back to the creator
   const sm = summonOf(a), owner = game.actors.get(sm.owner);
   const back = (sm.parts ?? []).map((id) => owner?.items.get(id)).filter(Boolean);
   if (back.length) await owner.updateEmbeddedDocuments("Item", back.map((i) => ({ _id: i.id, "flags.sw25.inGolem": false })));
@@ -328,7 +333,7 @@ export function registerSummons() {
       if (isGolem(actor)) buttons.unshift({ label: L2("Улучшить голема", "Enhance golem"), class: "sw25-gparts-btn", icon: "fa-solid fa-gem", onclick: () => openPartsCopy(actor) });
     }
   });
-  // a familiar has no HP: damage goes to its master (CR I p. 433)
+  // a familiar has no HP: damage goes to its master
   Hooks.on("preUpdateActor", (actor, changes, options, userId) => {
     if (summonOf(actor)?.kind !== "familiar" || userId !== game.user.id) return;
     const nv = foundry.utils.getProperty(changes, "system.hp.value");
@@ -341,7 +346,7 @@ export function registerSummons() {
     else emitToGM({ method: "familiarHp", masterId: m.id, dmg });
     ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="sw25-cast-mp">${L2(`Урон фамильяру (${dmg}) получает хозяин: ${esc(m.name)}.`, `Damage to the familiar (${dmg}) goes to the master: ${esc(m.name)}.`)}</div>` });
   });
-  // golems / undead act right after their creator (CR II p. 90)
+  // golems / undead act right after their creator
   Hooks.on("updateCombatant", async (cb, changes) => {
     if (game.user !== game.users.activeGM || !("initiative" in changes) || cb.initiative == null) return;
     const id = cb.actor?.id;

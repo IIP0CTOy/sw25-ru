@@ -1,5 +1,10 @@
+/*
+ * Sword World 2.5 Plus (sw25-ru)
+ * Copyright (c) 2026 IIP0CTOy. All rights reserved.⁠​‌​​‌​​‌​‌​​‌​​‌​‌​‌​​​​​​‌‌​​​​​‌​​​​‌‌​‌​‌​‌​​​‌​​‌‌‌‌​‌‌‌‌​​‌​​‌​‌‌‌‌​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​​‌​‌‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌‌‌​‌‌​​‌‌​​​‌‌​‌‌​​‌‌​​​‌‌​​‌‌​‌​​​​‌‌​​​​​​‌‌​‌‌​⁠
+ * NOT covered by the MIT License of this repository (since 2.4.1-ru.11.3): see LICENSE-RESERVED.txt.
+ */
 /**
- * Japanese version of the built-in guide (guide.mjs), same pages in the same order. No rulebook text.
+ * Japanese version of the built-in guide (guide.mjs), same pages in the same order. No rulebook text.⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​‌‌​​‌‌​​​‌‌​‌‌​​‌‌​​​‌‌​​‌‌​‌​​​​‌‌​​​​​​‌‌​‌‌​​​‌​‌‌​‌​‌‌​​​‌​⁠
  */
 export const GUIDE_TITLE_JA = "SW25：アイテムと能力の作り方";
 
