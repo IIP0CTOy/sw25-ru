@@ -94,6 +94,7 @@ Object.entries({
   "JSON (ytsheet):": "JSON (ytsheet):",
 }).forEach(([k, v]) => EN.set(k.trim(), v));
 RX.push([/^Секций: (\d+) — проверь основную секцию$/, (m) => `Sections: ${m[1]} — check the main section`]);
+RX.push([/^Таблица маунта: уровни (\d+)–(\d+), взят уровень (\d+)\. .*«(.*)»/, (m) => `Mount table: levels ${m[1]}–${m[2]}, level ${m[3]} taken. For another level write it before the name on the first line («${m[4]}») and parse again`]);
 
 /** Translate one UI string (exact match, then templates). Russian: returned unchanged. */
 export function tr(s) {

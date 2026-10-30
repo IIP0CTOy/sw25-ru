@@ -253,6 +253,8 @@
 .sw25n .n-btn.n-btn-dmg { background: #5a1f25; border-color: #2c0d10; }
 .sw25n .n-btn.n-btn-res { background: var(--sw-vellum-2); color: var(--sw-ink); border-color: var(--sw-vellum-line); box-shadow: none; }
 .sw25n .n-btn:hover { background: var(--sw-brass); color: var(--sw-brass-ink); text-shadow: none; }
+/* [ru.12.1] a constructor toggle that is switched on */
+.sw25n .n-btn.n-btn-use.n-on { background: var(--sw-brass); color: var(--sw-brass-ink); text-shadow: none; }
 .sw25n .n-btn:hover b { color: var(--sw-brass-ink); }
 .sw25n .n-btn:active { transform: translateY(1px); box-shadow: none; }
 .sw25n .n-row .item-description { margin-top: 4px; font-size: 13px; color: var(--sw-ink-soft); }
@@ -733,3 +735,53 @@
 .sw25n .n-cls-edit input.sl-change { width: 2.4em; height: 20px; text-align: center; padding: 0; }
 .sw25n .n-cls-edit .changesl-button { font-size: 11px; opacity: .8; }
 .sw25n .n-cls-edit .changesl-button:hover { opacity: 1; }
+
+/* ===== [ru.12.1] Compact variant of the new sheet (a sheet of its own in the «Sheet» choice): the same
+   template and code, only the header is packed into ~1/3 of the height ===== */
+.sw25n-compact .sw25n .n-hd { grid-template-columns: auto minmax(0, 1fr); gap: 6px; }
+.sw25n-compact .sw25n .n-side { flex-direction: row; gap: 4px; }
+.sw25n-compact .sw25n .n-portrait { width: 58px; height: 58px; border-width: 2px; border-radius: 10px; box-shadow: none; }
+.sw25n-compact .sw25n .n-slot { flex-direction: column; gap: 3px; min-height: 0; width: 62px; }
+.sw25n-compact .sw25n .n-lvl { padding: 0 2px; border-radius: var(--sw-r-s); }
+.sw25n-compact .sw25n .n-lvl small { font-size: 9px; }
+.sw25n-compact .sw25n .n-lvl b { font-size: 13px; line-height: 1.1; }
+.sw25n-compact .sw25n .n-lvl input.n-exp { height: 18px; font-size: 12px; width: 100%; padding: 0; text-align: center; box-sizing: border-box; }
+.sw25n-compact .sw25n .n-slot .deathcheck-row { padding: 1px; }
+.sw25n-compact .sw25n .n-main { gap: 3px; }
+.sw25n-compact .sw25n .n-namebar { gap: 4px; }
+.sw25n-compact .sw25n .n-nameplate { padding: 2px 8px 3px; display: flex; align-items: center; gap: 8px; }
+.sw25n-compact .sw25n .n-nameplate .n-np-text { flex: 1 1 auto; min-width: 0; }
+.sw25n-compact .sw25n .n-nameplate .header__title .header__title--name { font-size: 19px; -webkit-line-clamp: 1; }
+.sw25n-compact .sw25n .n-nameplate .header__overview { font-size: 12px; margin: 0; }
+.sw25n-compact .sw25n .n-nameplate .n-ov { min-height: 0; }
+.sw25n-compact .sw25n .n-modes { flex-direction: row; align-items: center; }
+.sw25n-compact .sw25n .n-mode span { width: 30px; height: 26px; }
+.sw25n-compact .sw25n .n-classes { min-height: 0; gap: 4px; }
+.sw25n-compact .sw25n .n-cls { font-size: 12px; padding-top: 0; padding-bottom: 0; }
+.sw25n-compact .sw25n .n-vitals { gap: 6px; }
+.sw25n-compact .sw25n .n-vitals .hpbar, .sw25n-compact .sw25n .n-vitals .mpbar { padding: 2px 6px 4px; }
+.sw25n-compact .sw25n .n-vitals .hp-progress-bar, .sw25n-compact .sw25n .n-vitals .mp-progress-bar { gap: 2px; }
+.sw25n-compact .sw25n .n-vitals progress { height: 7px; }
+.sw25n-compact .sw25n .n-vitals .n-vlab { font-size: 12px; top: 1px; }
+.sw25n-compact .sw25n .n-vitals .current-max-resource input { height: 22px; font-size: 16px; width: 54px; }
+.sw25n-compact .sw25n .n-tiles { gap: 4px; }
+.sw25n-compact .sw25n .n-tile-main { flex-direction: row; gap: 5px; min-height: 0; padding: 2px 4px; }
+.sw25n-compact .sw25n .n-tile-main b { font-size: 17px; }
+.sw25n-compact .sw25n .n-tile-main span { font-size: 10px; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sw25n-compact .sw25n .n-tile-main { padding-right: 14px; gap: 3px; }
+.sw25n-compact .sw25n .n-more { position: static; margin: 0; }
+.sw25n-compact .sw25n .n-more > summary { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; min-height: 0; padding: 0; border: 0; border-radius: 4px;
+  font-size: 0; line-height: 16px; background: var(--sw-vellum-2); }
+.sw25n-compact .sw25n .n-more > summary::before { content: "\2026"; font-size: 12px; font-weight: 700; color: var(--sw-ink-soft); }
+.sw25n-compact .sw25n .n-more[open] > summary::before, .sw25n-compact .sw25n .n-more > summary:hover::before { color: var(--sw-pale); }
+.sw25n-compact .sw25n .n-fumble { padding: 1px 4px; }
+.sw25n-compact .sw25n .n-fumble .property-col { flex-direction: row; align-items: center; gap: 4px; }
+.sw25n-compact .sw25n .n-fumble input { height: 22px; font-size: 15px; width: 24px; flex-basis: 24px; }
+.sw25n-compact .sw25n .n-fumble .property--label-col { font-size: 10px; }
+.sw25n-compact .sw25n .n-fumble .adjustment-button { height: 22px; width: 16px; margin: 0; }
+.sw25n-compact .sw25n .n-abil { gap: 4px; }
+.sw25n-compact .sw25n .n-ab { grid-template-columns: minmax(0, 1fr) auto auto; padding: 1px 6px; }
+.sw25n-compact .sw25n .n-ab span { grid-column: auto; font-size: 11px; }
+.sw25n-compact .sw25n .n-ab i { font-size: 13px; }
+.sw25n-compact .sw25n .n-ab b { font-size: 14px; }
+.sw25n-compact .sw25n .n-tabs.sheet-tabs > .item { height: 28px; line-height: 26px; }

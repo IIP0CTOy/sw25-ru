@@ -73,7 +73,23 @@ export async function applyFixedAmount(tok, kind, amount) {
 const CONTESTED_RESULTS = ["halving", "disappear", "shortening"];
 const HEAL_RE = /лечен|исцел|восстанавл|heal|cure|回復/i;
 
+/**
+ * [ru.12.1] The caster's own targets come back after the cast: an area, a line, a song or a self spell picks its
+ * targets for the card, and those used to stay selected (the next sword blow went at the allies of the song).
+ */
 export async function castSpell(actor, item, opts = {}) {
+  const prev = Array.from(game.user.targets);
+  try { return await castSpellInner(actor, item, opts); }
+  finally { restoreTargets(prev); }
+}
+/** Put the user's targets back as they were (tokens still on the canvas). */
+export function restoreTargets(prev) {
+  const now = Array.from(game.user.targets);
+  if (now.length === prev.length && now.every((t) => prev.includes(t))) return;
+  if (!canvas?.ready) return;
+  setUserTargets(prev.filter((t) => t?.scene === canvas.scene || canvas.tokens?.get(t?.id)));
+}
+async function castSpellInner(actor, item, opts = {}) {
   { // a racial form that forbids spells (talent constructor toggle)
     const { forbidden } = await import("./feats.mjs");
     const fb = forbidden(actor, "spell");
@@ -461,7 +477,9 @@ function setUserTargets(tokens) {
 }
 
 /** Let the user click the centre of the area; right click / Esc cancels. */
+let _cancelPick = null;   // [ru.12.1] one pick at a time: a new one (or a scene change) cancels the old one
 function pickPoint(area, label) {
+  _cancelPick?.(null);
   return new Promise((resolve) => {
     const d = canvas.dimensions;
     const rPx = (area.radius / d.distance) * d.size;
@@ -487,12 +505,16 @@ function pickPoint(area, label) {
     (canvas.controls ?? canvas.interface ?? canvas.stage).addChild(g);
     const pos = (ev) => ev.getLocalPosition?.(canvas.stage) ?? ev.data?.getLocalPosition(canvas.stage) ?? canvas.mousePosition;
     const onMove = (ev) => draw(pos(ev));
+    let done = false;
     const finish = (value) => {
-      canvas.stage.off("pointermove", onMove);
-      canvas.stage.off("pointerdown", onDown);
+      if (done) return; done = true;
+      if (_cancelPick === finish) _cancelPick = null;
+      Hooks.off("canvasTearDown", onTear);
+      canvas.stage?.off("pointermove", onMove);
+      canvas.stage?.off("pointerdown", onDown);
       document.removeEventListener("keydown", onKey, true);
       document.removeEventListener("contextmenu", onCtx, true);
-      g.destroy();
+      try { g.destroy(); } catch (e) { /* already gone with the old canvas */ }
       resolve(value);
     };
     const onDown = (ev) => {
@@ -507,6 +529,9 @@ function pickPoint(area, label) {
       ev.preventDefault();
       finish(null);
     };
+    const onTear = () => finish(null);
+    Hooks.on("canvasTearDown", onTear);
+    _cancelPick = finish;
     canvas.stage.on("pointermove", onMove);
     canvas.stage.on("pointerdown", onDown);
     document.addEventListener("keydown", onKey, true);
@@ -534,9 +559,21 @@ export async function castMonsterMagic(actor, ability) {
   // magic.props limits the elemental fairy spells (basic fairy magic is always allowed)
   const props = Array.isArray(magic.props) && magic.props.length ? magic.props : null;
   const fairyOk = (i) => !props || i.system.type !== "fairy" || i.system.fairytype !== "propfairy" || props.includes(i.system.fairyprop);
-  const spells = game.items
-    .filter((i) => i.type === "spell" && magic.schools.includes(i.system.type) && Number(i.system.level) <= Number(magic.level) && fairyOk(i))
-    .sort((a, b) => Number(a.system.level) - Number(b.system.level) || a.name.localeCompare(b.name, "ru"));
+  // [ru.12.1] spells of the world and of the Item compendiums (index only; world items win on the same name)
+  const ok = (i) => i.type === "spell" && magic.schools.includes(i.system?.type) && Number(i.system?.level) <= Number(magic.level) && fairyOk(i);
+  const spells = game.items.filter(ok).map((i) => ({ id: i.uuid, name: i.name, system: i.system }));
+  const seen = new Set(spells.map((x) => x.name));
+  for (const p of game.packs) {
+    if (p.documentName !== "Item" || !p.visible) continue;
+    let idx; try { idx = await p.getIndex({ fields: ["system.type", "system.level", "system.fairytype", "system.fairyprop", "system.basempcost", "system.mpcost"] }); } catch (e) { continue; }
+    for (const e of idx) if (ok(e) && !seen.has(e.name)) { seen.add(e.name); spells.push({ id: e.uuid, name: e.name, system: e.system, pack: true }); }
+  }
+  // [ru.12.1] the same spell in a Russian and an English compendium: keep the client's language (world spells always stay)
+  const cyr = (x) => /[\u0400-\u04FF]/.test(x.name);
+  const lng = game.i18n.lang;
+  if (lng === "ru" && spells.some((x) => x.pack && cyr(x))) spells.splice(0, spells.length, ...spells.filter((x) => !x.pack || cyr(x)));
+  else if (lng === "en" && spells.some((x) => x.pack && !cyr(x))) spells.splice(0, spells.length, ...spells.filter((x) => !x.pack || !cyr(x)));
+  spells.sort((a, b) => Number(a.system.level) - Number(b.system.level) || a.name.localeCompare(b.name, "ru"));
   if (!spells.length) {
     ui.notifications.warn(L("NoSchoolSpells"));
     return null;
@@ -555,7 +592,7 @@ export async function castMonsterMagic(actor, ability) {
     rejectClose: false,
   }).catch(() => null);
   if (!pickedId || pickedId === "cast") return null;
-  const src = game.items.get(pickedId);
+  const src = await fromUuid(pickedId);
   if (!src) return null;
 
   const mods = {

@@ -1310,7 +1310,15 @@ export const JA_STATIC = new Map(Object.entries({
 "Weapon +2": "武器 +2",
 "Armor and shield +1": "鎧・盾 +1",
 "Armor and shield +2": "鎧・盾 +2",
-"Custom forging, per ±1": "筋力合わせ（±1ごと）"
+"Custom forging, per ±1": "筋力合わせ（±1ごと）",
+"The resist roll against this attack was already made: re-check its outcome by hand.": "この攻撃への抵抗判定はすでに行われています。結果は手動で確認してください。",
+"Riding stunts": "騎芸",
+"Mounted": "騎乗中",
+"A stunt toggle: on when you mount, off when you dismount. Bonuses only while on.": "騎芸のスイッチ：騎乗したらオン、降りたらオフ。オンの間だけボーナスが入ります。",
+"Save as a riding stunt (Rider tab)": "騎芸として保存（ライダーのタブ）",
+"Rider stunts": "ライダーの騎芸",
+"The token will be friendly: it acts with the party in the side initiative": "トークンは友好になります：陣営ごとの先制でパーティ側として行動します",
+"Ally (mount, familiar)": "味方（騎獣・使い魔）"
 }));
 export const JA_TPL = [
 [
@@ -2424,5 +2432,33 @@ export const JA_TPL = [
 [
 "Upgrades: ${}, Abyss enhancements: ${}, Abyss curses: ${}.",
 "加工：${}、アビス強化：${}、アビスカース：${}。"
+],
+[
+"recovered, +${}",
+"回収、+${}"
+],
+[
+"Only ${} may be declared: applied — ${}.",
+"宣言できるのは${}個まで。適用：${}。"
+],
+[
+"${}: two shots at once need 2, you have ${}.",
+"${}：2発同時に撃つには2つ必要です（残り${}）。"
+],
+[
+"Character creation · riding stunts (${})",
+"キャラクター作成・騎芸（${}）"
+],
+[
+"Stunts: ${} (one per Rider level). Check the level and prerequisite stunts in the book.",
+"騎芸：${}個（ライダー技能レベルごとに1つ）。習得レベルと前提の騎芸はルールブックで確認してください。"
+],
+[
+"Riding stunts: ${} of ${}.",
+"騎芸：${}／${}。"
+],
+[
+"Not enough Strength: ${} of ${} — can only be held",
+"筋力不足：${}／${}——持つことしかできません"
 ]
 ];

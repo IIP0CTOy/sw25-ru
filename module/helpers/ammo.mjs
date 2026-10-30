@@ -154,17 +154,25 @@ export async function spendShot(actor, weapon, shot) {
   return { flag, line };
 }
 
-/** Ammo back to its pack (a miss / no critical). Once per card. */
-export async function refundShot(card, why) {
+/** Ammo back to its pack (a miss / no critical). Once per card; an attack on several targets only when every target evaded. */
+const _backDone = new Set();
+export async function refundShot(card, why, { pendingMiss = 0 } = {}) {
   const a = card?.flags?.sw25?.ammo;
-  if (!a || a.source !== "pack" || !a.itemId || a.recover === "never" || a.recover === "always" || card.flags.sw25.ammoBack) return;
+  if (!a || a.source !== "pack" || !a.itemId || a.recover === "never" || a.recover === "always" || card.flags.sw25.ammoBack || _backDone.has(card.id)) return;
   if (why === "nocrit" && a.recover !== "nocrit") return;
+  const targets = card.flags.sw25.target ?? [];
+  if (why === "miss" && targets.length > 1) {
+    const misses = game.messages.filter((m) => m.flags?.sw25?.contest && m.flags.sw25.attackMessageId === card.id && m.flags.sw25.defenderWins).length + pendingMiss;
+    if (misses < targets.length) return;
+  }
   const actor = ChatMessage.getSpeakerActor(card.speaker) ?? game.actors.get(card.speaker?.actor);
   const it = actor?.items.get(a.itemId);
   if (!it || !it.isOwner) return;
-  await it.update({ "system.quantity": N(it.system.quantity) + 1 });
+  _backDone.add(card.id);
+  const n = a.two ? 2 : 1;
+  await it.update({ "system.quantity": N(it.system.quantity) + n });
   if (card.isOwner) await card.update({ "flags.sw25.ammoBack": true });
-  await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<p><i class="fa-solid fa-arrow-rotate-left"></i> ${esc(a.name)}: ${esc(L2("подобрано, +1", "recovered, +1"))}</p>` });
+  await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<p><i class="fa-solid fa-arrow-rotate-left"></i> ${esc(a.name)}: ${esc(L2(`подобрано, +${n}`, `recovered, +${n}`))}</p>` });
 }
 
 /** Element flags of a shot (input of DamageSupporter.createChatTag): weapon elements + silver + the ammo element. */

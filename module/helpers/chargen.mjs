@@ -225,12 +225,25 @@ const slotsFor = (lv) => Math.max(1, Math.ceil(Math.max(1, lv) / 2));
 async function stepFeats(advLv) {
   const slots = slotsFor(advLv);
   const pool = game.items.filter((i) => i.type === "combatability" && i.system?.condtype !== "learn").sort((a, b) => a.name.localeCompare(b.name));
+  return pickFromWorld(pool, slots,
+    L2(`Создание персонажа · боевые таланты (${slots})`, `Character creation · combat feats (${slots})`),
+    L2(`Слотов: ${slots} (по одному на 1, 3, 5… уровне авантюриста). Условия получения проверьте по книге. Автоматические таланты классов добавятся сами.`, `Slots: ${slots} (one on adventurer level 1, 3, 5…). Check the requirements in the book. Automatic class feats are added by themselves.`));
+}
+/** [ru.12.1] Riding stunts: one per Rider level, from the world's Items (made in the talent constructor or imported). */
+async function stepStunts(riderLv) {
+  if (riderLv < 1) return [];
+  const pool = game.items.filter((i) => i.type === "ridingtrick").sort((a, b) => a.name.localeCompare(b.name));
+  return pickFromWorld(pool, riderLv,
+    L2(`Создание персонажа · трюки верховой езды (${riderLv})`, `Character creation · riding stunts (${riderLv})`),
+    L2(`Трюков: ${riderLv} (по одному на уровень Всадника). Требования по уровню и предыдущим трюкам проверьте по книге.`, `Stunts: ${riderLv} (one per Rider level). Check the level and prerequisite stunts in the book.`));
+}
+async function pickFromWorld(pool, slots, title, note) {
   if (!pool.length) return [];
   const rows = pool.map((f) => `<label style="display:block;margin:2px 0"><input type="checkbox" value="${f.id}"> <b>${esc(f.name)}</b>${f.system?.overview ? ` <small>— ${esc(String(f.system.overview).slice(0, 140))}</small>` : ""}</label>`).join("");
   const res = await DV().wait({
-    classes: ["sw25-chargen"], window: { resizable: true, title: L2(`Создание персонажа · боевые таланты (${slots})`, `Character creation · combat feats (${slots})`) },
+    classes: ["sw25-chargen"], window: { resizable: true, title },
     position: { width: 560 },
-    content: `<div class="sw25-cg-feats"><p>${L2(`Слотов: ${slots} (по одному на 1, 3, 5… уровне авантюриста). Условия получения проверьте по книге. Автоматические таланты классов добавятся сами.`, `Slots: ${slots} (one on adventurer level 1, 3, 5…). Check the requirements in the book. Automatic class feats are added by themselves.`)}</p><div style="max-height:380px;overflow:auto">${rows}</div></div>`,
+    content: `<div class="sw25-cg-feats"><p>${note}</p><div style="max-height:380px;overflow:auto">${rows}</div></div>`,
     buttons: [
       { action: "ok", label: L2("Дальше", "Next"), default: true, callback: (ev, btn) => [...btn.form.querySelectorAll(".sw25-cg-feats input:checked")].map((c) => c.value) },
       { action: "skip", label: L2("Пропустить", "Skip"), callback: () => [] },
@@ -249,8 +262,9 @@ async function stepFeats(advLv) {
 const RACE_BANS = { "Таббит": ["priest"], "Рунфолк": ["priest"] };
 async function stepClasses(birthInfo, raceName, high = null) {
   const banned = RACE_BANS[raceName] ?? [];
-  const list = classList().filter((c) => !banned.includes(classKey(c.name)));
   const free = new Set(birthInfo.classes.map((n) => findClass(n)?.id).filter(Boolean));
+  // [ru.12.1] the background's classes on top
+  const list = classList().filter((c) => !banned.includes(classKey(c.name))).sort((a, b) => Number(free.has(b.id)) - Number(free.has(a.id)));
   const budget = birthInfo.birth.exp + (high?.exp ?? 0);
   const maxLv = high ? 15 : 2;
   const spent = (levels) => list.reduce((a, c) => a + Math.max(0, costOf(c, levels[c.id] ?? 0) - (free.has(c.id) ? costOf(c, 1) : 0)), 0);
@@ -310,6 +324,9 @@ export async function openCharacterWizard() {
   const advLv = Math.max(0, ...Object.values(s4.levels));
   const feats = await stepFeats(advLv);
   if (!feats) return null;
+  const riderLv = Math.max(0, ...classList().filter((c) => classKey(c.name) === "rider").map((c) => s4.levels[c.id] ?? 0));
+  const stunts = await stepStunts(riderLv);
+  if (!stunts) return null;
   const money = s1.high ? s1.high.money : START_MONEY;
 
   const abilities = Object.fromEntries(AB.map(([k, L, g]) => [k, { racevalue: s2.base[g], valuebase: dice[L], basename: L, ...(growth[k] ? { valuegrowth: growth[k] } : {}) }]));
@@ -326,6 +343,7 @@ export async function openCharacterWizard() {
   const items = [];
   for (const c of classList()) { const lv = s4.levels[c.id] ?? 0; if (lv > 0) items.push(copy(c, { system: { skilllevel: lv } })); }
   for (const f of feats) items.push(copy(f));
+  for (const f of stunts) items.push(copy(f));
   const norm = (x) => String(x ?? "").toLowerCase().replace(/ё/g, "е");
   for (const it of sourceItems("raceability").filter((i) => norm(i.folder?.name) === norm(s1.race) || norm(i.folder?.name) === norm(EN_NAMES[s1.race]) || norm(i.folder?.name) === norm(JA_NAMES[s1.race]))) items.push(copy(it));
   const dropped = s2.classes.filter((n) => !findClass(n));
@@ -341,7 +359,8 @@ export async function openCharacterWizard() {
   if (checks.length) await actor.createEmbeddedDocuments("Item", checks);
   await actor.update({ "system.hp.value": Number(actor.system.hp?.max) || 0, "system.mp.value": Number(actor.system.mp?.max) || 0 });
 
-  const todo = [feats.length < slotsFor(advLv) ? L2("оставшиеся боевые таланты", "the remaining combat feats") : null, L2("языки", "languages"), L2("покупка снаряжения", "buying equipment"),
+  const todo = [feats.length < slotsFor(advLv) ? L2("оставшиеся боевые таланты", "the remaining combat feats") : null,
+    stunts.length < riderLv ? L2("трюки Всадника", "Rider stunts") : null, L2("языки", "languages"), L2("покупка снаряжения", "buying equipment"),
     L2("заклинания класса", "class spells"), s1.high ? L2("осколки Бездны", "abyss shards") : null].filter(Boolean).join(L2(", ", ", "));
   const cls = classList().filter((c) => (s4.levels[c.id] ?? 0) > 0).map((c) => `${c.name} ${s4.levels[c.id]}`).join(", ") || L2("нет", "none");
   ChatMessage.create({
@@ -351,6 +370,7 @@ export async function openCharacterWizard() {
       <div class="sw25-cast-mp">${L2(`Классы: ${esc(cls)} · свободный опыт ${s4.left} · ${money} G на снаряжение`, `Classes: ${esc(cls)} · free experience ${s4.left} · ${money} G for equipment`)}</div>
       ${s1.high ? `<div class="sw25-cast-mp">${L2(`Высокий уровень ${s1.high.col}: рост характеристик ×${s1.high.growth}, репутация ${s1.high.rep}, осколков Бездны ${s1.high.abyss}.`, `High level ${s1.high.col}: ${s1.high.growth} ability growths, reputation ${s1.high.rep}, ${s1.high.abyss} abyss shards.`)}</div>` : ""}
       <div class="sw25-cast-mp">${L2(`Боевых талантов: ${feats.length} из ${slotsFor(advLv)}.`, `Combat feats: ${feats.length} of ${slotsFor(advLv)}.`)}${feats.length ? ` (${esc(feats.map((f) => f.name).join(", "))})` : ""}</div>
+      ${riderLv ? `<div class="sw25-cast-mp">${L2(`Трюков верховой езды: ${stunts.length} из ${riderLv}.`, `Riding stunts: ${stunts.length} of ${riderLv}.`)}${stunts.length ? ` (${esc(stunts.map((f) => f.name).join(", "))})` : ""}</div>` : ""}
       <div class="sw25-cast-mp"><i>${L2(`Дальше вручную: ${todo}.`, `Next, by hand: ${todo}.`)}</i></div>`,
   });
   actor.sheet.render(true);

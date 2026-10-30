@@ -90,7 +90,9 @@ export async function fireWeaponSpell(actor, weapon) {
   await actor.update({ "flags.sw25.weaponSpell": null });
   if (!sp) return;
   const { castSpell } = await import("./spellcast.mjs");
-  await castSpell(actor, sp, { pay: async () => L2(`ОМ уже списаны (на оружии «${weapon.name}»)`, `MP already paid (on the weapon «${weapon.name}»)`) });
+  const msg = await castSpell(actor, sp, { pay: async () => L2(`ОМ уже списаны (на оружии «${weapon.name}»)`, `MP already paid (on the weapon «${weapon.name}»)`) });
+  // [ru.12.1] the cast did not happen (a form forbids spells, cancelled): the paid spell stays on the weapon
+  if (!msg) await actor.update({ "flags.sw25.weaponSpell": ws });
 }
 
 /* ---------------- counter ----------------⁠​‌‌‌​​‌‌​‌‌‌​‌‌‌​​‌‌​​‌​​​‌‌​‌​‌​‌‌‌​​‌​​‌‌‌​‌​‌​​‌​‌‌​‌​​‌‌​​​‌​‌‌​​‌​‌​​‌‌‌​​​​​‌‌​‌​​​​‌‌​‌‌‌​‌‌​​​​‌​​‌​‌‌​‌​‌‌​​​‌​⁠ */
@@ -109,8 +111,11 @@ export function meleeAttack(msg) {
   const actor = ChatMessage.getSpeakerActor(msg.speaker);
   const it = actor?.items.get(f.itemid);
   if (!it) return false;
+  // [ru.12.1] only an attack against Evasion (not a breath / poison against Fortitude or Willpower)
+  const rk = f.resist?.key ?? (["Уклонение", "Evasion", "Dodge", "回避"].includes(f.resist?.name) ? "Dodge" : f.resist?.name ? "other" : null);
+  if (rk && rk !== "Dodge") return false;
   if (it.type === "weapon") return !RANGED.includes(it.system?.category);
-  return it.type === "monsterability";
+  return it.type === "monsterability" && isLabel(it.system?.label1, "MonHit");
 }
 /** Tokens of the card's targets that may counter it now (not resisted yet, not used this round). */
 export async function counterCandidates(msg) {
@@ -152,9 +157,12 @@ export async function doCounter(attackMsg, defTd) {
   if (!acc) return ui.notifications.warn(L2(`${def.name}: нет надетого оружия ближнего боя.`, `${def.name}: no equipped melee weapon.`));
   const key = turnKey();
   if (key && def.isOwner) await def.update({ "flags.sw25.counterRound": key });
-  const roll = await new Roll(acc.formula, def.getRollData()).evaluate();
+  // [ru.12.1] the defender's own always-on talents for this weapon (accuracy, damage) count too
+  let fm = null;
+  if (acc.item.type === "weapon") { const { attackMods } = await import("./feats.mjs"); fm = await attackMods(def, acc.item, { noDeclare: true }); }
+  const roll = await new Roll(fm?.hit ? `${acc.formula}+${fm.hit}` : acc.formula, def.getRollData()).evaluate();
   const f = attackMsg.flags.sw25;
-  const [a1, a2] = dice(roll), [p1, p2] = dice(attackMsg.rolls?.[0]);
+  const [a1, a2] = dice(roll), [p1, p2] = Array.isArray(f.dice) ? f.dice : dice(attackMsg.rolls?.[0]);
   const mine = roll.total, theirs = N(f.total);
   const activeCrit = a1 === 6 && a2 === 6, activeFumble = a1 === 1 && a2 === 1;
   const passiveCrit = f.critical == 1 || (p1 === 6 && p2 === 6), passiveFumble = f.fumble == 1 || (p1 === 1 && p2 === 1);
@@ -164,7 +172,7 @@ export async function doCounter(attackMsg, defTd) {
   const label = `${feat.name}: ${acc.item.name}`;
   const vs = `${L2("контратака", "counter")} ${mine} · ${L2("атака", "attack")} ${theirs}`;
   // the counter roll card: a check of the defender at the attacker (its damage button uses the defender's weapon)
-  const cardFlags = { sw25: { kind: "check", counter: true, itemid: acc.item.id, total: mine, orgtotal: mine, target: atkTokenId ? [atkTokenId] : null, featMods: null } };
+  const cardFlags = { sw25: { kind: "check", counter: true, itemid: acc.item.id, total: mine, orgtotal: mine, target: atkTokenId ? [atkTokenId] : null, featMods: fm && (fm.dmg || fm.crit || fm.lt) ? { dmg: fm.dmg || 0, crit: fm.crit || 0, lt: fm.lt || 0, form: "none", names: fm.names ?? [] } : null } };
   const counterCard = await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ token: defTd }), flavor: esc(label), rolls: [roll],
     content: `<div class="dice-roll"><div class="dice-result"><h4 class="dice-total">${mine}</h4></div></div>`, flags: cardFlags });
   const html = `<div class="sw25-contest ${win ? "sw25-contest-hit" : "sw25-contest-miss"}"><b>${win ? L2("Контратака удалась: атака отменена", "Counter succeeded: the attack is cancelled") : L2("Контратака не удалась: атака попала, урон с броском 12", "Counter failed: the attack hits, damage with a roll of 12")}</b> <span class="sw25-contest-vs">(${vs})</span></div>`
@@ -189,7 +197,7 @@ export async function bindCounterButton(message, html) {
   (root.querySelector(".message-content") ?? root).appendChild(box);
   box.addEventListener("click", async (ev) => {
     const b = ev.target.closest("button"); if (!b) return;
-    ev.preventDefault(); b.disabled = true;
+    ev.preventDefault(); box.querySelectorAll("button").forEach((x) => (x.disabled = true));
     if (b.dataset.evade) {
       const { chatButton } = await import("./chatbutton.mjs");
       return chatButton(message, "buttonresist", { onlyTokens: cand.filter((td) => td.actor?.type !== "character").map((td) => td.id) });

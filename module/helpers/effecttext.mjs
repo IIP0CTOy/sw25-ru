@@ -106,8 +106,9 @@ export function parseEffectText(text, durationText = "") {
       const value = Number(m[2]) * (m[1] === "-" ? -1 : 1);
       const end = m.index + m[0].length, next = nums[i + 1]?.index ?? sent.length;
       let st = mentions(sent.slice(prev, m.index));
-      if (!st.length) st = mentions(sent.slice(end, next));
       prev = end;
+      // the stat after the number («+2 к Точности и +1 к Уклонению»): that text belongs to this number, not to the next one
+      if (!st.length) { st = mentions(sent.slice(end, next)); if (st.length) prev = next; }
       if (!value || value < -20 || value > 20) return;
       for (const s of st) {
         const same = rows.find((r) => r.id === s.id);
@@ -168,6 +169,8 @@ export async function openEffectTextDialog(item) {
   const cur = mine[0];
   const fromText = () => parseEffectText(item.system.description ?? "", item.system.time ?? "");
   let st;
+  // [ru.12.1] bonuses to a named check (from the item constructor) are not rows of this window: they are kept as they are
+  const kept = cur ? mine.flatMap((e) => e.system?.changes ?? e.changes ?? []).filter((c) => CHECK_RE.test(String(c.key))).map((c) => ({ key: c.key, value: Number(c.value) })) : [];
   if (cur) st = { rows: mine.flatMap((e) => e.system?.changes ?? e.changes ?? []).map((c) => ({ id: statByKey(c.key)?.id ?? "", key: c.key, value: Number(c.value) })).filter((r) => r.id), rounds: cur.duration?.units === "rounds" ? cur.duration.value : null, notes: [], choice: mine.some((e) => e.flags?.sw25?.choice) };
   else st = fromText();
   const transfer = cur ? cur.transfer : GEAR.includes(item.type);
@@ -209,7 +212,7 @@ export async function openEffectTextDialog(item) {
     ],
   }).catch(() => null);
   if (!res || res === "cancel") return null;
-  const list = buildEffects(item.name, item.type, res.rows, { rounds: res.rounds, transfer: res.transfer, choice: res.choice, equip: item.system.equip === true });
+  const list = buildEffects(item.name, item.type, [...res.rows, ...kept], { rounds: res.rounds, transfer: res.transfer, choice: res.choice, equip: item.system.equip === true });
   const data = list[0] ?? null;
   if (mine.length) await item.deleteEmbeddedDocuments("ActiveEffect", mine.map((e) => e.id));
   if (list.length) await item.createEmbeddedDocuments("ActiveEffect", list);

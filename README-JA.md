@@ -59,6 +59,8 @@ https://github.com/IIP0CTOy/sw25-ru/releases/latest/download/system.json
 
 ワールド作成時にシステム「Sword World 2.5 Plus」を選んでください。Foundry本体を日本語にするには、日本語化モジュール（例：`lang-ja`）を入れてください。
 
+騎手と騎獣を一緒に動かすには、モジュール [Rideable](https://foundryvtt.com/packages/rideable) を入れることができます。
+
 初回起動時、GMの言語が日本語ならスターター辞典とガイドも日本語で作られます。あとから言語を変えるときは、「辞典」タブの「SW25：スターター辞典」ボタンから選べます。
 
 **元の sw25-fvtt との併用について：** このシステムのIDは `sw25-ru` で、元の `sw25` とは別のシステムです。同じFoundryに両方入れられますが、ワールドはどちらか一方のシステムで作ります。

@@ -10,6 +10,7 @@ import { canon } from "../helpers/ability-names.mjs";
 import { starterPack } from "../helpers/starter.mjs";
 import { makoSplit, makoCommit } from "../helpers/mako.mjs";
 import { L2 } from "../helpers/monstergen-i18n.mjs";
+import { featOf } from "../helpers/feats.mjs";
 
 /**
  * SW25-RU — new character sheet (redesign).
@@ -266,11 +267,15 @@ export class SW25CharacterSheetNew extends SW25ActorSheet {
     const { roll, label } = el.dataset;
     el.dataset.roll = `${roll}${mod > 0 ? "+" : ""}${mod}`;
     el.dataset.label = `${label ?? ""} [${L2("мод.", "mod")} ${mod > 0 ? "+" : ""}${mod}]`;
+    const n0 = game.messages.size;
     try { return await super._onRoll(event); }
     finally {
       el.dataset.roll = roll; el.dataset.label = label;
-      delete this._chkMod[row.dataset.itemId];
-      const inp = row.querySelector(".n-chk-mod"); if (inp) inp.value = 0;
+      // a cancelled roll keeps the modifier
+      if (game.messages.size > n0) {
+        delete this._chkMod[row.dataset.itemId];
+        const inp = row.querySelector(".n-chk-mod"); if (inp) inp.value = 0;
+      }
     }
   }
 
@@ -280,6 +285,26 @@ export class SW25CharacterSheetNew extends SW25ActorSheet {
 
     const root = html[0];
     if (!root) return;
+
+    // [ru.12.1] constructor toggles (racial ability / riding stunt): the button says what it will do and shows the state
+    for (const row of root.querySelectorAll("li.item[data-item-id]")) {
+      const it = this.actor.items.get(row.dataset.itemId);
+      const f = featOf(it);
+      if (!f || f.kind !== "race" || f.how !== "toggle") continue;
+      const on = it.effects.some((e) => e.flags?.sw25?.featToggle && !e.disabled && !e.flags?.sw25?.growthOf);
+      let btn = row.querySelector(".n-btn-use");
+      if (!btn) {
+        const acts = row.querySelector(".n-row-acts");
+        if (!acts) continue;
+        btn = document.createElement("a");
+        btn.className = "rollable n-btn n-btn-use"; btn.dataset.rollType = "item";
+        const star = acts.querySelector(".n-star");
+        if (star) star.before(btn); else acts.appendChild(btn);
+      }
+      btn.textContent = on ? L2("Выключить", "Turn off") : L2("Включить", "Turn on");
+      btn.classList.toggle("n-on", on);
+      row.classList.toggle("n-toggle-on", on);
+    }
 
     // [ru.12] a one-off modifier field (with arrows) in each check row of the «Battle» tab
     this._chkMod ??= {};
@@ -338,5 +363,17 @@ export class SW25CharacterSheetNew extends SW25ActorSheet {
         name.prepend(star);
       }
     }
+  }
+}
+
+/**
+ * [ru.12.1] The same new sheet with a compact header (about a third of the height): a sheet of its own in
+ * the «Sheet» choice, so each player picks it for their character. Only a CSS class differs.
+ */
+export class SW25CharacterSheetCompact extends SW25CharacterSheetNew {
+  /** @override */
+  static get defaultOptions() {
+    const o = super.defaultOptions;
+    return foundry.utils.mergeObject(o, { classes: [...o.classes, "sw25n-compact"], height: 760 });
   }
 }

@@ -59,6 +59,20 @@ export function registerSessionHooks() {
     const n = (msg.rolls ?? []).filter(isFumble).length;
     if (n) await actor.setFlag(game.system.id, "sessionFumbles", Number(actor.getFlag(game.system.id, "sessionFumbles") ?? 0) + n);
   });
+  // [ru.12.1] a combat that ends takes its one-round effects with it (a declared risk, a 1-round penalty…);
+  // longer spell effects (minutes) stay
+  Hooks.on("deleteCombat", async (combat) => {
+    if (!isActiveGM()) return;
+    for (const c of combat.combatants) {
+      const a = c.actor;
+      if (!a) continue;
+      const ids = a.effects.filter((e) => {
+        const d = e.duration ?? {};
+        return !e.flags?.sw25?.featToggle && ["rounds", "turns"].includes(d.units) && Number(d.value) > 0 && Number(d.value) <= 1;
+      }).map((e) => e.id);
+      if (ids.length) await a.deleteEmbeddedDocuments("ActiveEffect", ids).catch((err) => console.warn("SW25 | end of combat effects:", err));
+    }
+  });
   // defeated monsters: when a combat ends
   Hooks.on("deleteCombat", async (combat) => {
     if (!isActiveGM()) return;

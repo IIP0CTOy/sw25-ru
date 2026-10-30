@@ -18,6 +18,7 @@ import { L2 } from "./monstergen-i18n.mjs";
 import { DamageSupporter } from "./damagesupport.mjs";
 import { showResistButton } from "./spellcast.mjs";
 import { dualFeat, dualMods, attackMods } from "./feats.mjs";
+import { pickShot, spendShot, ammoElements } from "./ammo.mjs";
 
 const reqOf = (i) => parseInt(String(i.system?.reqstr ?? "").replace(/[^\d]/g, ""), 10) || 0;
 
@@ -35,7 +36,10 @@ export function dualWeapons(actor) {
 
 /** One ordinary attack card (the usual evasion / damage flow follows). mods: { hit, dmg, note } */
 export async function attackCard(actor, item, targets, mods = {}) {
-  const hit = Number(mods.hit) || 0;
+  // [ru.12.1] a shooting weapon spends its ammunition here too (picked by the caller: mods.shot)
+  let ammo = null, ammoLine = "";
+  if (mods.shot) { const sp = await spendShot(actor, item, mods.shot); if (sp) { ammo = sp.flag; ammoLine = sp.line; } }
+  const hit = (Number(mods.hit) || 0) + (Number(ammo?.hit) || 0);
   const roll = await new Roll(`${item.system.checkformula || "2d6"}+${Number(item.system.checkbase) || 0}${hit ? (hit > 0 ? `+${hit}` : `${hit}`) : ""}`, actor.getRollData()).evaluate();
   const critical = roll.terms[0].total == 12 ? 1 : null;
   const fumble = roll.terms[0].total == 2 ? 1 : null;
@@ -43,13 +47,14 @@ export async function attackCard(actor, item, targets, mods = {}) {
   const target = targets.length ? targets.map((t) => t.id) : null;
   const targetName = targets.length ? targets.map((t) => `>>> ${t.document.name}`).join("<br>") : null;
   const resist = { name: game.i18n.localize("SW25.Resist.Check.Dodge"), key: "Dodge", result: "disappear" };
-  const elements = DamageSupporter.elementsOf(item);
+  const elements = ammoElements(DamageSupporter.elementsOf(item), ammo);
   const damage = actor.system.attributes.damage;
   const tags = DamageSupporter.createChatTag(elements, damage, actor.system.classType, DamageSupporter.getWeaponAttributes(item));
   const tooltip = await roll.getTooltip();
   const content = await renderTemplate("systems/sw25-ru/templates/roll/roll-check.hbs", {
     formula: roll.formula, tooltip, critical, fumble, total: roll.total,
     apply: item.system.applycheck, checktype: item.system.checkTypesButton ?? "", targetName,
+    resusetext: ammoLine ? `<div style="text-align: right;">${ammoLine}</div>` : undefined,
     resist: targets.length ? (showResistButton(resist, targets) ? resist : null) : resist,
     tags,
   });
@@ -64,7 +69,8 @@ export async function attackCard(actor, item, targets, mods = {}) {
       apply: item.system.applycheck, checktype: item.system.checkTypesButton ?? "",
       target, targetName, resist, elements, damage, tags,
       kind: "check", itemid: item.id, critical, fumble, dualAttack: !!mods.dual,
-      featMods: mods.dmg || mods.crit || mods.lt ? { dmg: mods.dmg || 0, crit: mods.crit || 0, lt: mods.lt || 0, form: "none" } : null,
+      featMods: mods.dmg || mods.crit || mods.lt || ammo ? { dmg: (mods.dmg || 0) + (ammo?.dmg || 0), crit: (mods.crit || 0) + (ammo?.crit || 0), lt: mods.lt || 0, pow: ammo?.power || 0, form: "none" } : null,
+      ...(ammo ? { ammo } : {}),
     } },
   });
   return msg;
@@ -84,13 +90,16 @@ export async function dualAttack(actor) {
     ui.notifications.warn(other ? L2("Парная атака: не больше двух целей.", "Dual attack: two targets at most.") : L2("Парная атака: выберите одну цель (обе атаки идут в одну цель).", "Dual attack: pick one target (both attacks go to the same target)."));
     return;
   }
+  // [ru.12.1] both weapons: ammunition first, before any card (nothing is spent if one of them can't shoot)
+  const shots = [];
+  for (const w of ws) { const sh = await pickShot(actor, w); if (sh === null) return; shots.push(sh); }
   const ids = [], tids = [];
   for (const [n, w] of ws.entries()) {
     const m = dualMods(actor, w);
     const tg = targets.length === 2 ? [targets[n]] : targets;
     const mod = `${m.hit > 0 ? "+" : "−"}${Math.abs(m.hit)}`;
     const note = m.hit ? L2(`парная атака ${mod}`, `dual attack ${mod}`) : L2("парная атака", "dual attack");
-    ids.push((await attackCard(actor, w, tg, { hit: m.hit, dmg: m.dmg, note, dual: true })).id);
+    ids.push((await attackCard(actor, w, tg, { hit: m.hit, dmg: m.dmg, note, dual: true, shot: shots[n] })).id);
     tids.push(tg[0]?.id ?? null);
   }
   const names = ws.map((w) => `<b>${Handlebars.escapeExpression(w.name)}</b>`).join(" + ");
@@ -169,6 +178,9 @@ export async function followupAttack(contest) {
   if (!(game.user.isGM || actor.isOwner)) { ui.notifications.warn(game.i18n.localize("SW25.Contest.AttackerOnly")); return; }
   const tok = canvas.tokens.get(f.targetTokenId);
   if (!tok) { ui.notifications.warn(game.i18n.localize("SW25.Contest.TargetNotOnScene")); return; }
+  // [ru.12.1] ammunition before the button is used up (out of arrows: the button stays)
+  const shot = await pickShot(actor, item);
+  if (shot === null) return;
   const flags = { sw25: { ...f, followupDone: true } };
   if (contest.isOwner) await contest.update({ "flags.sw25.followupDone": true });
   else { const { emitToGM } = await import("./socket.mjs"); emitToGM({ method: "updateChat", id: contest.id, flags }); }
@@ -180,5 +192,5 @@ export async function followupAttack(contest) {
     else { const { emitToGM } = await import("./socket.mjs"); emitToGM({ method: "updateChat", id: atk.id, content }); }
   }
   const m = await attackMods(actor, item, { noDeclare: true });
-  await attackCard(actor, item, [tok], { hit: m?.hit ?? 0, dmg: m?.dmg ?? 0, note: L2("ещё атака", "another attack") });
+  await attackCard(actor, item, [tok], { hit: m?.hit ?? 0, dmg: m?.dmg ?? 0, note: L2("ещё атака", "another attack"), shot });
 }

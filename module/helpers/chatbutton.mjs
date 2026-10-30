@@ -11,7 +11,7 @@ import { emitToGM } from "./socket.mjs";
 import { grantLoot, lootToCard } from "./lootroll.mjs";
 import { isLabel } from "./utils.mjs";
 import { L2 } from "./monstergen-i18n.mjs";
-import { isItem } from "./names.mjs";
+import { isItem, isClass } from "./names.mjs";
 import { ammoElements, refundShot } from "./ammo.mjs";
 import { piercedDefense, doubleOn, critBlocked } from "./attackforms.mjs";
 
@@ -245,6 +245,9 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
       }
       item.system.totalcvalue =
         Number(item.system.cvalue) + Number(actor.system.efcmod);
+      // [ru.12.1] Fencer: Critical Value -1 (never below 8), as on the sheet
+      if (item.type === "weapon" && isClass(item.system.powerskill, "fencer"))
+        item.system.totalcvalue = Math.max(8, item.system.totalcvalue - 1);
 
       let halfpow, halfpowmod, lethaltech, criticalray, pharmtool, powup;
       if (item.system.halfpow == true) halfpow = 1;
@@ -2659,7 +2662,7 @@ async function resolveContest(attackMsg, defRoll, defToken) {
   const key = resistKeyOf(f.resist);
   if (!key) return null;
 
-  const [a1, a2] = diceOf(attackMsg.rolls?.[0]);
+  const [a1, a2] = Array.isArray(f.dice) ? f.dice : diceOf(attackMsg.rolls?.[0]);   // [ru.12.1] dice flipped after the roll
   const [d1, d2] = diceOf(defRoll);
   const attackCrit = f.critical == 1 || (a1 === 6 && a2 === 6);
   const attackFumble = f.fumble == 1 || (a1 === 1 && a2 === 1);
@@ -2685,7 +2688,7 @@ async function resolveContest(attackMsg, defRoll, defToken) {
   else defenderWins = def >= atk;
   const dbl = doubleOn(attackMsg, atk, def, defenderWins);
   // a missed arrow / quarrel that can be picked up again goes back to its pack
-  if (defenderWins && f.ammo) refundShot(attackMsg, "miss").catch((e) => console.error("SW25 | ammo", e));
+  if (defenderWins && f.ammo) refundShot(attackMsg, "miss", { pendingMiss: 1 }).catch((e) => console.error("SW25 | ammo", e));
 
   const L = (k) => game.i18n.localize(`SW25.Contest.${k}`);
   const result = f.resist?.result;
@@ -2823,6 +2826,12 @@ async function _autoDamage(contestMsg, { auto = false } = {}) {
   if (!atkMsg) return;
   const atkActor = ChatMessage.getSpeakerActor(atkMsg.speaker);
   if (!auto && !(game.user.isGM || atkActor?.isOwner)) {
+    // [ru.12.1] the hit player applies the damage to their own character: the GM rolls it (one click, once)
+    const defActor = canvas.tokens.get(f.targetTokenId)?.actor;
+    if (defActor?.isOwner) {
+      if (emitToGM({ method: "autoDamage", id: contestMsg.id })) _damageDone.add(contestMsg.id);
+      return;
+    }
     ui.notifications.warn(game.i18n.localize("SW25.Contest.AttackerOnly"));
     return;
   }
@@ -2850,6 +2859,9 @@ async function _autoDamage(contestMsg, { auto = false } = {}) {
     const pts = bItem?.system?.powerTypesButton ?? [];
     const heal = pts.length > 0 && pts.every((t) => t === "hr" || t === "mr");
     const type = heal ? (pts.includes("hr") ? "hr" : "mr") : "md";
+    // [ru.12.1] the bullet's own effects land on the target that was hit; a bullet without power deals no damage roll
+    if (bItem && bItem.effects?.some((e) => !e.transfer)) await applyItemEffects(atkActor, bItem, [tok], { choice: bulletMsg.flags?.sw25?.choice ?? null });
+    if (!bItem?.system?.usepower) return;
     // the cards made for this shot are marked: shot protection of the target's armor applies to them
     _shotCtx = !heal;
     try { await rollAndApplyDamage(bulletMsg, tok, "full", type); } finally { _shotCtx = false; }
@@ -2866,6 +2878,17 @@ async function _autoDamage(contestMsg, { auto = false } = {}) {
     // a successful counter: the defender's weapon hit (physical damage)
     await rollAndApplyDamage(atkMsg, tok, f.damageMode, atkMsg.flags?.sw25?.counter ? "pd" : undefined);
   } finally { _double = false; _fixed12 = false; }
+}
+
+/** [ru.12.1] Socket: a player asked to apply the damage of a hit on their own character (run on the GM). */
+export async function autoDamageFor(contestMsgId, userId) {
+  const msg = game.messages.get(contestMsgId);
+  const f = msg?.flags?.sw25;
+  if (!f?.attackMessageId || f.damageDone) return;
+  const tok = canvas.tokens.get(f.targetTokenId) ?? game.scenes.find((s) => s.tokens.has(f.targetTokenId))?.tokens.get(f.targetTokenId)?.object;
+  const user = game.users.get(userId);
+  if (!user || !tok?.actor?.testUserPermission(user, "OWNER")) return;
+  return autoDamage(msg);
 }
 
 /** Disable the damage button once used (bound from renderChatMessage). */

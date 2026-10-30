@@ -26,7 +26,7 @@ import {
 } from "../sw25.mjs";
 import { targetRollDialog } from "../helpers/dialogs.mjs";
 import { isLabel } from "../helpers/utils.mjs";
-import { sameClass, findClassItem, weaponClassFits, pickCheckClass } from "../helpers/names.mjs";
+import { sameClass, findClassItem, weaponClassFits, pickCheckClass, isClass } from "../helpers/names.mjs";
 
 let quantityWarn = false;
 
@@ -146,7 +146,8 @@ export class SW25Item extends Item {
     const itemData = this;
     const systemData = itemData.system;
     const flags = itemData.flags || {};
-    const actor = itemData.actor ? game.actors.get(itemData.actor._id) : null;
+    // [ru.12.1] a just-created actor is not in game.actors yet during its first preparation: use the owner itself
+    const actor = itemData.actor ? (game.actors.get(itemData.actor._id) ?? itemData.actor) : null;
     // [Round 66] fill the default check/power skill + ability BEFORE the
     // roll data is computed. _prepareWeaponData/_prepareItemData used to set
     // them only afterwards, so a weapon with no skill saved on it got
@@ -1913,6 +1914,9 @@ export class SW25Item extends Item {
     }
     systemData.totalcvalue =
       Number(systemData.cvalue) + Number(actorData.efcmod);
+    // [ru.12.1] an attack made with Fencer levels: Critical Value -1 (never below 8)
+    if (itemData.type === "weapon" && isClass(systemData.powerskill, "fencer"))
+      systemData.totalcvalue = Math.max(8, systemData.totalcvalue - 1);
 
     let halfpow, halfpowmod, lethaltech, criticalray, pharmtool, powup;
     if (systemData.halfpow == true) halfpow = 1;

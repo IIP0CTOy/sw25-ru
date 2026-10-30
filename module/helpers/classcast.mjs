@@ -18,7 +18,7 @@
  *   pipeline (targets, save, effects).
  * Missing rhythm counters are created on the actor automatically.
  */
-import { castSpell, applyFixedAmount } from "./spellcast.mjs";
+import { castSpell, applyFixedAmount, restoreTargets } from "./spellcast.mjs";
 import { emitToGM } from "./socket.mjs";
 import { L2 } from "./monstergen-i18n.mjs";
 import { isClass, className, findClassItem, itemName, isItem } from "./names.mjs";
@@ -138,10 +138,14 @@ export async function performSong(actor, item) {
 
   const fx = await ensureSongEffect(item);
   const targets = fx && condOk ? songTargets(actor, fx) : [];
-  setTargets(targets);
+  // [ru.12.1] a song without a ready effect keeps the player's own targets; the player's targets come back after the song
+  const prevTargets = Array.from(game.user.targets);
+  if (fx) setTargets(targets);
 
   // check + Willpower of hostile listeners + effects: the spell pipeline
-  const msg = await castSpell(actor, item, { label: T("Perform"), pay: async () => "" });
+  let msg;
+  try { msg = await castSpell(actor, item, { label: T("Perform"), pay: async () => "" }); }
+  finally { restoreTargets(prevTargets); }
   if (!msg) return msg;
   const f = msg.flags?.sw25 ?? {};
   const total = Number(f.total) || 0;

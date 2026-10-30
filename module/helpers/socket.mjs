@@ -141,6 +141,12 @@ async function handle(data) {
       return;
     }
 
+    case "autoDamage": {
+      const { autoDamageFor } = await import("./chatbutton.mjs");
+      await autoDamageFor(data.id, data.userId);
+      return;
+    }
+
     case "updateChat": {
       const chatMessage = game.messages.get(data.id);
       if (!chatMessage) {

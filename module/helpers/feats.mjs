@@ -107,6 +107,7 @@ const EX = {
   hide: { kind: "race", label: ["Прочная кожа", "Tough Hide"], how: "always", where: "all", rules: [R("def", 1)], tip: ["Самая простая расовая: всегда +N.", "The simplest racial ability: always +N."] },
   form2: { kind: "race", label: ["Вторая форма", "Second Form"], how: "toggle", on: "major", off: "major", mpc: 0, limit: "none", forbid: ["spell"], where: "self_form", rules: [R("strmod", 1)], g6: [R("note", 0, "num", ["включение малым действием", "turned on with a minor action"])], g11: [R("agimod", 1)], tip: ["Переключатель: бонусы только пока включено, плюс запрет.", "A toggle: bonuses only while on, plus a restriction."] },
   flight: { kind: "race", label: ["Полёт", "Flight"], how: "toggle", on: "minor", off: "minor", mpc: 0, limit: "rounds", limitN: 3, forbid: [], where: "self_form", rules: [R("hit", 1), R("eva", 1)], tip: ["Переключатель с запасом раундов в день.", "A toggle with a daily budget of rounds."] },
+  mounted: { kind: "race", stunt: true, label: ["Верхом", "Mounted"], how: "toggle", on: "minor", off: "minor", mpc: 0, limit: "none", forbid: [], where: "self_form", rules: [R("eva", 1), R("dmg", 1)], tip: ["Трюк-переключатель: сел на транспорт — включил, слез — выключил. Бонусы только пока включено.", "A stunt toggle: on when you mount, off when you dismount. Bonuses only while on."] },
   luck: { kind: "race", label: ["Удача", "Luck"], how: "after", after: "flip", limit: "day", where: "all", rules: [], g6: [R("flip", 1)], g11: [R("flip", 1)], tip: ["Кнопка появляется на карточке проверки.", "The button appears on the check card."] },
   swap: { kind: "race", label: ["Обмен сил", "Exchange"], how: "use", on: "major", mpc: 0, limit: "day", where: "all", rules: [R("note", 0, "num", ["потратить ОЖ, получить столько же ОМ", "spend HP, gain as much MP"])], tip: ["Кнопка «использовать» с лимитом; эффект текстом.", "A “use” button with a limit; the effect is text."] },
   elem: { kind: "race", label: ["Сопротивление стихии", "Elemental Ward"], how: "always", where: "all", rules: [R("immune", 0, "num", "fire")], g6: [R("note", 0, "num", ["то же — союзнику, держащему за руку", "the same for an ally holding hands"])], tip: ["Особые строки по типу урона.", "Special rows by damage type."] },
@@ -131,7 +132,7 @@ const LEGACY = [
 ];
 /** The rules of a talent item (constructor flags, or the two known names), or null. */
 export function featOf(item) {
-  if (!item || !["combatability", "raceability"].includes(item.type)) return null;
+  if (!item || !["combatability", "raceability", "ridingtrick"].includes(item.type)) return null;
   const f = item.flags?.sw25?.feat;
   if (f) return f;
   const name = String(item.name ?? "").trim();
@@ -321,8 +322,9 @@ function effectsFor(f, name, img) {
 export function buildFeatItem(f) {
   const name = String(f.name ?? "").trim();
   if (!name) throw new Error(L2("Нужно название.", "A name is required."));
-  const type = f.kind === "race" ? "raceability" : "combatability";
-  const img = f.kind === "race" ? "icons/magic/life/heart-cross-strong-flame-green.webp" : f.how === "declare" ? "icons/skills/melee/strike-sword-steel-yellow.webp" : f.how === "button" ? "icons/skills/melee/weapons-crossed-swords-yellow.webp" : "icons/skills/melee/maneuver-sword-katana-yellow.webp";
+  // [ru.12.1] «riding stunt»: the same rules, saved as a riding stunt (Rider tab of the sheet)
+  const type = f.stunt ? "ridingtrick" : f.kind === "race" ? "raceability" : "combatability";
+  const img = f.stunt ? "icons/environment/creatures/horse-brown.webp" : f.kind === "race" ? "icons/magic/life/heart-cross-strong-flame-green.webp" : f.how === "declare" ? "icons/skills/melee/strike-sword-steel-yellow.webp" : f.how === "button" ? "icons/skills/melee/weapons-crossed-swords-yellow.webp" : "icons/skills/melee/maneuver-sword-katana-yellow.webp";
   const rules = foundry.utils.deepClone(f);
   delete rules.name;
   const sentence = featSentence(rules, name);
@@ -330,7 +332,7 @@ export function buildFeatItem(f) {
   if (type === "combatability") Object.assign(system, { type: f.how === "declare" ? "declaration" : f.how === "always" ? "constant" : "main" });
   const flags = { sw25: { feat: rules } };
   if (f.limit && f.limit !== "none") flags.sw25.daily = { per: f.limit === "hours" ? "hour" : "day", limit: f.limit === "ndays" ? Math.max(1, N(f.limitN, 1)) : 1 };
-  return { data: { name, type, img, system, flags, effects: effectsFor(rules, name, img) }, folder: f.kind === "race" ? [L2("Расовые способности", "Racial abilities")] : [L2("Боевые таланты", "Combat feats")] };
+  return { data: { name, type, img, system, flags, effects: effectsFor(rules, name, img) }, folder: f.stunt ? [L2("Трюки верховой езды", "Riding stunts")] : f.kind === "race" ? [L2("Расовые способности", "Racial abilities")] : [L2("Боевые таланты", "Combat feats")] };
 }
 
 /* ------------------------------------------------------------------ *
@@ -394,16 +396,16 @@ export async function attackMods(actor, weapon, ctx = {}) {
   if (!actor || weapon?.type !== "weapon") return { hit: 0, dmg: 0, form: "none", names: [] };
   const pass = passiveMods(actor, weapon, ctx);
   const decl = ctx.dual || ctx.noDeclare ? [] : activeFeats(actor).filter(({ f }) => f.kind === "feat" && f.how === "declare" && f.form !== "combo" && weaponMatches(f, weapon, ctx));
-  let chosen = [];
+  let chosen = [], clearChips = false;
   // talents armed with the chips on the sheet: no dialog (Shift+click or the client setting bring the dialog back)
   const useChips = decl.length && !ctx.ask && !talentDialogOn();
   if (useChips) {
     const left = Math.max(0, declLimit(actor) - declaredThisTurn(actor));
     const a = armedOf(actor, weapon.id);
     const want = decl.filter(({ item }) => a.on.includes(item.id) || a.pin.includes(item.id));
-    if (want.length > left) ui.notifications.warn(left ? L2(`Заявить можно только ${left}: лишние таланты не применены.`, `Only ${left} may be declared: the extra talents were not applied.`) : L2("В этот ход талант уже заявлен.", "A talent was already declared this turn."));
     chosen = want.slice(0, left);
-    if (a.on.length && actor.isOwner) await actor.update({ [`flags.sw25.armed.${weapon.id}.on`]: [] });
+    if (want.length > left) ui.notifications.warn(left ? L2(`Заявить можно только ${left}: применено — ${chosen.map((c) => c.item.name).join(", ")}.`, `Only ${left} may be declared: applied — ${chosen.map((c) => c.item.name).join(", ")}.`) : L2("В этот ход талант уже заявлен.", "A talent was already declared this turn."));
+    clearChips = a.on.length > 0;
   } else if (decl.length) {
     const left = Math.max(0, declLimit(actor) - declaredThisTurn(actor));
     const rows = decl.map(({ item, f }, i) => `<label class="sw25-decl-row"><input type="checkbox" name="d${i}" ${left ? "" : "disabled"}> <b>${esc(item.name)}</b><br><small>${esc(featSentence(f, item.name))}</small></label>`).join("");
@@ -439,11 +441,17 @@ export async function attackMods(actor, weapon, ctx = {}) {
     out.names.push(item.name);
     if (f.risk?.length) roundFx.push({ item, f, rules: f.risk, risk: true });
   }
-  if (chosen.length) {
+  // [ru.12.1] the declaration is spent (chips off, risk / 1-round effects, the per-turn count) only when the
+  // attack really goes: the caller runs out.commit() after its own checks (ammunition, number of targets)
+  let committed = false;
+  out.commit = async () => {
+    if (committed) return; committed = true;
+    if (clearChips && actor.isOwner) await actor.update({ [`flags.sw25.armed.${weapon.id}.on`]: [] });
+    if (!chosen.length) return;
     for (const r of roundFx) await roundEffect(actor, r.item, r.rules, weapon, r.risk);
     const k = turnKey();
     if (k && actor.isOwner) await actor.update({ "flags.sw25.declTurn": { key: k, n: declaredThisTurn(actor) + chosen.length } });
-  }
+  };
   // armor piercing I / II: critical threshold +1
   if (out.form === "pierce" && out.formArg < 3) out.crit += 1;
   out.label = out.names.length ? out.names.join(", ") : "";
@@ -577,7 +585,8 @@ export function dualFeat(actor) {
 /** Accuracy modifier of each dual attack and whether the second may go to another target. */
 export function dualMods(actor, weapon) {
   const df = dualFeat(actor);
-  const all = activeFeats(actor).filter(({ f }) => f.kind === "feat" && f.where === "dual");
+  // [ru.12.1] a talent the player declares is not applied by itself on every dual attack
+  const all = activeFeats(actor).filter(({ f }) => f.kind === "feat" && f.where === "dual" && f.how !== "declare");
   const noPenalty = all.some(({ f }) => (f.rules ?? []).some((r) => r.s === "nodual"));
   let hit = 0, dmg = 0;
   for (const { item, f } of all) {
@@ -705,7 +714,7 @@ async function flipRoll(message, actor, item) {
   const after = before - (d[0] + d[1]) + (nd[0] + nd[1]) + bonus;
   const six = nd[0] === 6 && nd[1] === 6, one = nd[0] === 1 && nd[1] === 1;
   const auto = six ? L2(" — автоматический успех (6-6)", " — automatic success (6-6)") : one ? L2(" — автоматический провал (1-1)", " — automatic failure (1-1)") : "";
-  const sw = { ...(message.flags.sw25 ?? {}), flipped: true };
+  const sw = { ...(message.flags.sw25 ?? {}), flipped: true, dice: nd };   // [ru.12.1] the contest reads the flipped dice
   // the card's ± buttons add `aftermod` to orgtotal: shift both by the same amount
   const delta = after - before;
   if (sw.total !== undefined) { sw.orgtotal = Number(sw.orgtotal ?? sw.total) + delta; sw.total = Number(sw.total) + delta; }
@@ -717,6 +726,9 @@ async function flipRoll(message, actor, item) {
     content: `<p>${esc(message.flavor ?? "")}: [${d.join(", ")}] → [${nd.join(", ")}]${bonus ? ` ${sg(bonus)}` : ""}</p><p><b>${before} → ${after}</b>${auto}</p>`,
   });
   await dailyMark(actor, item, chk);
+  // the target already evaded / saved against the old roll (monsters roll at once): the GM re-checks that one by hand
+  if (game.messages.some((m) => m.flags?.sw25?.contest && m.flags.sw25.attackMessageId === message.id))
+    ui.notifications.warn(L2("Сопротивление этой атаке уже брошено — его итог пересчитайте вручную.", "The resist roll against this attack was already made: re-check its outcome by hand."));
 }
 
 /* ------------------------------------------------------------------ *
@@ -798,7 +810,7 @@ export async function openFeatBuilder(startKind = "feat") {
   const root = dlg.element.querySelector(".sw25-fb");
   let S;
   const log = [];
-  const blank = (kind) => ({ kind, name: "", how: "always", dur: "action", form: "none", formN: 3, doubleN: 3, apN: 1, where: kind === "race" ? "all" : "any", wArg: "sword", whereCheck: "", who: "self", rules: [], risk: [], g6: [], g11: [], on: "minor", off: "major", mpc: 0, limit: "none", limitN: 1, forbid: [], after: "flip", prereq: "", twoDecl: false, otherT: false });
+  const blank = (kind) => ({ kind, name: "", how: "always", dur: "action", form: "none", formN: 3, doubleN: 3, apN: 1, where: kind === "race" ? "all" : "any", wArg: "sword", whereCheck: "", who: "self", rules: [], risk: [], g6: [], g11: [], on: "minor", off: "major", mpc: 0, limit: "none", limitN: 1, forbid: [], after: "flip", prereq: "", twoDecl: false, otherT: false, stunt: false });
   const load = (k) => {
     const e = EX[k]; S = { ...blank(e.kind), ...foundry.utils.deepClone(e), name: T(e.label) }; S.ex = k; delete S.label;
     for (const list of [S.rules, S.risk, S.g6, S.g11]) for (const r of list ?? []) if (Array.isArray(r.x)) r.x = T(r.x);
@@ -902,10 +914,10 @@ export async function openFeatBuilder(startKind = "feat") {
         box.appendChild(a); G.appendChild(box);
       }
     }
-    root.querySelector(".fb-more").innerHTML = feat
+    root.querySelector(".fb-more").innerHTML = `<label><input type="checkbox" class="fb-stunt" ${S.stunt ? "checked" : ""}> ${L2("Сохранить как трюк верховой езды (вкладка Всадника)", "Save as a riding stunt (Rider tab)")}</label>` + (feat
       ? `<label class="fld"><span>${L2("Условие получения (текст)", "Requirement (text)")}</span><input type="text" class="fb-prereq" value="${esc(S.prereq)}"></label>
          <label><input type="checkbox" class="fb-twodecl" ${S.twoDecl ? "checked" : ""}> ${L2("Позволяет заявлять 2 таланта за ход", "Allows 2 declared talents per turn")}</label>`
-      : `<div class="note">${L2("Расовую способность перетащите на лист персонажа или в компендиум рас.", "Drag the racial ability onto a character or into the race compendium.")}</div>`;
+      : `<div class="note">${L2("Расовую способность перетащите на лист персонажа или в компендиум рас.", "Drag the racial ability onto a character or into the race compendium.")}</div>`);
     tier(); sentence();
   }
   function tier() {
@@ -951,6 +963,7 @@ export async function openFeatBuilder(startKind = "feat") {
     if (t.classList.contains("fb-formn")) S.formN = Math.max(2, N(t.value, 3));
     if (t.classList.contains("fb-dbln")) S.doubleN = Math.max(1, N(t.value, 3));
     if (t.classList.contains("fb-prereq")) S.prereq = t.value;
+    if (t.classList.contains("fb-stunt")) S.stunt = t.checked;
     if (t.classList.contains("fb-wcheck")) S.whereCheck = t.value.trim();
     sentence();
   });

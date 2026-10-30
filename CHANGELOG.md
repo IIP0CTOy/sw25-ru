@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 2.4.1-ru.12.1
+- Talent constructor: a talent can be saved as a riding stunt (Rider tab); new example «Mounted» — a toggle for riding.
+- Fencer attacks get Critical Value −1 (never below 8); a monster just made in the generator shows its real numbers on its sheet; Perception and habitat are read from monster text without «Reaction».
+- Character wizard: a step for riding stunts, background classes on top; shop: the open character is the buyer, a mark when Strength is too low; generator: «Ally» makes a friendly token, mount tables by level are read; toggles on the sheet show on/off; one-round effects end with the combat; monster spellcasters list spells in the client's language only.
+- A player hit by a monster can press «Damage» on the card: the GM's client rolls and applies it, once.
+- New «compact sheet» for characters (the «Sheet» button): the same sheet with a header a third smaller, for small screens.
+- Targets: after an area spell, a line or a song the player's own targets come back (the next attack no longer goes at the song's allies).
+- Attacks: a declared talent is spent only when the attack really happens; «Counter» only answers a melee attack against Evasion and counts the defender's always-on talents; dual and follow-up attacks with bows, crossbows and guns spend ammunition; dice flipped after the roll count in the contest.
+- Ammunition: silver, element and «lost only on a critical» also work when the damage is rolled from the sheet; «two rolls, best» needs two shots; an attack on several targets gets the arrow back only when every target evaded; a weapon's old «resource» link is not spent again.
+- Bullets: a magitech bullet's effects land on the target; a spell put on a weapon stays there if the cast did not happen.
+- Fixes: ± buttons on the sheet no longer change another field; a failed counter counts 12 on any dice; the effects window keeps bonuses to named checks; «+2 to X and +1 to Y» in effect text; monster spellcasters see compendium spells; monster knowledge keeps different monsters with one name apart; area picking can't hang; the one-off check modifier survives a cancelled roll.
+
 ## 2.4.1-ru.12
 - Shooting: ammunition made in the item constructor (for bows, crossbows or guns: accuracy, damage, power and critical modifiers, magic damage, silvered, element, recovery after the shot).
 - Bow and crossbow attacks spend the chosen ammunition and apply its modifiers; recoverable ammunition comes back on a miss; magic arrows deal magic damage and shot protection reduces it.

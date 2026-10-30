@@ -5,7 +5,7 @@ import { SW25ActiveEffect } from "./documents/active-effect.mjs";
 import { SW25Combat, registerSideInitiativeUI } from "./documents/combat.mjs";
 // Import sheet classes.
 import { SW25ActorSheet } from "./sheets/actor-sheet.mjs";
-import { SW25CharacterSheetNew } from "./sheets/actor-sheet-new.mjs";
+import { SW25CharacterSheetNew, SW25CharacterSheetCompact } from "./sheets/actor-sheet-new.mjs";
 import { SW25ItemSheet } from "./sheets/item-sheet.mjs";
 import { SW25ActiveEffectConfigV1 } from "./sheets/active-effect-config-V1.mjs";
 import { SW25ActiveEffectConfigV2 } from "./sheets/active-effect-config-V2.mjs";
@@ -528,6 +528,11 @@ Hooks.once("init", function () {
     types: ["character"],
     makeDefault: true, // [ru.11.1] the new sheet is the default for characters; the classic one stays selectable
     label: "SW25.SheetLabels.ActorNew", // a lang key: at init the client language is not known yet
+  });
+  // [ru.12.1] the same sheet with a compact header (small screens): picked per character with the «Sheet» button
+  Actors.registerSheet("sw25", SW25CharacterSheetCompact, {
+    types: ["character"],
+    label: "SW25.SheetLabels.ActorCompact",
   });
   Items.unregisterSheet("core", ItemSheet);
   Items.registerSheet("sw25", SW25ItemSheet, {

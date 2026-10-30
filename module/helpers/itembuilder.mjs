@@ -599,6 +599,7 @@ function ensureStyle() {
  * bonus twice and could not be scrolled inside the dialog). One scrollable list, arrows + Enter.
  */
 function attachBonusPicker(root, onPick) {
+  document.querySelectorAll(".sw25-ib-pop").forEach((e) => e.remove());   // [ru.12.1] a popup left by an earlier window
   const pop = document.createElement("ul");
   pop.className = "sw25-ib-pop";
   pop.style.display = "none";

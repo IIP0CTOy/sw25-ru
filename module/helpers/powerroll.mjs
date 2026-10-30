@@ -127,7 +127,8 @@ export async function powerRoll(formula, powertable) {
     total = Number(total) + Number(lethalTech);
     if (total < 2) total = 3;
   }
-  if (criticalRay && criticalRay != 0 && total != 2) {
+  // [ru.12.1] a fixed result ("f12", a failed counter) counts whatever the dice show, 1-1 included
+  if (criticalRay && criticalRay != 0 && (total != 2 || /^f\d+$/.test(criticalRay))) {
     if (/^f\d+$/.test(criticalRay)) {
       let fixresults = criticalRay.substring(1);
       total = Number(fixresults);

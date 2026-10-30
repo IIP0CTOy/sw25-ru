@@ -279,7 +279,8 @@
       "Actor": "SW25 Actor Sheet",
       "Item": "SW25 Item Sheet",
       "ActiveEffect": "SW25 Effect Sheet",
-      "ActorNew": "SW25 — new sheet"
+      "ActorNew": "SW25 — new sheet",
+      "ActorCompact": "SW25 — compact sheet"
     },
     "Actor": {
       "ColorSetting": {

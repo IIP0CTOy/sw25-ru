@@ -50,6 +50,8 @@ https://github.com/IIP0CTOy/sw25-ru/releases/latest/download/system.json
 
 Для русского интерфейса самой Foundry нужен модуль перевода ядра `ru-ru`.
 
+Чтобы всадник и транспорт двигались одним токеном, можно поставить модуль [Rideable](https://foundryvtt.com/packages/rideable).
+
 ## Поддержка
 
 Система бесплатная. Если хотите поддержать автора — [Boosty](https://boosty.to/iipoctoy_foundry_vvt). Спасибо!

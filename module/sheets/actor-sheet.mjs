@@ -21,7 +21,7 @@ import { dailyCheck, dailyMark } from "../helpers/rest.mjs";
 import { L2 } from "../helpers/monstergen-i18n.mjs";
 import { dualWeapons, dualAttack } from "../helpers/dualattack.mjs";
 import { attackMods, featOf, useFeat } from "../helpers/feats.mjs";
-import { pickShot, spendShot, ammoElements } from "../helpers/ammo.mjs";
+import { pickShot, spendShot, ammoElements, refundShot } from "../helpers/ammo.mjs";
 import { betterRoll, pierceTarget, fireWeaponSpell, critBlocked } from "../helpers/attackforms.mjs";
 
 /**
@@ -1142,6 +1142,13 @@ export class SW25ActorSheet extends ActorSheet {
         const shot = await pickShot(this.actor, w);
         if (shot === null) return;
         if (shot) featCtx.shot = shot;
+        // [ru.12.1] «two rolls, best» shoots two at once: two arrows / bullets are needed
+        if (shot && featCtx.form === "best" && shot.spec?.recover !== "always") {
+          const have = shot.source === "mag" ? (w.flags?.sw25?.mag?.loaded?.length ?? 0) : Number(shot.item?.system?.quantity) || 0;
+          if (have < 2) { ui.notifications.warn(L2(`${shot.name}: для двух выстрелов сразу нужно 2, есть ${have}.`, `${shot.name}: two shots at once need 2, you have ${have}.`)); return; }
+        }
+        // everything is checked: the declared talents are spent now
+        await featCtx.commit?.();
       }
     }
     if (dataset.apply == "-" || !dataset.apply || targetTokens.size === 0) {
@@ -1252,7 +1259,7 @@ export class SW25ActorSheet extends ActorSheet {
             if (r !== "fallback") return r;
           }
           // talents made in the talent constructor: toggles, uses, the dual attack
-          if ((item?.type === "raceability" || item?.type === "combatability") && featOf(item) && !event.shiftKey) {
+          if (["raceability", "combatability", "ridingtrick"].includes(item?.type) && featOf(item) && !event.shiftKey) {
             const r = await useFeat(this.actor, item);
             if (r !== "fallback") return r;
           }
@@ -1310,10 +1317,15 @@ export class SW25ActorSheet extends ActorSheet {
           const q1 = Number(featCtx.shot.item.system.quantity) + 1;
           sp = (await spendShot(this.actor, w, featCtx.shot)) ?? sp;
           sp.line = `${foundry.utils.escapeHTML(featCtx.shot.name)}: ${q1} >>> ${Number(featCtx.shot.item.system.quantity)}`;
+          sp.flag.two = true;
+        } else if (sp && featCtx.form === "best" && featCtx.shot.source === "mag") {
+          const s2 = await spendShot(this.actor, w, featCtx.shot);
+          if (s2) sp.line = s2.line;
         }
         if (sp) { shotFlag = sp.flag; chatresuse = `<div style="text-align: right;">${sp.line}</div>`; }
       }
-      if (dataset.resuse && !(shotFlag && featCtx.shot.item?.id === dataset.resuse)) {
+      // [ru.12.1] a shot with the new ammunition does not also spend the weapon's old «resource» link
+      if (dataset.resuse && !shotFlag) {
         const resuseid = dataset.resuse;
         const resusequantity = dataset.resusequantity;
         const resuseitem = this.actor.items.get(resuseid);
@@ -1520,10 +1532,10 @@ export class SW25ActorSheet extends ActorSheet {
     // [ru.11.1] declared talents (e.g. a damage bonus) of the latest attack with this weapon also count when
     // the damage is rolled from the sheet (an attack without a target has no damage button on its card)
     let featNote = "";
-    let pierceFlag = null;
+    let pierceFlag = null, last = null;
     if (itemId && powertable.length > 13) {
       const own = (m) => m.speaker?.actor === this.actor.id && m.flags?.sw25?.kind === "check" && !m.flags.sw25.spellcast && m.flags.sw25.itemid === itemId;
-      const last = game.messages.contents.slice(-30).reverse().find(own);
+      last = game.messages.contents.slice(-30).reverse().find(own) ?? null;
       const fm = last?.flags?.sw25?.featMods;
       if ((fm?.dmg || fm?.crit || fm?.lt || fm?.pow) && !fm.used) {
         powertable[13] = String((Number(powertable[13]) || 0) + (Number(fm.dmg) || 0));
@@ -1651,7 +1663,8 @@ export class SW25ActorSheet extends ActorSheet {
     }
 
     const item = itemId ? this.actor.items.get(itemId) : null;
-    const elements = item ? DamageSupporter.elementsOf(item) : null;
+    // [ru.12.1] the shot's ammunition (silver, element) also counts when the damage is rolled from the sheet
+    const elements = item ? ammoElements(DamageSupporter.elementsOf(item), last?.flags?.sw25?.ammo) : null;
     const damage = this.actor ? this.actor.system.attributes.damage : null;
     const classType = this.actor ? this.actor.system.classType : null;
     const isWeapon = DamageSupporter.getWeaponAttributes(item);
@@ -1722,6 +1735,8 @@ export class SW25ActorSheet extends ActorSheet {
     await ChatMessage.create(chatData).then((chatMessage) => {
       chatMessageId = chatMessage.id;
     });
+    // [ru.12.1] ammunition lost only on a critical hit: no critical here — it goes back
+    if (last?.flags?.sw25?.ammo?.recover === "nocrit" && roll.rollCount === 0) refundShot(last, "nocrit").catch((e) => console.error("SW25 | ammo", e));
 
     return { roll, chatMessageId };
   }
@@ -2252,7 +2267,6 @@ export class SW25ActorSheet extends ActorSheet {
       const data = {};
       data[property] = quantity;
       await item.update(data);
-      this._updateQuantity(item, quantity);
     }
 
     this.submit();
@@ -2294,7 +2308,6 @@ export class SW25ActorSheet extends ActorSheet {
       const data = {};
       data[property] = skilllevel;
       await item.update(data);
-      this._updateSkilllevel(item, skilllevel);
     }
 
     this.submit();
@@ -2311,9 +2324,6 @@ export class SW25ActorSheet extends ActorSheet {
     item.update({ "system.skilllevel": newSkillLevel });
   }
 
-  async _updateSkilllevel(item, skilllevel) {
-    await item.update({ "system.skilllevel": skilllevel });
-  }
 
   async _changeSkillMod(event) {
     event.preventDefault();
@@ -2347,7 +2357,6 @@ export class SW25ActorSheet extends ActorSheet {
       const data = {};
       data[property] = checkmod;
       await item.update(data);
-      this._updateCheckmod(item, checkmod);
     }
 
     this.submit();
@@ -2364,9 +2373,6 @@ export class SW25ActorSheet extends ActorSheet {
     if (newCheckMod == 0) newCheckMod = null;
     item.update({ "system.checkmod": newCheckMod });
   }
-  async _updateCheckmod(item, checkmod) {
-    await item.update({ "system.checkmod": checkmod });
-  }
 
   async _changeCheckMod1(event) {
     event.preventDefault();
@@ -2380,9 +2386,6 @@ export class SW25ActorSheet extends ActorSheet {
     item.update({ "system.checkmod1": newCheckMod });
   }
 
-  async _updateCheckmod(item, checkmod) {
-    await item.update({ "system.checkmod1": checkmod });
-  }
 
   async _changeCheckMod2(event) {
     event.preventDefault();
@@ -2396,9 +2399,6 @@ export class SW25ActorSheet extends ActorSheet {
     item.update({ "system.checkmod2": newCheckMod });
   }
   
-  async _updateCheckmod(item, checkmod) {
-    await item.update({ "system.checkmod2": checkmod });
-  }
 
   async _changeCheckMod3(event) {
     event.preventDefault();
@@ -2412,9 +2412,6 @@ export class SW25ActorSheet extends ActorSheet {
     item.update({ "system.checkmod3": newCheckMod });
   }
 
-  async _updateCheckmod(item, checkmod) {
-    await item.update({ "system.checkmod3": checkmod });
-  }
 
   async _changePowerMod(event) {
     event.preventDefault();

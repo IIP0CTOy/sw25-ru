@@ -39,14 +39,14 @@ const num = (v, d = 0) => { const n = parseInt(String(v).replace(/[−–]/g, "-
  * ------------------------------------------------------------------ */
 const L = {
   en: {
-    intelligence: /intelligence:\s*([^\n]*?)(?=\s+perception:|$)/i,
-    perception: /perception:\s*([^\n]*?)(?=\s+disposition:|$)/i,
-    disposition: /disposition:\s*([^\n]*?)(?=\s+soulscars?:|$)/i,
+    intelligence: /intelligence:\s*([^\n]*?)(?=\s+perception:|$)/im,
+    perception: /perception:\s*([^\n]*?)(?=\s+(?:disposition|language):|$)/im,
+    disposition: /disposition:\s*([^\n]*?)(?=\s+soulscars?:|$)/im,
     impurity: /soulscars?:\s*(\d+)/i,
-    language: /language:\s*([^\n]*?)(?=\s+habitat:|$)/i,
-    habitat: /habitat:\s*([^\n]*)/i,
+    language: /language:\s*([^\n]*?)(?=\s+habitat:|$)/im,
+    habitat: /habitat:\s*([^\n]*?)(?=\s+rep(?:utation)?\s*\/|$)/im,
     rep: /rep(?:utation)?\s*\/\s*weak(?:ness)?:\s*(\d+)\s*\/\s*(\d+)/i,
-    weak: /weak(?:\s*point|ness):\s*(?!\s*\d+\s*\/)([^\n]*?)(?=\s+initiative:|$)/im,
+    weak: /weak(?:\s*point|ness):\s*(?!\s*\d+\s*\/)([^\n]*?)(?=\s+(?:initiative|movement\s*speed):|$)/im,
     initiative: /initiative:\s*(\d+)/i,
     move: /movement\s*speed:\s*([^\s]+(?:\s*\([^)]*\))?)/i,
     vit: /fortitude:\s*(\d+)\s*\(\s*(\d+)\s*\)/i,
@@ -58,14 +58,14 @@ const L = {
     sections: /sections?:\s*(\d+)(?:\s*\(([^)]*)\))?(?:.*main(?:\s*section)?:\s*([^\n]+))?/i,
   },
   ru: {
-    intelligence: /интеллект:\s*([^\n]*?)(?=\s+восприятие:|$)/i,
-    perception: /восприятие:\s*([^\n]*?)(?=\s+(?:реакция|отношение|нрав):|$)/i,
-    disposition: /(?:реакция|отношение|нрав):\s*([^\n]*?)(?=\s+(?:загрязн\S*|шрамы\S*|скверна):|$)/i,
+    intelligence: /интеллект:\s*([^\n]*?)(?=\s+восприятие:|$)/im,
+    perception: /восприятие:\s*([^\n]*?)(?=\s+(?:реакция|отношение|нрав|язык\S*):|$)/im,
+    disposition: /(?:реакция|отношение|нрав):\s*([^\n]*?)(?=\s+(?:загрязн\S*|шрамы\S*|скверна):|$)/im,
     impurity: /(?:загрязн\S*|шрамы\S*|скверна):\s*(\d+)/i,
-    language: /язык\S*:\s*([^\n]*?)(?=\s+(?:среда обитания|ареал|место обитания):|$)/i,
-    habitat: /(?:среда обитания|ареал|место обитания):\s*([^\n]*)/i,
+    language: /язык\S*:\s*([^\n]*?)(?=\s+(?:среда обитания|ареал|место обитания):|$)/im,
+    habitat: /(?:среда обитания|ареал|место обитания):\s*([^\n]*?)(?=\s+(?:известность|репутация)\s*\/|$)/im,
     rep: /(?:известность|репутация)\s*\/\s*слаб\S*(?:\s*место)?:\s*(\d+)\s*\/\s*(\d+)/i,
-    weak: /(?:слаб\S*\s*место|слабость|уязвимост\S*):\s*(?!\s*\d+\s*\/)([^\n]*?)(?=\s+инициатив\S*:|$)/im,
+    weak: /(?:слаб\S*\s*место|слабость|уязвимост\S*):\s*(?!\s*\d+\s*\/)([^\n]*?)(?=\s+(?:инициатив\S*|скорость)\S*:|$)/im,
     initiative: /инициатив\S*:\s*(\d+)/i,
     move: /(?:скорость\s*передвижения|передвижение|скорость):\s*([^\s]+(?:\s*\([^)]*\))?)/i,
     vit: /стойкость:\s*(\d+)\s*\(\s*(\d+)\s*\)/i,
@@ -196,9 +196,10 @@ export function extractMagic(m) {
   if (m.magic.length) m.usespell = true;
   // [ru.12] «immune to criticals (from edged weapons)» in an ability text → the critical-immunity setting
   if (!m.critImmune) {
-    const t = m.abilities.map((a) => `${a.name ?? ""} ${a.text ?? ""}`).join(" ");
-    if (/immune to criticals|критическ[\p{L}]*\s+(?:удар[\p{L}]*\s+)?не\s+(?:получа|действу|срабатыва)|не\s+получает\s+критическ|クリティカル(?:を)?無効/iu.test(t))
-      m.critImmune = /edged|режущ|斬/iu.test(t) ? "edged" : "all";
+    // [ru.12.1] «edged» is read only from the ability that grants the immunity
+    const IMM = /immune to criticals|критическ[\p{L}]*\s+(?:удар[\p{L}]*\s+)?не\s+(?:получа|действу|срабатыва)|не\s+получает\s+критическ|クリティカル(?:を)?無効/iu;
+    const t = m.abilities.map((a) => `${a.name ?? ""} ${a.text ?? ""}`).find((x) => IMM.test(x));
+    if (t) m.critImmune = /edged|режущ|斬/iu.test(t) ? "edged" : "all";
   }
   return m;
 }
@@ -222,6 +223,15 @@ export function parseStatBlock(raw, lang, opts = {}) {
     const m = lines[k]?.match(D.level);
     if (m && !/\d{3,}/.test(lines[k])) { out.level = num(m[1], 1); out.name = m[2].trim(); break; }
   }
+  // [ru.12.1] mount data: «Name  Price: …» above «Appropriate Level: 1 – 4  Intelligence: …» (no level in front of the name)
+  const range = text.match(/(?:appropriate\s+level|подходящий\s+уровень|適正レベル)\s*:?\s*(\d{1,2})\s*[-–~～]\s*(\d{1,2})/i);
+  if (!out.name && range) {
+    const ri = lines.findIndex((l) => /(?:appropriate\s+level|подходящий\s+уровень|適正レベル)/i.test(l));
+    const cand = (lines[ri - 1] ?? "").replace(/\s*(?:price|цена|価格)\s*:.*$/i, "").trim();
+    const lvName = cand.match(/^(\d{1,2})\s+(\S.*)$/);   // «3 Horse»: the GM picked a level
+    if (cand && !/:/.test(cand)) { out.name = lvName ? lvName[2] : cand; out.level = lvName ? num(lvName[1], 1) : num(range[1], 1); }
+  }
+  out.name = out.name.replace(/\s*(?:price|цена|価格)\s*:.*$/i, "").replace(/\s*\((?:see\s+p\.|см\.\s*стр\.)[^)]*\)/i, "").trim();
   if (!out.name) out.warnings.push("Не нашёл строку «Уровень + Название» — введи вручную");
   out.intelligence = g(D.intelligence); out.perception = g(D.perception); out.disposition = g(D.disposition);
   out.impurity = num(g(D.impurity));
@@ -245,6 +255,48 @@ export function parseStatBlock(raw, lang, opts = {}) {
       name: m[1].trim() || tr("Оружие"), hit: num(m[2]), dmgMod: dm ? num(dm[2] ?? 0) : 0,
       dodge: num(m[5]), pp: num(m[7]), hp: num(m[8]), mp: num(m[9], 0),
     });
+  }
+  // [ru.12.1] mount table: «level  section  hit  dmg  dodge  def  HP  MP  fort  will» (no fixed values), one row per level
+  if (!out.rows.length) {
+    const mountRe = /^\s*(\d{1,2})\s+(\S.*?)\s+(\d+)\s+(\d+d\s*[+\-−–]?\s*\d*|\d+d)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+|-|—)\s+(\d+)\s+(\d+)\s*$/i;
+    const byLv = new Map();
+    for (const l of lines) {
+      const m = l.match(mountRe);
+      if (!m) continue;
+      const dm = m[4].replace(/\s|−|–/g, (c) => (c === " " ? "" : "-")).match(/^(\d+)d([+-]\d+)?$/i);
+      const lv = num(m[1]);
+      if (!byLv.has(lv)) byLv.set(lv, []);
+      byLv.get(lv).push({ name: m[2].trim(), hit: num(m[3]), dmgMod: dm ? num(dm[2] ?? 0) : 0, dodge: num(m[5]), pp: num(m[6]), hp: num(m[7]), mp: num(m[8], 0), vit: num(m[9]), mnd: num(m[10]) });
+    }
+    // multi-section mounts: the level number stands on its own line among its section rows (book PDF layout)
+    if (!byLv.size) {
+      const secRe = /^\s*(\S.*?)\s+(\d+)\s+(\d+d\s*[+\-−–]?\s*\d*|\d+d)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+|-|—)\s+(\d+|-|—)\s+(\d+|-|—)\s*$/i;
+      const rowsIn = [], lvIn = [];
+      for (const l of lines) {
+        const lvOnly = l.match(/^\s*(\d{1,2})\s*$/);
+        if (lvOnly) { lvIn.push(num(lvOnly[1])); continue; }
+        const m = l.match(secRe);
+        if (!m || /^\s*level\b|^\s*уровень\b/i.test(l)) continue;
+        const dm = m[3].replace(/\s|−|–/g, (c) => (c === " " ? "" : "-")).match(/^(\d+)d([+-]\d+)?$/i);
+        rowsIn.push({ name: m[1].trim(), hit: num(m[2]), dmgMod: dm ? num(dm[2] ?? 0) : 0, dodge: num(m[4]), pp: num(m[5]), hp: num(m[6]), mp: num(m[7], 0), vit: num(m[8], 0), mnd: num(m[9], 0) });
+      }
+      if (lvIn.length && rowsIn.length && rowsIn.length % lvIn.length === 0) {
+        const k = rowsIn.length / lvIn.length;
+        lvIn.forEach((lv, i) => byLv.set(lv, rowsIn.slice(i * k, i * k + k)));
+      }
+    }
+    if (byLv.size) {
+      const lvs = [...byLv.keys()].sort((a, b) => a - b);
+      const lv = byLv.has(out.level) ? out.level : lvs[0];
+      out.level = lv;
+      // «Wing (Wing) x 2» = two sections
+      out.rows = byLv.get(lv).flatMap(({ vit: _v, mnd: _m, ...r }) => { const x = r.name.match(/\s*[x×]\s*(\d)$/i); return x ? Array.from({ length: Number(x[1]) }, () => ({ ...r, name: r.name.replace(/\s*[x×]\s*\d$/i, "") })) : [r]; });
+      const withRes = byLv.get(lv).find((r) => r.vit || r.mnd) ?? byLv.get(lv)[0];
+      if (!vit) out.vit = withRes.vit;
+      if (!mnd) out.mnd = withRes.mnd;
+      out.warnings = out.warnings.filter((w) => w !== "Стойкость/Воля не найдены");
+      if (lvs.length > 1) out.warnings.push(`Таблица маунта: уровни ${lvs[0]}–${lvs.at(-1)}, взят уровень ${lv}. Другой уровень — напиши его перед названием в первой строке («${lvs.at(-1)} ${out.name || "Название"}») и разбери снова`);
+    }
   }
   if (!out.rows.length) out.warnings.push("Строка таблицы «Точн./Урон/Уклон./Защ./ОЖ/ОМ» не распознана — заполни ниже");
   if (secLine) out.coreName = (secLine[3] ?? "").trim();
@@ -386,7 +438,7 @@ function abilityItem(a) {
   return { name: a.name, type: "monsterability", system: sys, flags };
 }
 
-export async function createMonster(m, { open = true, folder = null, pack = null } = {}) {
+export async function createMonster(m, { open = true, folder = null, pack = null, ally = false } = {}) {
   const t = T();
   const rows = m.rows.length ? m.rows : [{ name: "", hit: 0, dmgMod: 0, dodge: 0, pp: 0, hp: 1, mp: 0 }];
   const multi = rows.length > 1;
@@ -435,6 +487,8 @@ export async function createMonster(m, { open = true, folder = null, pack = null
   };
   const we = weaknessEffect(m);
   if (we) data.effects = [we];
+  // [ru.12.1] a mount / familiar / summon on the party's side: a friendly token (counts with the party in the side initiative)
+  if (ally) data.prototypeToken = { disposition: CONST.TOKEN_DISPOSITIONS.FRIENDLY };
   if (multi) {
     const secs = rows.map((r, k) => ({
       id: `s${k}`, name: (r.name || `${tr("Секция")} ${k + 1}`).replace(/^\w/, (c) => c.toUpperCase()), core: r === core,
@@ -759,7 +813,7 @@ export async function openMonsterGenerator(opts = {}) {
       <small>Названия, описания и тексты способностей можно прогнать через любой переводчик: структура и числа при этом не затрагиваются.</small>
       <div style="display:flex;gap:6px;margin:4px 0"><button type="button" class="mg-trcopy">Скопировать тексты на перевод</button><button type="button" class="mg-trapply">Применить перевод</button></div>
       <textarea class="mg-trtext" rows="6" style="width:100%" data-ph="Вставь сюда переведённые строки (нумерация «N|» должна сохраниться)"></textarea></details>
-    <div style="text-align:right;margin-top:8px"><button type="button" class="mg-create" style="width:auto"><i class="fa-solid fa-dragon"></i> ${tr("Создать выбранных")}</button></div>
+    <div style="text-align:right;margin-top:8px"><label style="margin-right:12px" title="${esc(L2("Токен будет дружественным: в инициативе сторон он ходит с партией", "The token will be friendly: it acts with the party in the side initiative"))}"><input type="checkbox" class="mg-ally"> ${L2("Союзник (транспорт, фамильяр)", "Ally (mount, familiar)")}</label><button type="button" class="mg-create" style="width:auto"><i class="fa-solid fa-dragon"></i> ${tr("Создать выбранных")}</button></div>
   </div></div>`;
 
   const readAbilityField = (a, key, el) => {
@@ -790,7 +844,7 @@ export async function openMonsterGenerator(opts = {}) {
         if (!chosen.length) { notify.warn("Никто не выбран."); return; }
         if (chosen.some((m) => !m.name?.trim())) { notify.warn(L2("У выбранного монстра нет названия.", "A selected monster has no name.")); return; }
         let n = 0;
-        for (const m of chosen) { m.abilities.forEach((a) => { if (!a.resist) a.result = ""; }); await createMonster(m, { open: chosen.length === 1 }); n++; }
+        for (const m of chosen) { m.abilities.forEach((a) => { if (!a.resist) a.result = ""; }); await createMonster(m, { open: chosen.length === 1, ally: !!dlg.element?.querySelector(".mg-ally")?.checked }); n++; }
         if (n > 1) notify.info(L2(`Создано монстров: ${n}. Они лежат в списке акторов.`, `Monsters created: ${n}. They are in the Actors directory.`));
         await dlg.close();
     } catch (err) { console.error(err); notify.error(String(err?.message ?? err)); }
@@ -924,6 +978,7 @@ export async function openMonsterGenerator(opts = {}) {
         if (ids.length > 10) return notify.warn(L2("За раз не больше 10 листов (сайт чужой — не нагружаем).", "At most 10 sheets at a time (it is someone else's site)."));
         const res = []; let skipped = 0, spellsN = 0;
         for (let i = 0; i < ids.length; i++) {
+          if (!root.isConnected) return;   // [ru.12.1] the window was closed: stop asking the site
           setInfo(`ytsheet: ${i + 1}/${ids.length}…`);
           try {
             const r = await fetch(`${YT_BASE}?id=${ids[i]}&mode=json`);

@@ -242,14 +242,16 @@ async function monsterKnowledge(party, enemies) {
   const esc = (s) => foundry.utils.escapeHTML?.(String(s)) ?? String(s);
   const know = party.filter((c) => c.actor.items.some((i) => i.type === "skill" && isClass(i.name, "sage", "rider") && Number(i.system.skilllevel) > 0));
   const kinds = new Map();
+  // [ru.12.1] one kind = same name AND same Reputation / Weak point (different monsters with one name stay apart)
   for (const c of enemies) {
-    const key = c.actor.name;
+    const key = `${c.actor.name}|${Number(c.actor.system.popularity) || 0}|${Number(c.actor.system.weakpoint) || 0}`;
     if (!kinds.has(key)) kinds.set(key, []);
     kinds.get(key).push(c);
   }
   if (!kinds.size) return "";
   const rows = [];
-  for (const [name, list] of kinds) {
+  for (const [kindKey, list] of kinds) {
+    const name = list[0].actor.name;
     const a = list[0].actor;
     const rep = Number(a.system.popularity ?? 0) || 0;
     const weak = Number(a.system.weakpoint ?? 0) || 0;

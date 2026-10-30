@@ -4020,6 +4020,8 @@ body:not(.sw25-is-gm) .sw25-gmonly {
   order: 1;
 }
 .application.dialog.sw25-tool .form-footer button:hover { color: var(--sw25-text); border-color: var(--sw25-muted); }
+/* [ru.12.1] a row of equal choices (4+ buttons, e.g. stat sets) keeps its own order: the highlighted one does not jump to the end */
+.application.dialog.sw25-tool .form-footer:has(> button:nth-of-type(4)) button { order: 0 !important; }
 .application.dialog.sw25-tool .form-footer button.default,
 .application.dialog.sw25-tool .form-footer button[autofocus] {
   order: 2;

@@ -11,6 +11,7 @@
  */
 import { L2 } from "./monstergen-i18n.mjs";
 import { priceFactor, disgraceEffect } from "./ranks.mjs";
+import { checkEquipRequirement } from "./equipreq.mjs";
 
 const esc = (s) => foundry.utils.escapeHTML?.(String(s ?? "")) ?? String(s ?? "");
 /** «1,660G», "570 G", 570 -> number (0 when unknown). */
@@ -22,8 +23,11 @@ export function parsePrice(v) {
 
 function buyers() {
   const list = game.actors.filter((a) => a.type === "character" && a.isOwner);
+  // [ru.12.1] then a character whose sheet is open, then the newest character (not simply the first by name)
+  const open = Object.values(ui.windows).map((w) => w.actor ?? w.document).find((a) => a?.documentName === "Actor" && a.type === "character" && a.isOwner);
+  const newest = [...list].sort((a, b) => (b._stats?.createdTime ?? 0) - (a._stats?.createdTime ?? 0))[0];
   const def = canvas?.tokens?.controlled?.map((t) => t.actor).find((a) => a?.type === "character" && a.isOwner)
-    ?? (game.user.character?.isOwner ? game.user.character : null) ?? list[0] ?? null;
+    ?? (game.user.character?.isOwner ? game.user.character : null) ?? open ?? newest ?? null;
   return { list, def };
 }
 
@@ -82,11 +86,11 @@ export async function openShop() {
     const q = (sel) => root.querySelector(sel);
     q(".shop-money").textContent = Number(actor()?.system?.money) || 0;
     q(".shop-rows").innerHTML = cart.length
-      ? cart.map((l, i) => `<tr data-i="${i}"><td>${esc(l.item.name)}</td>
+      ? cart.map((l, i) => { const r = checkEquipRequirement(l.item, actor()); return `<tr data-i="${i}"><td>${esc(l.item.name)}${r.ok ? "" : ` <i class="fa-solid fa-triangle-exclamation" style="color:#d2a94e" title="${esc(L2(`Не хватает силы: ${r.str} из ${r.req} — можно только держать`, `Not enough Strength: ${r.str} of ${r.req} — can only be held`))}"></i>`}</td>
           <td style="text-align:center"><input data-f="price" type="number" min="0" value="${l.price}" style="width:70px"${l.fixed && !game.user.isGM ? " disabled" : ""}></td>
           <td style="text-align:center"><input data-f="qty" type="number" min="1" value="${l.qty}" style="width:48px"></td>
           <td style="text-align:center">${l.price * l.qty}</td>
-          <td><button type="button" data-del="${i}" style="width:auto" title="${L2("Убрать", "Remove")}"><i class="fa-solid fa-xmark"></i></button></td></tr>`).join("")
+          <td><button type="button" data-del="${i}" style="width:auto" title="${L2("Убрать", "Remove")}"><i class="fa-solid fa-xmark"></i></button></td></tr>`; }).join("")
       : `<tr><td colspan="5" style="text-align:center;opacity:.6">${L2("Корзина пуста", "The cart is empty")}</td></tr>`;
     const f = factor(), e = disgraceEffect(actor());
     q(".shop-total").textContent = f === 1 ? total() : f == null ? "—" : `${total()} (${base()} ×${f})`;

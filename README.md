@@ -59,6 +59,8 @@ https://github.com/IIP0CTOy/sw25-ru/releases/latest/download/system.json
 
 For the Russian interface of Foundry itself, install the `ru-ru` core translation module.
 
+To move a rider and a mount together, you can install the [Rideable](https://foundryvtt.com/packages/rideable) module.
+
 ## Support
 
 The system is free. If you want to support the author, you can do it on [Boosty](https://boosty.to/iipoctoy_foundry_vvt) (cards from any country, including Japan). Thank you!

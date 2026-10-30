@@ -996,6 +996,8 @@ export class SW25Actor extends Actor {
 
     // Polyglot support
     const languages = [];
+    // [ru.12.1] rebuilt on every preparation (a repeated prepareData used to list each language again)
+    if (systemData.attributes?.languages) { systemData.attributes.languages.conv = []; systemData.attributes.languages.read = []; }
     this.items.forEach((item) => {
       if (item.type == "language") {
         if (item.system.conversation) {
