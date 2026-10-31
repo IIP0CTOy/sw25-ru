@@ -17,7 +17,7 @@ export async function lootRoll(actor) {
   // the next "<range>:" token, and accept "13+", single numbers and – — −.
   const RANGE_START = /\.\s+(?=(?:\d+\s*[ー－～~\-–—−]\s*\d*|\d+\s*\+|\d+|Всегда|Always|自動)\s*[：:])/;
   const lootLines = String(lootlist ?? "")
-    .split(/<br\s*\/?>|<\/?p>/)
+    .split(/<br\s*\/?>|<\/?p>|\n/)   // [ru.12.2] plain line breaks too
     .flatMap((line) => line.replace(/<[^>]*>/g, "").split(RANGE_START))
     .map((line) => line.trim())
     .filter((line) => line !== "");
@@ -105,7 +105,7 @@ export function parseLoot(text) {
   const par = t.match(/\(([^()]*)\)\s*$/);
   const inside = par ? par[1] : "";
   const name = (par ? t.slice(0, par.index) : t).trim() || t;
-  const price = Number((inside.match(/(\d[\d\s]*)\s*G/i)?.[1] ?? "").replace(/\s/g, "")) || 0;
+  const price = Number((inside.match(/(\d[\d\s,.]*)\s*G/i)?.[1] ?? "").replace(/[\s,.]/g, "")) || 0;   // [ru.12.2] «5,000G» / «5 000G»
   const colors = COLORS.filter(([, re]) => re.test(inside)).map(([k]) => k);
   const rank = (inside.match(/\b(SS|S|A|B)\b\s*$/i)?.[1] ?? "").toLowerCase();
   return { name, price, colors: rank ? colors : [], rank, qty, material: rank && colors.length ? inside.split("/").pop().trim() : "" };

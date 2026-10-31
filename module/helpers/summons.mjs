@@ -40,7 +40,12 @@ const norm = (s) => String(s ?? "").normalize("NFKC").toLowerCase().replace(/ё/
 const nameOf = (v) => (v && typeof v === "object" ? L2(v.ru ?? v.en ?? "", v.en ?? v.ru ?? "") : String(v ?? ""));
 const namesOf = (v) => (v && typeof v === "object" ? [v.ru, v.en, v.ja].filter(Boolean) : [String(v ?? "")].filter(Boolean));
 async function creationOptions() {
-  const list = (await creationTemplates()).map((t) => ({ ...t.spec, label: t.name, names: [t.name], uuid: t.uuid }));
+  // [ru.12.2] compendium templates in the client's language only (a Russian client does not list English bestiary names)
+  const cyr = (t) => /[\u0400-\u04FF]/.test(t);
+  const ru = game.i18n.lang === "ru";
+  const list = (await creationTemplates())
+    .filter((t) => !String(t.uuid).startsWith("Compendium.") || cyr(t.name) === ru)
+    .map((t) => ({ ...t.spec, label: t.name, names: [t.name], uuid: t.uuid }));
   const have = new Set(list.map((o) => norm(o.label)));
   for (const c of (await extraData()).creations ?? []) {
     const names = namesOf(c.name);
@@ -326,7 +331,8 @@ export function registerSummons() {
   Hooks.on("getActorSheetHeaderButtons", (app, buttons) => {
     const actor = app.actor ?? app.document;
     if (!actor?.isOwner) return;
-    if (actor.type === "character") buttons.unshift({ label: L2("Создания", "Creations"), class: "sw25-summon-btn", icon: "fa-solid fa-person-rays", onclick: () => openSummons(actor) });
+    // [ru.12.1] only for a Conjurer (or a character who still has creations): other classes do not make them
+    if (actor.type === "character" && (classLevel(actor, "conjurer") > 0 || creationsOf(actor).length)) buttons.unshift({ label: L2("Создания", "Creations"), class: "sw25-summon-btn", icon: "fa-solid fa-person-rays", onclick: () => openSummons(actor) });
     if (summonOf(actor)) buttons.unshift({ label: L2("Развеять", "Dismiss"), class: "sw25-dismiss-btn", icon: "fa-solid fa-wind", onclick: () => dismiss(actor) });
     else if (actor.type === "monster" && game.user.isGM) {
       buttons.unshift({ label: L2("Создание", "Creation"), class: "sw25-crmark-btn", icon: "fa-solid fa-person-rays", onclick: () => openCreationMark(actor) });

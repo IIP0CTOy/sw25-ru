@@ -49,8 +49,10 @@ export function critBlocked(item, targets, card) {
   if (!list.length) return false;
   const fm = card?.flags?.sw25?.featMods;
   if (fm?.form === "pierce" && N(fm.formArg) >= 3) return false;
+  if (fm?.noCritImm) return false;   // [ru.12.2] a talent that ignores critical immunity
   const edged = item?.type === "weapon" && item.system?.type === "blade";
-  return list.every((t) => { const c = (t.actor ?? t.document?.actor)?.flags?.sw25?.critImmune; return c === "all" || (c === "edged" && edged); });
+  // [ru.12.2] "edgedmagic": edged weapons and every spell (golems and the like)
+  return list.every((t) => { const c = (t.actor ?? t.document?.actor)?.flags?.sw25?.critImmune; return c === "all" || (c === "edged" && edged) || (c === "edgedmagic" && (edged || item?.type === "spell")); });
 }
 
 /* ---------------- damage ×2 on a margin ---------------- */

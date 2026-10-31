@@ -70,7 +70,7 @@ export async function openShop() {
       <b>${L2("Деньги", "Money")}: <span class="shop-money"></span> G</b>
     </div>
     <label style="display:flex;gap:6px;align-items:center;margin-bottom:6px" title="${L2("Позор повышает цены Гильдии", "Disgrace raises the Guild's prices")}"><input type="checkbox" class="shop-guild" checked> ${L2("Покупка в Гильдии (наценка за позор)", "Buying at the Guild (disgrace surcharge)")}</label>
-    <div class="shop-drop" style="border:2px dashed #888;border-radius:6px;padding:14px;text-align:center;margin-bottom:6px">${L2("Перетащите сюда предметы (из компендиума, списка предметов или листа)", "Drag items here (from a compendium, the Items directory or a sheet)")}</div>
+    <div class="shop-drop" style="border:2px dashed #888;border-radius:6px;padding:14px;text-align:center;margin-bottom:6px">${L2("Перетащите сюда предметы — из каталога выше, списка предметов или листа", "Drag items here — from a catalog above, the Items directory or a sheet")}</div>
     <table style="width:100%"><thead><tr><th style="text-align:left">${L2("Предмет", "Item")}</th><th>${L2("Цена, G", "Price, G")}</th><th>${L2("Кол-во", "Qty")}</th><th>${L2("Сумма", "Sum")}</th><th></th></tr></thead><tbody class="shop-rows"></tbody></table>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><button type="button" class="shop-buy" style="width:auto"><i class="fa-solid fa-coins"></i> ${L2("Купить", "Buy")}</button><b>${L2("Итого", "Total")}: <span class="shop-total">0</span> G</b></div>
   </div>`;
@@ -142,7 +142,7 @@ export async function openShop() {
 
   const dlg = new DialogV2({
     window: { title: L2("Магазин", "Shop"), resizable: true },
-    position: { width: 560 },
+    position: { width: 640 },
     content,
     buttons: [
       { action: "close", label: L2("Закрыть", "Close") },
@@ -158,6 +158,87 @@ export async function openShop() {
     let data; try { data = JSON.parse(e.dataTransfer.getData("text/plain")); } catch { return; }
     await addItem(data);
   };
+  // [ru.12.1] catalogs: the item compendiums that hold gear open with one click (drag from them into the cart)
+  (async () => {
+    const GEAR = ["weapon", "armor", "accessory", "item"];
+    const STAT_FIELDS = ["system.power", "system.cvalue", "system.usage", "system.hit", "system.dmod", "system.pp", "system.dodge", "system.reqstr"];
+    const cats = [];
+    for (const p of game.packs) {
+      if (p.documentName !== "Item" || !p.visible) continue;
+      let idx; try { idx = await p.getIndex({ fields: ["flags.sw25.enh", "flags.sw25.curse"] }); } catch (e) { continue; }
+      if (idx.some((e) => GEAR.includes(e.type) && !e.flags?.sw25?.enh && !e.flags?.sw25?.curse)) cats.push(p);
+    }
+    const lng = game.i18n.lang;
+    const cyr = (p) => /[\u0400-\u04FF]/.test(p.title);
+    const mine = cats.filter((p) => (lng === "ru" ? cyr(p) : !cyr(p)));
+    const show = mine.length ? mine : cats;
+    // [ru.12.2] the world's own gear (made with the item builder etc.) — the ones this user can see
+    const world = game.items.filter((i) => GEAR.includes(i.type) && i.testUserPermission(game.user, "OBSERVER"));
+    if ((!show.length && !world.length) || !root?.isConnected) return;
+    const bar = document.createElement("div");
+    bar.className = "shop-cats";
+    bar.style.cssText = "display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:6px";
+    const btn = "width:auto;flex:0 0 auto;padding:0 8px";
+    bar.innerHTML = `<span style="opacity:.8">${L2("Каталог:", "Catalog:")}</span>`
+      + (world.length ? `<button type="button" class="shop-world" style="${btn}"><i class="fa-solid fa-globe"></i> ${L2("Предметы мира", "World items")} (${world.length})</button>` : "")
+      + show.map((p) => `<button type="button" data-pack="${esc(p.collection)}" style="${btn}"><i class="fa-solid fa-book-open"></i> ${esc(p.title)}</button>`).join("");
+    // [ru.12.2] every source opens as a price list right here (click a line → cart); Shift+click a compendium opens its window
+    const path = (f) => { const n = []; while (f) { n.unshift(f.name); f = f.folder; } return n.join(" / ") || "—"; };
+    const list = document.createElement("div");
+    list.className = "shop-world-list";
+    list.style.cssText = "display:none;max-height:260px;overflow:auto;border:1px solid #888;border-radius:6px;padding:4px 6px;margin-bottom:6px";
+    let shown = null;
+    const rowsOf = async (src) => {
+      if (src === "world") return world.map((i) => ({ uuid: i.uuid, name: i.name, type: i.type, sys: i.system, price: i.system?.price, rank: i.system?.rank, g: path(i.folder) }));
+      const p = game.packs.get(src);
+      const idx = await p.getIndex({ fields: ["system.price", "system.rank", "folder", "flags.sw25.enh", "flags.sw25.curse", ...STAT_FIELDS] });
+      return [...idx].filter((e) => GEAR.includes(e.type) && !e.flags?.sw25?.enh && !e.flags?.sw25?.curse)   // upgrades / curses belong to the smithy
+        .map((e) => ({ uuid: e.uuid, name: e.name, type: e.type, sys: e.system, price: e.system?.price, rank: e.system?.rank, g: path(p.folders.get(e.folder)) }));
+    };
+    // [ru.12.2] the numbers that matter when choosing: weapon power / critical value / grip / Strength, armour Defense / Evasion
+    const sg = (n) => (n > 0 ? `+${n}` : `${n}`);
+    const stats = (r) => {
+      const s = r.sys ?? {}, n = (v) => Number(v) || 0, out = [];
+      if (r.type === "weapon") {
+        if (s.power !== null && s.power !== undefined && s.power !== "") out.push(`k${s.power}@${n(s.cvalue) || 10}`);
+        const u = CONFIG.SW25?.weaponUsages?.[s.usage]; if (u) out.push(game.i18n.localize(u));
+        if (n(s.hit)) out.push(`${L2("точн", "acc")} ${sg(n(s.hit))}`);
+        if (n(s.dmod)) out.push(`${L2("урон", "dmg")} ${sg(n(s.dmod))}`);
+      } else if (r.type === "armor") {
+        out.push(`${L2("Защ", "Def")} ${n(s.pp)}`);
+        if (n(s.dodge)) out.push(`${L2("Укл", "Eva")} ${sg(n(s.dodge))}`);
+      }
+      if (["weapon", "armor"].includes(r.type) && n(s.reqstr)) out.push(`${L2("Сила", "Str")} ${n(s.reqstr)}`);
+      return out.join(" · ");
+    };
+    const fill = async (src) => {
+      const rows = (await rowsOf(src)).sort((x, y) => String(x.g ?? "").localeCompare(String(y.g ?? "")) || String(x.name ?? "").localeCompare(String(y.name ?? "")));
+      const groups = new Map();
+      for (const r of rows) { if (!groups.has(r.g)) groups.set(r.g, []); groups.get(r.g).push(r); }
+      list.innerHTML = `<input type="search" class="shop-world-q" placeholder="${L2("Поиск…", "Search…")}" style="width:100%;margin-bottom:4px">`
+        + [...groups].map(([k, items]) => `<div class="shop-wg"><div style="opacity:.75;font-size:11px;margin-top:4px">${esc(k)}</div>`
+          + items.map((i) => `<div class="shop-wi" data-uuid="${esc(i.uuid)}" data-n="${esc(i.name.toLowerCase())}" style="display:grid;grid-template-columns:18px minmax(0,1fr) auto 2.5em 6em;gap:6px;align-items:center;cursor:pointer;padding:1px 0" title="${L2("В корзину", "Add to cart")}"><i class="fa-solid fa-cart-plus"></i><span>${esc(i.name)}</span><span style="opacity:.75;font-size:11px;white-space:nowrap">${esc(stats(i))}</span><span style="opacity:.7;text-align:center">${esc(i.rank ?? "")}</span><span style="text-align:right">${parsePrice(i.price) || "—"} G</span></div>`).join("") + `</div>`).join("");
+    };
+    bar.addEventListener("click", async (e) => {
+      const b = e.target.closest(".shop-world, [data-pack]"); if (!b) return;
+      const src = b.dataset.pack ?? "world";
+      if (b.dataset.pack && e.shiftKey) return game.packs.get(src)?.render(true);
+      bar.querySelectorAll("button").forEach((x) => x.classList.remove("active"));
+      if (shown === src && list.style.display !== "none") { list.style.display = "none"; shown = null; return; }
+      shown = src; b.classList.add("active");
+      try { await fill(src); } catch (err) { console.error("SW25 | shop catalog", err); }
+      list.style.display = "";
+      list.querySelector(".shop-world-q")?.focus();
+    });
+    list.addEventListener("click", (e) => { const r = e.target.closest(".shop-wi"); if (r) addItem({ type: "Item", uuid: r.dataset.uuid }); });
+    list.addEventListener("input", (e) => {
+      if (!e.target.matches(".shop-world-q")) return;
+      const q = e.target.value.trim().toLowerCase();
+      for (const r of list.querySelectorAll(".shop-wi")) r.style.display = !q || r.dataset.n.includes(q) ? "" : "none";
+      for (const g of list.querySelectorAll(".shop-wg")) g.style.display = [...g.querySelectorAll(".shop-wi")].some((r) => r.style.display !== "none") ? "" : "none";
+    });
+    root.querySelector(".shop-drop")?.before(bar, list);
+  })();
   root.querySelector(".sw25-shop").addEventListener("drop", onDrop);   // one handler (the zone is inside it)
   root.querySelector(".sw25-shop").addEventListener("dragover", (e) => e.preventDefault());
   root.addEventListener("change", (e) => {

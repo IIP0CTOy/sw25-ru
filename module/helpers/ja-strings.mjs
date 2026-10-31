@@ -1318,7 +1318,30 @@ export const JA_STATIC = new Map(Object.entries({
 "Save as a riding stunt (Rider tab)": "騎芸として保存（ライダーのタブ）",
 "Rider stunts": "ライダーの騎芸",
 "The token will be friendly: it acts with the party in the side initiative": "トークンは友好になります：陣営ごとの先制でパーティ側として行動します",
-"Ally (mount, familiar)": "味方（騎獣・使い魔）"
+"Ally (mount, familiar)": "味方（騎獣・使い魔）",
+"Drag items here — from a catalog above, the Items directory or a sheet": "ここにアイテムをドラッグ——上のカタログ、アイテム一覧、シートから",
+"Catalog:": "カタログ：",
+"Contracted elements:": "契約している属性：",
+"Untick the special spells of other gods.": "他の神の特殊神聖魔法はチェックを外してください。",
+"A caster knows every spell of their school up to the class level. Ticked: the ones not on the sheet yet.": "魔法使いは技能レベルまでの自分の系統の魔法をすべて習得しています。チェック済み：まだシートにないもの。",
+"Add the ticked ones": "チェックしたものを追加",
+"School spells": "系統の魔法",
+"Add every spell of your school up to the class level (known ones are skipped)": "技能レベルまでの系統魔法をすべて追加（習得済みは除外）",
+"World items": "ワールドのアイテム",
+"Search…": "検索…",
+"Add to cart": "カートに追加",
+"Choose what the talent applies to:": "この特技の対象を選んでください：",
+"Done": "完了",
+"Cast": "行使",
+"acc": "命中",
+"dmg": "ダメージ",
+"Str": "筋力",
+"A token is needed: target someone or put your character on the scene.": "コマが必要です：対象を選ぶか、自分のキャラクターをシーンに置いてください。",
+"Every sheet already matches the compendiums.": "すべてのシートはコンペンディウムと一致しています。",
+"Items taken from compendiums earlier get the new rules and effects. Quantity, equipment, upgrades and choices already made stay.": "以前コンペンディウムから取ったアイテムに新しいルールと効果を反映します。個数・装備・強化・選択済みの内容はそのままです。",
+"Update from compendiums": "コンペンディウムから更新",
+"Update the ticked ones": "チェックしたものを更新",
+"Update sheets from compendiums": "コンペンディウムからシートを更新"
 }));
 export const JA_TPL = [
 [
@@ -2460,5 +2483,33 @@ export const JA_TPL = [
 [
 "Not enough Strength: ${} of ${} — can only be held",
 "筋力不足：${}／${}——持つことしかできません"
+],
+[
+"${} has no spellcasting class.",
+"${}には魔法技能がありません。"
+],
+[
+"${}: every school spell up to the class level is already on the sheet (or none are in the compendiums).",
+"${}：技能レベルまでの系統魔法はすべてシートにあります（またはコンペンディウムにありません）。"
+],
+[
+"${}: school spells",
+"${}：系統の魔法"
+],
+[
+"${}: ${} spells added.",
+"${}：魔法を${}個追加しました。"
+],
+[
+"${}: none left.",
+"${}：残っていません。"
+],
+[
+"${} left",
+"残り${}"
+],
+[
+"Items updated: ${}.",
+"更新したアイテム：${}。"
 ]
 ];

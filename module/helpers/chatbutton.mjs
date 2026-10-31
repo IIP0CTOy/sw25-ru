@@ -91,7 +91,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
       if (buttonType == "buttoncheck1") label = label + " (" + label1 + ")";
       if (buttonType == "buttoncheck2") label = label + " (" + label2 + ")";
       if (buttonType == "buttoncheck3") label = label + " (" + label3 + ")";
-      let powlabel = game.i18n.localize("SW25.Item.Power");
+      let powlabel = game.i18n.localize("SW25.Item.Power").trim();
       if (item.type == "monsterability") powlabel = labelmonpow;
       if (buttonType == "buttonpower") label = label + " (" + powlabel + ")";
 
@@ -465,7 +465,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
     if (buttonType == "buttonpower") {
       if (item.type == "monsterability")
         label = label + " (" + labelmonpow + ")";
-      else label = label + " (" + game.i18n.localize("SW25.Item.Power") + ")";
+      else label = label + " (" + game.i18n.localize("SW25.Item.Power").trim() + ")";
       const formula = item.system.formula;
       const powertable = item.system.powertable;
 
@@ -3133,6 +3133,8 @@ function renderSummary(rows) {
 export function filterViewerOnly(html) {
   if (game.user.isGM) return;
   html.find(".sw25-gmonly").remove();
+  // [ru.12.2] undoing damage / healing that landed on a target is the GM's call
+  html.find('.buttonclick[data-buttontype="applycancel"]').closest("div").remove();
   html.find(".sw25-viewer").each((_, el) => {
     const doc = el.dataset.sw25Actor ? fromUuidSync(el.dataset.sw25Actor) : null;
     const actor = doc?.actor ?? doc;

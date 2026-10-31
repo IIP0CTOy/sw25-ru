@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 2.4.1-ru.12.2
+- Spells: a «School spells» button on the Spells tab adds every spell of the character's school up to the class level from the compendiums (known ones skipped, fairy elements and priest notes in the dialog).
+- Shop: the catalog opens right in the shop as a price list — world items and every gear compendium, with search, rank, price and the main numbers (weapon power and critical value, grip, armor Defense and Evasion, Strength); a click puts the item in the cart.
+- Talents with a choice («…/**»): when such a talent lands on a character, it asks for the weapon category, armor category or magic system; armor bonuses work only while that armor is worn.
+- Talents declared with a spell: casting check and critical value modifiers, asked before the MP is spent; a talent can ignore critical immunity.
+- Monsters immune to criticals from edged weapons and from all magic (golems and the like) are handled for spells too.
+- Potions and herbs that restore HP or MP: one click on the sheet uses one on the target (or yourself), rolls the recovery with the Ranger bonus and applies it.
+- GM: «Update sheets from compendiums» in the Actors sidebar — items taken from compendiums earlier get the newer rules and effects (quantity, equipment, upgrades and choices made stay).
+- Loot: prices written as «5,000G» and loot tables on separate lines are read correctly.
+- Fixes: racial abilities no longer lose their always-on bonuses (the «equipped» switch ignored them); the «Creations» button only for conjurers, with creation names in the client's language; the undo button on damage cards only for the GM; «(Power)» without the stray space; the character wizard button on one line; fumble counter label and hint.
+
 ## 2.4.1-ru.12.1
 - Talent constructor: a talent can be saved as a riding stunt (Rider tab); new example «Mounted» — a toggle for riding.
 - Fencer attacks get Critical Value −1 (never below 8); a monster just made in the generator shows its real numbers on its sheet; Perception and habitat are read from monster text without «Reaction».

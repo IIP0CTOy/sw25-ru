@@ -16,7 +16,7 @@ import { rollDeathCheck } from "../helpers/deathcheck.mjs";
 import { emitToGM } from "../helpers/socket.mjs";
 import { isLabel } from "../helpers/utils.mjs";
 import { castSpell, showResistButton, castMonsterMagic, castMonsterAbility } from "../helpers/spellcast.mjs";
-import { performSong, useAlchemy, useTactics, useAspect, useWeave } from "../helpers/classcast.mjs";
+import { performSong, useAlchemy, useTactics, useAspect, useWeave, useConsumable } from "../helpers/classcast.mjs";
 import { dailyCheck, dailyMark } from "../helpers/rest.mjs";
 import { L2 } from "../helpers/monstergen-i18n.mjs";
 import { dualWeapons, dualAttack } from "../helpers/dualattack.mjs";
@@ -1263,6 +1263,11 @@ export class SW25ActorSheet extends ActorSheet {
             const r = await useFeat(this.actor, item);
             if (r !== "fallback") return r;
           }
+          // [ru.12.2] potions / herbs that restore HP or MP: one click
+          if (item?.type === "item" && item.system?.usepower && !event.shiftKey) {
+            const r = await useConsumable(this.actor, item);
+            if (r !== "fallback") return r;
+          }
           if (item) return item.roll();
         };
         const used = await use();
@@ -1418,7 +1423,7 @@ export class SW25ActorSheet extends ActorSheet {
           // [Round 66] for contest resolution / one-click damage
           kind: "check",
           itemid: itemId,
-          featMods: featCtx && (featCtx.dmg || featCtx.crit || featCtx.lt || featCtx.form !== "none" || shotFlag) ? { dmg: (Number(featCtx.dmg) || 0) + (shotFlag?.dmg || 0), crit: (featCtx.crit || 0) + (shotFlag?.crit || 0), lt: featCtx.lt || 0, pow: shotFlag?.power || 0, form: featCtx.form, formArg: featCtx.formArg || 0, ...(featCtx.form === "pierce" && targetTokens?.size > 1 ? { pierceTarget: pierceTarget(targetTokens) } : {}), names: featCtx.names } : null,
+          featMods: featCtx && (featCtx.dmg || featCtx.crit || featCtx.lt || featCtx.form !== "none" || featCtx.noCritImm || shotFlag) ? { noCritImm: featCtx.noCritImm || undefined, dmg: (Number(featCtx.dmg) || 0) + (shotFlag?.dmg || 0), crit: (featCtx.crit || 0) + (shotFlag?.crit || 0), lt: featCtx.lt || 0, pow: shotFlag?.power || 0, form: featCtx.form, formArg: featCtx.formArg || 0, ...(featCtx.form === "pierce" && targetTokens?.size > 1 ? { pierceTarget: pierceTarget(targetTokens) } : {}), names: featCtx.names } : null,
           ...(shotFlag ? { ammo: shotFlag } : {}),
           critical: chatCritical,
           fumble: chatFumble,

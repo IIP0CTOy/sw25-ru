@@ -190,6 +190,13 @@ async function castSpellInner(actor, item, opts = {}) {
       minorCast = how === "minor";
     }
   }
+  // 0d. [ru.12.2] spell talents declared now (casting check, critical value); cancelled: nothing spent
+  let sm = null;
+  if (item.type === "spell" && !opts.pay) {
+    const { spellMods } = await import("./feats.mjs");
+    sm = await spellMods(actor, item);
+    if (!sm) return null;
+  }
   // 1. cost: MP for spells; songs/alchemy pass their own payer (rhythm, cards)
   let payLine = "";
   const cost = opts.pay ? 0 : Number(item.system.mpcost) || 0;
@@ -239,7 +246,8 @@ async function castSpellInner(actor, item, opts = {}) {
 
   // 3. casting check (a Minor Action cast was decided above: no dice)
   const base = Number(item.system.checkbase) || 0;
-  const formula = minorCast ? "0" : base ? `2d6 ${base < 0 ? "-" : "+"} ${Math.abs(base)}` : "2d6";
+  const base2 = base + (minorCast ? 0 : Number(sm?.cast) || 0);
+  const formula = minorCast ? "0" : base2 ? `2d6 ${base2 < 0 ? "-" : "+"} ${Math.abs(base2)}` : "2d6";
   const roll = await new Roll(formula, actor.getRollData()).evaluate();
   const dice = roll.dice[0]?.results.map((r) => r.result) ?? [];
   const critical = !minorCast && dice[0] === 6 && dice[1] === 6 ? 1 : null;
@@ -276,7 +284,7 @@ async function castSpellInner(actor, item, opts = {}) {
 
   const chatData = {
     speaker: ChatMessage.getSpeaker({ actor }),
-    flavor: `${item.name} — ${opts.label ?? L("Label")}`,
+    flavor: `${item.name} — ${opts.label ?? L("Label")}${sm?.names?.length ? ` [${sm.names.join(", ")}]` : ""}`,
     rolls: [roll],
     content,
     flags: {
@@ -298,11 +306,17 @@ async function castSpellInner(actor, item, opts = {}) {
         fumble,
         minorCast,
         bulletSpell: bullet || undefined,
+        // [ru.12.2] spell talents: the critical value of the damage (never below 8), critical immunity
+        featMods: sm && (sm.crit || sm.noCritImm) ? (() => {
+          const cv = (Number(item.system.cvalue) || 10) + (Number(actor.system.effect?.efspellcvalue) || 0);
+          return { form: "none", crit: Math.max(8, cv + sm.crit) - cv, noCritImm: sm.noCritImm || undefined, names: sm.names };
+        })() : undefined,
       },
     },
   };
   ChatMessage.applyRollMode(chatData, game.settings.get("core", "rollMode"));
   const msg = await ChatMessage.create(chatData);
+  if (msg) await sm?.commit?.();
 
   if (fumble || !msg) return msg;
   // [ru.11.1] a bullet waits on the caster for the next gun attack (one bullet at a time)
@@ -702,4 +716,78 @@ export async function castMonsterAbility(actor, item) {
   await applyItemEffects(actor, item, targets);
   for (const tok of targets) await rollAndApplyDamage(msg, tok, "full");
   return msg;
+}
+
+/* ------------------------------------------------------------------ *
+ *  [ru.12.1] «School spells»: a caster knows every spell of their school up to their class level.
+ *  One dialog adds them from the compendiums (and the world), the ones already on the sheet are skipped.
+ * ------------------------------------------------------------------ */
+const SCHOOL_OF = { sorcerer: "sorcerer", conjurer: "conjurer", priest: "priest", magitech: "magitech", fairytamer: "fairy", druid: "druid", daemonruler: "daemon" };
+const FAIRY_PROPS = ["fairyearth", "fairyice", "fairyfire", "fairywind", "fairylight", "fairydark"];
+
+/** {type: level} of the spell schools the actor can use (Wizard = the lower of Sorcerer and Conjurer). */
+export async function schoolLevels(actor) {
+  const { classLevel } = await import("./names.mjs");
+  const out = {};
+  for (const [cls, type] of Object.entries(SCHOOL_OF)) { const lv = classLevel(actor, cls); if (lv > 0) out[type] = lv; }
+  if (out.sorcerer && out.conjurer) out.wizard = Math.min(out.sorcerer, out.conjurer);
+  return out;
+}
+
+export async function openSchoolSpells(actor) {
+  if (!actor?.isOwner) return;
+  const levels = await schoolLevels(actor);
+  if (!Object.keys(levels).length) return ui.notifications.info(L2(`${actor.name}: нет классов-заклинателей.`, `${actor.name} has no spellcasting class.`));
+  const have = new Set(actor.items.filter((i) => i.type === "spell").map((i) => i.name));
+  const ok = (e) => e.type === "spell" && levels[e.system?.type] && Number(e.system?.level) <= levels[e.system.type] && !have.has(e.name);
+  const found = game.items.filter(ok).map((i) => ({ uuid: i.uuid, name: i.name, system: i.system, pack: false }));
+  const seen = new Set(found.map((x) => x.name));
+  for (const p of game.packs) {
+    if (p.documentName !== "Item" || !p.visible) continue;
+    let idx; try { idx = await p.getIndex({ fields: ["system.type", "system.level", "system.fairytype", "system.fairyprop", "system.basempcost", "system.mpcost"] }); } catch (e) { continue; }
+    for (const e of idx) if (ok(e) && !seen.has(e.name)) { seen.add(e.name); found.push({ uuid: e.uuid, name: e.name, system: e.system, pack: true }); }
+  }
+  // the same spell in a Russian and an English compendium: the client's language
+  const cyr = (x) => /[\u0400-\u04FF]/.test(x.name);
+  const lng = game.i18n.lang;
+  let list = found;
+  if (lng === "ru" && found.some((x) => x.pack && cyr(x))) list = found.filter((x) => !x.pack || cyr(x));
+  else if (lng === "en" && found.some((x) => x.pack && !cyr(x))) list = found.filter((x) => !x.pack || !cyr(x));
+  if (!list.length) return ui.notifications.info(L2(`${actor.name}: все заклинания школы до уровня класса уже на листе (или их нет в компендиумах).`, `${actor.name}: every school spell up to the class level is already on the sheet (or none are in the compendiums).`));
+  list.sort((a, b) => Number(a.system.level) - Number(b.system.level) || a.name.localeCompare(b.name, "ru"));
+  const esc = (x) => foundry.utils.escapeHTML(String(x ?? ""));
+  const schoolName = (t) => game.i18n.localize(CONFIG.SW25?.spellTypes?.[t] ?? `SW25.Item.Spell.${t.charAt(0).toUpperCase()}${t.slice(1)}`);
+  const sections = Object.keys(levels).filter((t) => list.some((x) => x.system.type === t)).map((t) => {
+    const rows = list.filter((x) => x.system.type === t).map((x) => {
+      const fp = x.system.fairytype === "propfairy" ? x.system.fairyprop : "";
+      return `<label class="ss-row" data-fp="${esc(fp)}" style="display:flex;gap:6px;align-items:center"><input type="checkbox" value="${esc(x.uuid)}" checked> <b style="min-width:22px">${esc(x.system.level)}</b> ${esc(x.name)} <small style="opacity:.7;margin-left:auto">${esc(Number(x.system.basempcost) || Number(x.system.mpcost) || 0)} ${L2("ОМ", "MP")}</small></label>`;
+    }).join("");
+    const fairy = t === "fairy" ? `<div class="ss-fairy" style="display:flex;flex-wrap:wrap;gap:8px;margin:4px 0">${L2("Контракт со стихиями:", "Contracted elements:")} ${FAIRY_PROPS.map((p) => `<label><input type="checkbox" class="ss-fp" value="${p}" checked> ${esc(game.i18n.localize(`SW25.Item.Spell.${p.charAt(0).toUpperCase()}${p.slice(1)}`))}</label>`).join("")}</div>` : "";
+    const note = t === "priest" ? `<div style="font-size:.85em;opacity:.8">${L2("Особые заклинания других богов снимите вручную.", "Untick the special spells of other gods.")}</div>` : "";
+    return `<fieldset><legend>${esc(schoolName(t))} ${levels[t]}</legend>${fairy}${note}<div style="max-height:220px;overflow:auto">${rows}</div></fieldset>`;
+  }).join("");
+  const DialogV2 = foundry.applications.api.DialogV2;
+  const picked = await DialogV2.wait({
+    window: { title: L2(`${actor.name}: заклинания школы`, `${actor.name}: school spells`), resizable: true },
+    classes: ["sw25-school-spells"],
+    position: { width: 520 },
+    content: `<div class="sw25-ss"><p>${L2("Маг знает все заклинания своей школы до уровня класса. Отмечены те, которых ещё нет на листе.", "A caster knows every spell of their school up to the class level. Ticked: the ones not on the sheet yet.")}</p>${sections}</div>`,
+    buttons: [
+      { action: "add", label: L2("Добавить отмеченные", "Add the ticked ones"), default: true, callback: (ev, btn) => [...btn.form.querySelectorAll(".ss-row input:checked")].filter((c) => c.closest(".ss-row").style.display !== "none").map((c) => c.value) },
+      { action: "cancel", label: L2("Отмена", "Cancel") },
+    ],
+    render: (ev, dlg) => {
+      const root = (dlg?.element ?? ev?.target?.element);
+      root?.querySelectorAll(".ss-fp").forEach((cb) => cb.addEventListener("change", () => {
+        root.querySelectorAll(`.ss-row[data-fp="${cb.value}"]`).forEach((r) => { r.style.display = cb.checked ? "" : "none"; });
+      }));
+    },
+    rejectClose: false,
+  }).catch(() => null);
+  if (!Array.isArray(picked) || !picked.length) return;
+  const docs = (await Promise.all(picked.map((u) => fromUuid(u)))).filter(Boolean);
+  const data = docs.map((d) => { const o = d.toObject(); delete o._id; delete o.folder; delete o.sort; delete o.ownership; return o; });
+  await actor.createEmbeddedDocuments("Item", data);
+  if (!actor.system.attributes?.showspell) await actor.update({ "system.attributes.showspell": true });
+  ui.notifications.info(L2(`${actor.name}: добавлено заклинаний — ${data.length}.`, `${actor.name}: ${data.length} spells added.`));
 }

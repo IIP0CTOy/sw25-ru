@@ -127,6 +127,33 @@ function setTargets(tokens) {
   for (const t of tokens) t._sw25SkipPick = false;
 }
 
+/**
+ * [ru.12.2] Potions and herbs that restore HP / MP (an item with a power and the «HP» or «MP» button):
+ * one click — the target (the targeted token, or the user's own), the power roll with the Ranger bonus
+ * the system already adds (potion: Ranger + Int, herb: Ranger + Dex), the recovery applied, one used up.
+ * Returns "fallback" for anything else (the old item card).
+ */
+export async function useConsumable(actor, item) {
+  const s = item?.system ?? {}, pt = s.powerTypesButton ?? [];
+  const type = pt.length === 1 && ["hr", "mr"].includes(pt[0]) ? pt[0] : null;
+  if (item?.type !== "item" || !s.usepower || !type) return "fallback";
+  const q = Number(s.quantity) || 0;
+  if (q < 1) { ui.notifications.warn(L2(`${item.name}: не осталось.`, `${item.name}: none left.`)); return null; }
+  let tok = Array.from(game.user.targets)[0] ?? actor.getActiveTokens()[0] ?? null;
+  if (!tok) { ui.notifications.warn(L2("Нужен токен: выделите цель или поставьте своего персонажа на сцену.", "A token is needed: target someone or put your character on the scene.")); return null; }
+  const esc = (v) => foundry.utils.escapeHTML(String(v ?? ""));
+  const card = await ChatMessage.create({
+    speaker: ChatMessage.getSpeaker({ actor }),
+    flavor: item.name,
+    content: `<div class="sw25-cast-mp"><i class="fa-solid fa-flask"></i> ${esc(item.name)} → ${esc(tok.name)} · ${esc(L2(`осталось ${q - 1}`, `${q - 1} left`))}</div>`,
+    flags: { sw25: { kind: "check", itemid: item.id, target: [tok.id], autoDamage: true } },
+  });
+  const { rollAndApplyDamage } = await import("./chatbutton.mjs");
+  await rollAndApplyDamage(card, tok, "full", type);
+  await item.update({ "system.quantity": q - 1 });
+  return card;
+}
+
 export async function performSong(actor, item) {
   if (item.system.type === "final") return performFinale(actor, item);
   await ensureNotes(actor);

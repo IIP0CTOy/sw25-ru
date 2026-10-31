@@ -385,6 +385,9 @@ export function registerChargen() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "sw25-chargen";
+    // [ru.12.2] its own row, one line (the sidebar is narrow)
+    btn.style.cssText = "flex:1 1 100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis";
+    btn.title = L2("Мастер создания персонажа", "Character creation wizard");
     btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> ${L2("Мастер создания персонажа", "Character creation wizard")}`;
     btn.addEventListener("click", () => openCharacterWizard());
     const host = root.querySelector(".header-actions") ?? root.querySelector(".directory-header") ?? root;

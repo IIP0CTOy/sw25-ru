@@ -27,6 +27,7 @@
  */
 import { L2 } from "./monstergen-i18n.mjs";
 import { ensureItemFolder } from "./itembuilder.mjs";
+import { className } from "./names.mjs";
 
 const A = "system.attributes.", E = "system.effect.";
 const esc = (v) => foundry.utils.escapeHTML(String(v ?? ""));
@@ -437,6 +438,7 @@ export async function attackMods(actor, weapon, ctx = {}) {
     // a «1 round» talent is an effect from now on; this roll's accuracy formula was read before it, so add it here too
     if (f.dur === "round") { if (f.rules?.length) roundFx.push({ item, f, rules: f.rules }); out.hit += s.hit ?? 0; }
     else { out.hit += s.hit ?? 0; out.dmg += s.dmg ?? 0; out.crit += s.crit ?? 0; out.lt += s.lethal ?? 0; }
+    if (f.noCritImm) out.noCritImm = true;
     if (f.form && f.form !== "none") { out.form = f.form; out.formN = N(f.formN) || 0; out.formArg = f.form === "double" ? N(f.doubleN, 3) || 3 : f.form === "pierce" ? N(f.apN, 1) || 1 : 0; }
     out.names.push(item.name);
     if (f.risk?.length) roundFx.push({ item, f, rules: f.risk, risk: true });
@@ -455,6 +457,59 @@ export async function attackMods(actor, weapon, ctx = {}) {
   // armor piercing I / II: critical threshold +1
   if (out.form === "pierce" && out.formArg < 3) out.crit += 1;
   out.label = out.names.length ? out.names.join(", ") : "";
+  return out;
+}
+
+/* ------------------------------------------------------------------ *
+ *  [ru.12.2] Talents declared with a spell (where: "spell")
+ *    spellIf: "dmg"   only a spell that deals damage (not healing)
+ *             "table" only a spell that uses the power table
+ *    rules: cast (casting check), crit (critical value, never below 8); noCritImm: critical immunity is ignored
+ * ------------------------------------------------------------------ */
+const spellFits = (f, item) => {
+  const sys = item?.system ?? {}, pt = sys.powerTypesButton ?? [];
+  const heal = pt.length > 0 && pt.every((t) => t === "hr" || t === "mr");
+  if (f.spellIf === "dmg") return !!sys.usepower && !heal;
+  if (f.spellIf === "table") return !!sys.usepower;
+  return true;
+};
+/** Before a cast: offer the spell talents. null = cancelled, else { cast, crit, noCritImm, names, commit() }. */
+export async function spellMods(actor, item) {
+  const out = { cast: 0, crit: 0, noCritImm: false, names: [], commit: async () => {} };
+  if (!actor || item?.type !== "spell") return out;
+  const decl = activeFeats(actor).filter(({ f }) => f.kind === "feat" && f.how === "declare" && f.where === "spell" && spellFits(f, item));
+  if (!decl.length) return out;
+  const left = Math.max(0, declLimit(actor) - declaredThisTurn(actor));
+  const rows = decl.map(({ item: it, f }, i) => `<label class="sw25-decl-row"><input type="checkbox" name="d${i}" ${left ? "" : "disabled"}> <b>${esc(it.name)}</b><br><small>${esc(it.system?.overview || featSentence(f, it.name))}</small></label>`).join("");
+  const head = left ? L2(`Можно заявить: ${left}`, `You may declare: ${left}`) : L2("В этот ход талант уже заявлен.", "A talent was already declared this turn.");
+  ensureStyle();
+  const res = await foundry.applications.api.DialogV2.wait({
+    window: { title: L2(`${item.name}: заявить талант?`, `${item.name}: declare a talent?`) },
+    position: { width: 480 },
+    content: `<div class="sw25-decl"><p class="hint">${esc(head)}</p>${rows}</div>`,
+    buttons: [
+      { action: "go", label: L2("Колдовать", "Cast"), default: true, callback: (ev, btn) => [...btn.form.querySelectorAll("input[type=checkbox]")].map((c, i) => (c.checked ? i : -1)).filter((i) => i >= 0) },
+      { action: "cancel", label: L2("Отмена", "Cancel") },
+    ],
+    rejectClose: false,
+    render: (ev, dlg) => {
+      const el = dlg.element ?? ev?.target?.element;
+      const boxes = [...(el?.querySelectorAll?.(".sw25-decl input[type=checkbox]") ?? [])];
+      boxes.forEach((b) => b.addEventListener("change", () => { const n = boxes.filter((x) => x.checked).length; boxes.forEach((x) => { if (!x.checked) x.disabled = n >= left; }); }));
+    },
+  });
+  if (res === "cancel" || res === null || res === undefined) return null;
+  const chosen = (Array.isArray(res) ? res : []).slice(0, left).map((i) => decl[i]);
+  for (const { item: it, f } of chosen) {
+    const t = sumRules(f.rules, actor, item);
+    out.cast += t.cast ?? 0; out.crit += t.crit ?? 0;
+    if (f.noCritImm) out.noCritImm = true;
+    out.names.push(it.name);
+  }
+  out.commit = async () => {
+    const k = turnKey();
+    if (chosen.length && k && actor.isOwner) await actor.update({ "flags.sw25.declTurn": { key: k, n: declaredThisTurn(actor) + chosen.length } });
+  };
   return out;
 }
 
@@ -985,6 +1040,63 @@ export async function openFeatBuilder(startKind = "feat") {
 }
 
 /* ------------------------------------------------------------------ *
+ *  [ru.12.2] Talents with a choice («…/**»): the choice is made when the talent reaches a character
+ *    flags.sw25.feat.pick = "wcat"   weapon category (its rules work with that category, where: "wcat")
+ *                         | "acat"   armour category (its rules are an effect, on only while such armour is equipped)
+ *                         | "school" magic system (MP cost of that system −N)
+ * ------------------------------------------------------------------ */
+const SCHOOL_KEYS = { sc: "sorcerer", cn: "conjurer", pr: "priest", mt: "magitech", fr: "fairytamer", dr: "druid", dm: "daemonruler" };
+function pickOptions(kind) {
+  const C = CONFIG.SW25 ?? {};
+  if (kind === "wcat") return Object.entries(C.weaponCategories ?? {}).map(([k, v]) => [k, game.i18n.localize(v)]);
+  if (kind === "acat") return Object.entries(C.armorCategorys ?? {}).filter(([k]) => k !== "other").map(([k, v]) => [k, game.i18n.localize(v)]);
+  if (kind === "school") return Object.entries(SCHOOL_KEYS).map(([k, c]) => [k, className(c)]);
+  return [];
+}
+const pickedArg = (f) => (f.pick === "wcat" ? f.wArg : f.pick === "acat" ? f.aArg : f.school);
+function pickEffects(f, name, img) {
+  const fx = (changes, extra = {}) => [{ name, img, transfer: true, disabled: false, changes, flags: { sw25: { featFx: true, ...extra } } }];
+  if (f.pick === "acat") {
+    const ch = changesOf(f.rules, { kind: "feat" });
+    return ch.length ? fx(ch, { featArmor: f.aArg }) : [];
+  }
+  if (f.pick === "school" && SCHOOL_KEYS[f.school]) {
+    const v = (f.rules ?? []).filter((r) => r.s === "mp").reduce((t, r) => t - N(r.n), 0);   // «MP cost −1» → the system's MP saving +1
+    return v ? fx([{ key: `${A}efmp${f.school}`, type: "add", value: String(v), phase: "initial" }]) : [];
+  }
+  return [];
+}
+/** Armour-category talents: their effect is on only while armour of that category is equipped. */
+async function syncArmorFeats(actor) {
+  if (!actor?.isOwner) return;
+  const worn = new Set(actor.items.filter((i) => i.type === "armor" && i.system?.equip).map((i) => i.system?.category));
+  for (const item of actor.items) {
+    if (featOf(item)?.pick !== "acat") continue;
+    const upd = item.effects.filter((e) => e.flags?.sw25?.featArmor).map((e) => ({ _id: e.id, disabled: !worn.has(e.flags.sw25.featArmor) })).filter((u) => item.effects.get(u._id).disabled !== u.disabled);
+    if (upd.length) await item.updateEmbeddedDocuments("ActiveEffect", upd);
+  }
+}
+async function askPick(item) {
+  const f = featOf(item), opts = pickOptions(f?.pick);
+  if (!opts.length) return;
+  const sel = await foundry.applications.api.DialogV2.prompt({
+    window: { title: item.name },
+    content: `<p>${esc(L2("Выберите, к чему относится талант:", "Choose what the talent applies to:"))}</p><select name="pick" style="width:100%">${opts.map(([k, v]) => `<option value="${esc(k)}">${esc(v)}</option>`).join("")}</select>`,
+    ok: { label: L2("Готово", "Done"), callback: (ev, btn) => btn.form.elements.pick.value },
+    rejectClose: false,
+  });
+  if (!sel || !item.parent) return;
+  const label = opts.find(([k]) => k === sel)?.[1] ?? sel;
+  const nf = foundry.utils.deepClone(f);
+  if (f.pick === "wcat") { nf.where = "wcat"; nf.wArg = sel; } else if (f.pick === "acat") nf.aArg = sel; else nf.school = sel;
+  const name = /\*\*/.test(item.name) ? item.name.replace(/\*\*/, label) : `${item.name} (${label})`;
+  await item.update({ name, "flags.sw25.feat": nf });
+  const effs = pickEffects(nf, name, item.img);
+  if (effs.length) await item.createEmbeddedDocuments("ActiveEffect", effs);
+  if (f.pick === "acat") await syncArmorFeats(item.actor);
+}
+
+/* ------------------------------------------------------------------ *
  *  Registration
  * ------------------------------------------------------------------ */
 export function registerFeats() {
@@ -994,7 +1106,7 @@ export function registerFeats() {
     scope: "client", config: true, type: Boolean, default: false,
   });
   Hooks.on("renderActorSheet", (app, html) => { renderChips(app, html).catch((err) => console.error("SW25 | attack chips", err)); });
-  game.sw25 = Object.assign(game.sw25 ?? {}, { feats: { open: openFeatBuilder, build: buildFeatItem, featOf, activeFeats, attackMods, sentence: featSentence } });
+  game.sw25 = Object.assign(game.sw25 ?? {}, { feats: { open: openFeatBuilder, build: buildFeatItem, featOf, activeFeats, attackMods, sentence: featSentence, askPick } });
   Hooks.on("renderItemDirectory", (app, htmlEl) => {
     const root = htmlEl instanceof HTMLElement ? htmlEl : htmlEl?.[0];
     if (!root || root.querySelector(".sw25-featbuilder")) return;
@@ -1005,4 +1117,19 @@ export function registerFeats() {
     (root.querySelector(".header-actions") ?? root.querySelector(".directory-header") ?? root).appendChild(btn);
   });
   Hooks.on("renderChatMessageHTML", (message, html) => { try { bindAfterRoll(message, html); } catch (err) { console.error("SW25 | after-roll button", err); } });
+  // [ru.12.2] «…/**» talents ask for their choice; armour-category talents follow the equipped armour
+  const err = (e) => console.error("SW25 | talent choice", e);
+  Hooks.on("createItem", (item, options, userId) => {
+    if (userId !== game.user.id || !item.actor) return;
+    const f = featOf(item);
+    if (f?.pick && !pickedArg(f)) askPick(item).catch(err);
+    if (item.type === "armor") syncArmorFeats(item.actor).catch(err);
+  });
+  Hooks.on("updateItem", (item, changes, options, userId) => {
+    if (userId !== game.user.id || !item.actor || item.type !== "armor") return;
+    if (foundry.utils.hasProperty(changes, "system.equip") || foundry.utils.hasProperty(changes, "system.category")) syncArmorFeats(item.actor).catch(err);
+  });
+  Hooks.on("deleteItem", (item, options, userId) => {
+    if (userId === game.user.id && item.actor && item.type === "armor") syncArmorFeats(item.actor).catch(err);
+  });
 }

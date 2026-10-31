@@ -38,6 +38,7 @@ import { registerItemBuilder } from "./helpers/itembuilder.mjs";
 import { registerFeats } from "./helpers/feats.mjs";
 import { registerShards } from "./helpers/shards.mjs";
 import { registerUpgrades } from "./helpers/upgrades.mjs";
+import { registerRefresh } from "./helpers/catalog.mjs";
 import { registerAmmo } from "./helpers/ammo.mjs";
 import { registerRanks } from "./helpers/ranks.mjs";
 import { registerSummons } from "./helpers/summons.mjs";
@@ -593,6 +594,7 @@ Hooks.once("setup", () => {
   registerEffectText(); // [Round 93] effects from text + manual fix dialog (item sheet header)
   registerShards(); // monsters boosted with sword shards
   registerUpgrades(); // weapon / armour upgrades, Abyss enhancement
+  registerRefresh(); // [ru.12.2] GM: items on sheets take the newer compendium rules
   registerAmmo(); // ammunition, gun magazines
   registerRanks(); // adventurer rank and disgrace
   registerSummons(); // golems, undead, familiars
@@ -968,7 +970,8 @@ function syncEquipEffects(item, _equip) {
 async function _syncEquipEffects(item) {
   if (!item.effects?.size) return;
   const equip = item.system?.equip === true;
-  const transferEffects = item.effects.filter((e) => e.transfer === true && !e.flags?.sw25?.carried);   // Abyss curses «while carried» stay on
+  // Abyss curses «while carried» stay on; [ru.12.2] talent effects (featFx) follow their own rules, not «equipped»
+  const transferEffects = item.effects.filter((e) => e.transfer === true && !e.flags?.sw25?.carried && !e.flags?.sw25?.featFx);
   if (!transferEffects.length) return;
   const off = (e) => (e.flags?.sw25?.whenOff ? !!equip : !equip);   // whenOff: an Abyss curse that works only while the item is not in use
   const updates = transferEffects

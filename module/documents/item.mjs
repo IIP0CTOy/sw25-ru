@@ -2702,7 +2702,7 @@ export class SW25Item extends Item {
           label = label + " (" + label2 + ")";
         if (item.system.clickitem == "dice3")
           label = label + " (" + label3 + ")";
-        let powlabel = game.i18n.localize("SW25.Item.Power");
+        let powlabel = game.i18n.localize("SW25.Item.Power").trim();
         if (item.type == "monsterability") powlabel = labelmonpow;
         if (item.system.clickitem == "power")
           label = label + " (" + powlabel + ")";
@@ -2793,7 +2793,7 @@ export class SW25Item extends Item {
     const useeffect = item.system.useeffect;
     const useequip = item.system.useequip;
     let label = `${item.name}`;
-    let powlabel = game.i18n.localize("SW25.Item.Power");
+    let powlabel = game.i18n.localize("SW25.Item.Power").trim();
     let spell = false;
     if (item.type == "spell") spell = true;
     let enhancearts = false;

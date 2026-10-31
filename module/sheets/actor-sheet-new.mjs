@@ -286,6 +286,17 @@ export class SW25CharacterSheetNew extends SW25ActorSheet {
     const root = html[0];
     if (!root) return;
 
+    // [ru.12.1] «School spells»: a caster adds every spell of their school up to the class level in one dialog
+    const spTab = root.querySelector('.tab[data-tab="spells"]');
+    if (spTab && this.actor.isOwner && findClassItem(this.actor, "sorcerer", "conjurer", "priest", "magitech", "fairytamer", "druid", "daemonruler")) {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "n-btn n-school-spells";
+      b.innerHTML = `<i class="fa-solid fa-book-sparkles"></i> ${L2("Заклинания школы", "School spells")}`;
+      b.dataset.tooltip = L2("Добавить все заклинания своей школы до уровня класса (уже известные пропускаются)", "Add every spell of your school up to the class level (known ones are skipped)");
+      b.addEventListener("click", async (ev) => { ev.preventDefault(); const { openSchoolSpells } = await import("../helpers/spellcast.mjs"); openSchoolSpells(this.actor); });
+      spTab.prepend(b);
+    }
+
     // [ru.12.1] constructor toggles (racial ability / riding stunt): the button says what it will do and shows the state
     for (const row of root.querySelectorAll("li.item[data-item-id]")) {
       const it = this.actor.items.get(row.dataset.itemId);

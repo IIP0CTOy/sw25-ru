@@ -181,7 +181,8 @@
       "Honer.Label": "Rep.",
       "Honer.Rank": "Rank",
       "Impurity": "Soulscar",
-      "Fumble": "Fumble",
+      "Fumble": "Fumbles",
+      "FumbleHint": "Automatic failures (1-1) this session: 50 experience each at the end of the session",
       "Exp": "EXP",
       "Useexp": "Used",
       "Totalexp": "Total",
@@ -201,7 +202,7 @@
       "Showfeature": "Show Empty Groups",
       "FeaturesEmptyHint": "Nothing here yet — either this character has none of these abilities, or the hidden categories (techniques, songs, riding tricks, love charms, stratagems, infusions, barbarous skills, essence weaving) are turned off.",
       "Showspell": "Show All Spell",
-      "SpellsEmptyHint": "Nothing here yet — this character has no items from any of the 10 spell schools. If that's unexpected, check the Features tab.",
+      "SpellsEmptyHint": "No spells yet. A caster knows every spell of their school up to the class level — press «School spells» above to add them.",
       "Showaction": "Show All Action",
       "Magicpower": "MPwr"
     },
