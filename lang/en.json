@@ -1292,6 +1292,10 @@
       "hint": "Initiative effect target and initiative fomula settings (for Player Character), default and when omitted : ",
       "default": "Initiative"
     },
+    "knowShowHP": {
+      "name": "Monster Knowledge shows HP/MP",
+      "hint": "After a successful Monster Knowledge check at the start of a combat, the HP/MP bars of that monster's tokens are shown to everyone on hover. Not in the rules: a house option."
+    },
     "effectMKnowPC": {
       "name": "Item name of Monster Knowledge",
       "hint": "Monster Knowledge effect target settings (for Player Character), default and when omitted : ",

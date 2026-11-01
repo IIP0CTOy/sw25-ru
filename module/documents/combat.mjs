@@ -271,6 +271,10 @@ async function monsterKnowledge(party, enemies) {
       const effs = c.actor.effects.filter((e) => /^Слабое место|^Weak|^弱点/i.test(e.name));
       const upd = effs.filter((e) => e.disabled === !!weakOn).map((e) => ({ _id: e.id, disabled: !weakOn }));
       if (upd.length) await c.actor.updateEmbeddedDocuments("ActiveEffect", upd);
+      // [ru.12.3] house option: a known monster shows its HP/MP bars to everyone on hover
+      if (known && game.settings.get("sw25", "knowShowHP") && c.token && ![30, 50].includes(c.token.displayBars)) {
+        await c.token.update({ displayBars: CONST.TOKEN_DISPLAY_MODES.HOVER });
+      }
     }
     const who = best ? `${esc(best.c.name)} ${Number.isFinite(best.total) ? best.total : "1-1"}` : K("Nobody");
     const res = !best ? K("Unknown") : weakOn ? K("Weak") : known ? K("Known") : K("Unknown");

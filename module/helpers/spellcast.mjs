@@ -45,8 +45,29 @@ export function bindBullet(doc) {
   if (item?.type !== "weapon" || item.system?.category !== "gun") return;
   const b = actor.flags?.sw25?.bullet;
   if (!b?.msgId) return;
-  doc.updateSource({ "flags.sw25.bullet": b, content: `${doc.content ?? ""}<div class="sw25-cast-mp"><i class="fa-solid fa-gun"></i> ${Handlebars.escapeExpression(b.name)}</div>` });
-  if (actor.isOwner) actor.update({ "flags.sw25.bullet": null });
+  // [ru.12.3] the bullet's text can be opened on the shot card
+  const desc = actor.items.get(b.itemId)?.system?.description ?? "";
+  const line = `<i class="fa-solid fa-gun"></i> ${Handlebars.escapeExpression(b.name)}`;
+  const box = desc ? `<details class="sw25-cast-mp"><summary>${line}</summary>${desc}</details>` : `<div class="sw25-cast-mp">${line}</div>`;
+  doc.updateSource({ "flags.sw25.bullet": b, content: `${doc.content ?? ""}${box}` });
+  if (actor.isOwner) {
+    actor.update({ "flags.sw25.bullet": null });
+    syncBulletFx(actor, null).catch((e) => console.error("SW25 | bullet", e));
+  }
+}
+
+/** [ru.12.3] the loaded bullet shows as an effect «Loaded: <bullet>» on the shooter. */
+export async function syncBulletFx(actor, b) {
+  const old = actor.effects.filter((e) => e.flags?.sw25?.bulletFx).map((e) => e.id);
+  if (old.length) await actor.deleteEmbeddedDocuments("ActiveEffect", old);
+  if (!b) return;
+  const item = actor.items.get(b.itemId);
+  await actor.createEmbeddedDocuments("ActiveEffect", [{
+    name: `${L2("Заряжено", "Loaded")}: ${b.name}`,
+    img: item?.img || "icons/weapons/ammunition/bullets-cartridge-shell-gray.webp",
+    description: item?.system?.description ?? "",
+    flags: { sw25: { bulletFx: true } },
+  }]);
 }
 
 /** Apply a flat HP/MP change to a token (owner directly, else via the GM). */
@@ -321,7 +342,9 @@ async function castSpellInner(actor, item, opts = {}) {
   if (fumble || !msg) return msg;
   // [ru.11.1] a bullet waits on the caster for the next gun attack (one bullet at a time)
   if (bullet) {
-    await actor.update({ "flags.sw25.bullet": { msgId: msg.id, itemId: item.id, name: item.name } });
+    const loaded = { msgId: msg.id, itemId: item.id, name: item.name };
+    await actor.update({ "flags.sw25.bullet": loaded });
+    await syncBulletFx(actor, loaded).catch((e) => console.error("SW25 | bullet", e));
     return msg;
   }
   // contested spells: the save (GM for monsters / player for PCs) triggers

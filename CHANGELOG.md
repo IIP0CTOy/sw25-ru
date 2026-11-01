@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 2.4.1-ru.12.3
+- Damage cards: the GM can apply the damage again (after an undo), with a confirmation.
+- New monsters: token bars show when the owner hovers the token.
+- Guns: a healing bullet misses only on a fumble; the bullet's damage or healing shows on the shot's card.
+- Damage rows on attack cards show the power total next to the applied value.
+- New sheet: XP and class level fields in settings mode show their values.
+- Guns: a loaded bullet shows as an effect «Loaded: …» on the shooter; the bullet's text opens on the shot card.
+- House option (off by default): a successful Monster Knowledge check at the start of a combat shows that monster's HP/MP bars to everyone on hover.
+
 ## 2.4.1-ru.12.2
 - Spells: a «School spells» button on the Spells tab adds every spell of the character's school up to the class level from the compendiums (known ones skipped, fairy elements and priest notes in the dialog).
 - Shop: the catalog opens right in the shop as a price list — world items and every gear compendium, with search, rank, price and the main numbers (weapon power and critical value, grip, armor Defense and Evasion, Strength); a click puts the item in the cart.

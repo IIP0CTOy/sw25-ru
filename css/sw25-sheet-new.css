@@ -735,6 +735,8 @@
 .sw25n .n-cls-edit input.sl-change { width: 2.4em; height: 20px; text-align: center; padding: 0; }
 .sw25n .n-cls-edit .changesl-button { font-size: 11px; opacity: .8; }
 .sw25n .n-cls-edit .changesl-button:hover { opacity: 1; }
+/* [ru.12.3] the header has light text: the inputs get their own colours, else the value is invisible */
+.sw25n .n-lvl input.n-exp, .sw25n .n-cls-edit input.sl-change { color: var(--sw-ink); background: #fff; border: 1px solid var(--sw-vellum-line); border-radius: 4px; -webkit-text-fill-color: var(--sw-ink); }
 
 /* ===== [ru.12.1] Compact variant of the new sheet (a sheet of its own in the «Sheet» choice): the same
    template and code, only the header is packed into ~1/3 of the height ===== */

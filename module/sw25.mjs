@@ -201,6 +201,15 @@ function registerSystemSettings() {
       effectMKnowPC = value;
     },
   });
+  // [ru.12.3] house option: Monster Knowledge reveals the HP/MP bars
+  game.settings.register("sw25", "knowShowHP", {
+    name: "SETTING.knowShowHP.name",
+    hint: "SETTING.knowShowHP.hint",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: false,
+  });
   game.settings.register("sw25", "effectVitResMon", {
     name: "SETTING.effectVitResMon.name",
     hint: "SETTING.effectVitResMon.hint",
@@ -1684,6 +1693,7 @@ function applyBuiltinPowerRows() {
         //prependAdjective = true;
         //disposition = -1;
         //displayBars = 40;
+        displayBars = 20; // [ru.12.3] bars when the owner hovers the token
         break;
       default:
       /*
@@ -1726,6 +1736,8 @@ function applyBuiltinPowerRows() {
       displayBars = actor.prototypeToken.hasOwnProperty("displayBars")
         ? actor.prototypeToken.displayBars
         : displayBars;
+      // [ru.12.3] monsters: "always for owner" becomes "hovered by owner"
+      if (actor.type === "monster" && displayBars === 40) displayBars = 20;
     }
 
     // Update actor

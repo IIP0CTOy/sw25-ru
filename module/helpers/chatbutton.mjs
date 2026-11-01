@@ -2680,8 +2680,17 @@ async function resolveContest(attackMsg, defRoll, defToken) {
     if (st(atkA).has("invisible") || st(defA).has("blind")) { def -= 4; visNotes.push(L2("не видит атакующего −4", "can't see the attacker −4")); }
   }
 
+  // [ru.12.3] a healing bullet misses only on a fumble (an ally may choose not to evade)
+  let healShot = false;
+  if (key === "Dodge" && f.bullet?.msgId) {
+    const bMsg = game.messages.get(f.bullet.msgId);
+    const bItem = ChatMessage.getSpeakerActor(attackMsg.speaker)?.items.get(bMsg?.flags?.sw25?.itemid);
+    const pts = bItem?.system?.powerTypesButton ?? [];
+    healShot = pts.length > 0 && pts.every((t) => t === "hr" || t === "mr");
+  }
   let defenderWins;
   if (attackFumble) defenderWins = true;
+  else if (healShot) defenderWins = false;
   else if (defCrit) defenderWins = true;
   else if (attackCrit) defenderWins = false;
   else if (defFumble) defenderWins = false;
@@ -2765,8 +2774,8 @@ const _damageDone = new Set();
  * applyType: "pd" | "md" | "cd" | "hr" | "mr" | null (null = roll only,
  * leave the apply buttons to the players).
  */
-export async function rollAndApplyDamage(atkMsg, tok, mode = "full", applyType) {
-  return withParent(atkMsg.id, () => _rollAndApplyDamage(atkMsg, tok, mode, applyType));
+export async function rollAndApplyDamage(atkMsg, tok, mode = "full", applyType, parentId = atkMsg.id) {
+  return withParent(parentId, () => _rollAndApplyDamage(atkMsg, tok, mode, applyType));
 }
 async function _rollAndApplyDamage(atkMsg, tok, mode, applyType) {
   const atkActor = ChatMessage.getSpeakerActor(atkMsg.speaker);
@@ -2819,8 +2828,18 @@ async function _autoDamage(contestMsg, { auto = false } = {}) {
   const f = contestMsg.flags?.sw25 ?? {};
   if (!f.attackMessageId || !f.damageMode) return;
   if (f.damageDone || _damageDone.has(contestMsg.id)) {
-    if (!auto) ui.notifications.warn(game.i18n.localize("SW25.Contest.AlreadyDone"));
-    return;
+    // [ru.12.3] the GM may apply it again (after an undo, to fix a mistake)
+    let again = false;
+    if (!auto && game.user.isGM) {
+      try {
+        again = await foundry.applications.api.DialogV2.confirm({ window: { title: game.i18n.localize("SW25.Contest.AlreadyDone") }, content: `<p>${L2("Применить урон ещё раз?", "Apply the damage again?")}</p>`, rejectClose: false });
+      } catch (err) { again = false; }
+    }
+    if (!again) {
+      if (!auto && !game.user.isGM) ui.notifications.warn(game.i18n.localize("SW25.Contest.AlreadyDone"));
+      return;
+    }
+    _damageDone.delete(contestMsg.id);
   }
   const atkMsg = game.messages.get(f.attackMessageId);
   if (!atkMsg) return;
@@ -2864,7 +2883,8 @@ async function _autoDamage(contestMsg, { auto = false } = {}) {
     if (!bItem?.system?.usepower) return;
     // the cards made for this shot are marked: shot protection of the target's armor applies to them
     _shotCtx = !heal;
-    try { await rollAndApplyDamage(bulletMsg, tok, "full", type); } finally { _shotCtx = false; }
+    // [ru.12.3] the result goes on the shot's card (with the hit), not on the old bullet card
+    try { await rollAndApplyDamage(bulletMsg, tok, "full", type, atkMsg.id); } finally { _shotCtx = false; }
     return;
   }
   _double = !!f.double; _fixed12 = !!f.fixed12;
@@ -2894,7 +2914,8 @@ export async function autoDamageFor(contestMsgId, userId) {
 /** Disable the damage button once used (bound from renderChatMessage). */
 export function markContestButtons(message, html) {
   if (message.flags?.sw25?.damageDone) {
-    html.find(".sw25-autodamage").prop("disabled", true).addClass("sw25-used");
+    // the GM keeps the button: it can apply the damage again after an undo
+    html.find(".sw25-autodamage").prop("disabled", !game.user.isGM).addClass("sw25-used");
   }
 }
 
@@ -3105,7 +3126,9 @@ function renderSummary(rows) {
       if (r.damageMode === "half") tag = `<span class="sw25-sum-tag">${esc(L("TagHalf"))}</span>`;
       else if (r.powerFumble) tag = `<span class="sw25-sum-tag">${esc(L("TagFumble"))}</span>`;
       else if (r.crit) tag = `<span class="sw25-sum-tag sw25-sum-crit">${esc(L("TagCrit"))}${r.crit > 1 ? " ×" + r.crit : ""}</span>`;
-      res = `${tag}<span class="sw25-sum-dmg${diff > 0 ? " sw25-sum-heal" : ""}">${sign}${diff} ${esc(typeLabel(r.applyType))}</span>
+      // [ru.12.3] the power total stays visible next to the applied value
+      const pw = r.power !== undefined ? `<span class="sw25-sum-pow">${esc(L("Rolled"))}: ${esc(r.power)} →</span> ` : "";
+      res = `${tag}${pw}<span class="sw25-sum-dmg${diff > 0 ? " sw25-sum-heal" : ""}">${sign}${diff} ${esc(typeLabel(r.applyType))}</span>
         <span class="sw25-sum-hp sw25-viewer" data-sw25-actor="${uuid}">(${esc(r.before)} → ${esc(r.after)})</span>
         <button class="buttonclick sw25-sum-cancel sw25-gmonly" data-buttontype="childcancel:${r.applyId}" title="${esc(L("Undo"))}"><i class="fa-solid fa-rotate-left"></i></button>`;
     } else if (r.power !== undefined) {

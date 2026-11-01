@@ -1341,7 +1341,8 @@ export const JA_STATIC = new Map(Object.entries({
 "Items taken from compendiums earlier get the new rules and effects. Quantity, equipment, upgrades and choices already made stay.": "以前コンペンディウムから取ったアイテムに新しいルールと効果を反映します。個数・装備・強化・選択済みの内容はそのままです。",
 "Update from compendiums": "コンペンディウムから更新",
 "Update the ticked ones": "チェックしたものを更新",
-"Update sheets from compendiums": "コンペンディウムからシートを更新"
+"Update sheets from compendiums": "コンペンディウムからシートを更新",
+"Apply the damage again?": "もう一度ダメージを適用しますか？"
 }));
 export const JA_TPL = [
 [
