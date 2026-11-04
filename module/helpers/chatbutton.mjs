@@ -144,7 +144,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
             targetMessage: chatMessageId,
           },
         };
-        chatData.content = await renderTemplate(
+        chatData.content = await foundry.applications.handlebars.renderTemplate(
           "systems/sw25-ru/templates/roll/roll-applyall.hbs",
           {
             apply: chatapply,
@@ -438,7 +438,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
         },
       };
 
-      chatData.content = await renderTemplate(
+      chatData.content = await foundry.applications.handlebars.renderTemplate(
         "systems/sw25-ru/templates/roll/roll-check.hbs",
         {
           formula: chatFormula,
@@ -598,7 +598,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
         },
       };
 
-      chatData.content = await renderTemplate(
+      chatData.content = await foundry.applications.handlebars.renderTemplate(
         "systems/sw25-ru/templates/roll/roll-power.hbs",
         {
           formula: chatFormula,
@@ -670,7 +670,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
             tags: chatMessage.flags.sw25.tags,
           },
         },
-        content: await renderTemplate(
+        content: await foundry.applications.handlebars.renderTemplate(
           "systems/sw25-ru/templates/roll/roll-power.hbs",
           {
             formula: chatMessage.flags.sw25.formula,
@@ -733,7 +733,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
             tags: chatMessage.flags.sw25.tags,
           },
         },
-        content: await renderTemplate(
+        content: await foundry.applications.handlebars.renderTemplate(
           "systems/sw25-ru/templates/roll/roll-power.hbs",
           {
             formula: chatMessage.flags.sw25.formula,
@@ -808,7 +808,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
             tags: chatMessage.flags.sw25.tags,
           },
         },
-        content: await renderTemplate(
+        content: await foundry.applications.handlebars.renderTemplate(
           "systems/sw25-ru/templates/roll/roll-power.hbs",
           {
             formula: chatMessage.flags.sw25.formula,
@@ -867,7 +867,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
             tags: chatMessage.flags.sw25.tags,
           },
         },
-        content: await renderTemplate(
+        content: await foundry.applications.handlebars.renderTemplate(
           "systems/sw25-ru/templates/roll/roll-power.hbs",
           {
             formula: chatMessage.flags.sw25.formula,
@@ -936,7 +936,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
             tags: chatMessage.flags.sw25.tags,
           },
         },
-        content: await renderTemplate(
+        content: await foundry.applications.handlebars.renderTemplate(
           "systems/sw25-ru/templates/roll/roll-power.hbs",
           {
             formula: chatMessage.flags.sw25.formula,
@@ -994,7 +994,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
             tags: chatMessage.flags.sw25.tags,
           },
         },
-        content: await renderTemplate(
+        content: await foundry.applications.handlebars.renderTemplate(
           "systems/sw25-ru/templates/roll/roll-power.hbs",
           {
             formula: chatMessage.flags.sw25.formula,
@@ -1082,7 +1082,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
           tags: chatMessage.flags.sw25.tags,
         },
       },
-      content: await renderTemplate(
+      content: await foundry.applications.handlebars.renderTemplate(
         "systems/sw25-ru/templates/roll/roll-power.hbs",
         {
           formula: chatMessage.flags.sw25.formula,
@@ -1175,7 +1175,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
           tags: chatMessage.flags.sw25.tags,
         },
       },
-      content: await renderTemplate(
+      content: await foundry.applications.handlebars.renderTemplate(
         "systems/sw25-ru/templates/roll/roll-power.hbs",
         {
           formula: chatMessage.flags.sw25.formula,
@@ -1250,7 +1250,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
             tags: chatMessage.flags.sw25.tags,
           },
         },
-        content: await renderTemplate(
+        content: await foundry.applications.handlebars.renderTemplate(
           "systems/sw25-ru/templates/roll/roll-check.hbs",
           {
             formula: chatMessage.flags.sw25.formula,
@@ -1301,7 +1301,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
             tags: chatMessage.flags.sw25.tags,
           },
         },
-        content: await renderTemplate(
+        content: await foundry.applications.handlebars.renderTemplate(
           "systems/sw25-ru/templates/roll/roll-check.hbs",
           {
             formula: chatMessage.flags.sw25.formula,
@@ -1362,7 +1362,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
       });
     }
 
-    let content = await renderTemplate(
+    let content = await foundry.applications.handlebars.renderTemplate(
       "systems/sw25-ru/templates/roll/roll-apply.hbs",
       {
         target: targetToken.document.name,
@@ -1429,7 +1429,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
           tags: chatMessage.flags.sw25.tags,
         },
       },
-      content: await renderTemplate(
+      content: await foundry.applications.handlebars.renderTemplate(
         "systems/sw25-ru/templates/roll/roll-check.hbs",
         {
           formula: chatMessage.flags.sw25.formula,
@@ -1565,7 +1565,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
         });
         if (out) {
           const esc = (v) => Handlebars.escapeExpression(String(v ?? ""));
-          let content = await renderTemplate("systems/sw25-ru/templates/roll/roll-apply.hbs", {
+          let content = await foundry.applications.handlebars.renderTemplate("systems/sw25-ru/templates/roll/roll-apply.hbs", {
             value: out.value,
             target: `${targetToken.document.name} — ${out.label}`,
             type: buttonType,
@@ -1705,7 +1705,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
         },
       };
 
-      chatData.content = await renderTemplate(
+      chatData.content = await foundry.applications.handlebars.renderTemplate(
         "systems/sw25-ru/templates/roll/roll-apply.hbs",
         {
           value: differenceValue,
@@ -1804,7 +1804,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
       speaker: speaker,
       flavor: label,
     };
-    chatData.content = await renderTemplate(
+    chatData.content = await foundry.applications.handlebars.renderTemplate(
       "systems/sw25-ru/templates/roll/effect-apply.hbs",
       {
         targetActorName: chatActorName,
@@ -1989,7 +1989,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
       flavor: label,
     };
 
-    chatData.content = await renderTemplate(
+    chatData.content = await foundry.applications.handlebars.renderTemplate(
       "systems/sw25-ru/templates/roll/hp-apply.hbs",
       {
         targetHP: base,
@@ -2043,7 +2043,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
         },
       },
     };
-    chatData.content = await renderTemplate(
+    chatData.content = await foundry.applications.handlebars.renderTemplate(
       "systems/sw25-ru/templates/roll/mp-apply.hbs",
       {
         targetMP: base,
@@ -2117,7 +2117,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
         chatLootItem = lootItems[i].item;
     }
 
-    chatData.content = await renderTemplate(
+    chatData.content = await foundry.applications.handlebars.renderTemplate(
       "systems/sw25-ru/templates/roll/roll-check.hbs",
       {
         formula: chatFormula,
@@ -2149,7 +2149,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
       : 1;
     lootFlag.sw25.lootCount = lootCount;
 
-    const lootContent = await renderTemplate(
+    const lootContent = await foundry.applications.handlebars.renderTemplate(
       "systems/sw25-ru/templates/roll/lootlist.hbs",
       {
         flavor: chatMessage.flags.sw25.name,
@@ -2507,7 +2507,7 @@ async function _chatButton(chatMessage, buttonType, opts = {}) {
           roll.total + 5
         )} <span style="font-size:0.7em;"> ( ${roll.total} + 5 )</span>`;
 
-      chatData.content = await renderTemplate(
+      chatData.content = await foundry.applications.handlebars.renderTemplate(
         "systems/sw25-ru/templates/roll/roll-check.hbs",
         {
           name: name,

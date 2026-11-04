@@ -77,7 +77,7 @@ export async function mpCost(
       rollMode: rollMode,
     };
 
-    chatData.content = await renderTemplate(
+    chatData.content = await foundry.applications.handlebars.renderTemplate(
       "systems/sw25-ru/templates/roll/mp-apply.hbs",
       {
         cost: costValue,
@@ -126,7 +126,7 @@ export async function mpCost(
         },
       },
     };
-    chatData.content = await renderTemplate(
+    chatData.content = await foundry.applications.handlebars.renderTemplate(
       "systems/sw25-ru/templates/roll/mp-apply.hbs",
       {
         cost: costMes,
@@ -221,7 +221,7 @@ export async function hpCost(token, cost, max, name, type) {
     rolls: [result],
   };
 
-  chatData.content = await renderTemplate(
+  chatData.content = await foundry.applications.handlebars.renderTemplate(
     "systems/sw25-ru/templates/roll/hp-apply.hbs",
     {
       nofix: nofix,

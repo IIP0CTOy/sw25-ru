@@ -51,7 +51,7 @@ export async function attackCard(actor, item, targets, mods = {}) {
   const damage = actor.system.attributes.damage;
   const tags = DamageSupporter.createChatTag(elements, damage, actor.system.classType, DamageSupporter.getWeaponAttributes(item));
   const tooltip = await roll.getTooltip();
-  const content = await renderTemplate("systems/sw25-ru/templates/roll/roll-check.hbs", {
+  const content = await foundry.applications.handlebars.renderTemplate("systems/sw25-ru/templates/roll/roll-check.hbs", {
     formula: roll.formula, tooltip, critical, fumble, total: roll.total,
     apply: item.system.applycheck, checktype: item.system.checkTypesButton ?? "", targetName,
     resusetext: ammoLine ? `<div style="text-align: right;">${ammoLine}</div>` : undefined,

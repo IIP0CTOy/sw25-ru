@@ -2,7 +2,7 @@
  * Extend the basic ActorSheet with some very simple modifications
  * @extends {ActiveEffectConfig}
  */
-export class SW25ActiveEffectConfigV1 extends ActiveEffectConfig {
+export class SW25ActiveEffectConfigV1 extends foundry.applications.sheets.ActiveEffectConfig {
   /** @override */
   static get defaultOptions() {
     //return foundry.utils.mergeObject(super.defaultOptions, {

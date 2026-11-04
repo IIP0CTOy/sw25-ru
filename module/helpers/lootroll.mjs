@@ -63,7 +63,7 @@ export async function lootRoll(actor) {
     rollMode: rollMode,
   };
 
-  chatData.content = await renderTemplate(
+  chatData.content = await foundry.applications.handlebars.renderTemplate(
     "systems/sw25-ru/templates/roll/lootlist.hbs",
     {
       flavor: actorName,

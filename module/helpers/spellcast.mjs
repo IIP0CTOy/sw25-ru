@@ -282,7 +282,7 @@ async function castSpellInner(actor, item, opts = {}) {
     ? targets.map((t) => `>>> ${Handlebars.escapeExpression(t.document.name)}`).join("<br>")
     : null;
 
-  let content = await renderTemplate("systems/sw25-ru/templates/roll/roll-check.hbs", {
+  let content = await foundry.applications.handlebars.renderTemplate("systems/sw25-ru/templates/roll/roll-check.hbs", {
     formula: roll.formula,
     tooltip: await roll.getTooltip(),
     critical,
@@ -717,7 +717,7 @@ export async function castMonsterAbility(actor, item) {
   const contested = ["Vitres", "Mndres", "Dodge"].includes(key) && [...CONTESTED_RESULTS, "none"].includes(result);
   const resistData = contested ? { name: game.i18n.localize(`SW25.Resist.Check.${key}`), key, result } : null;
   const targetName = targets.map((t) => `>>> ${Handlebars.escapeExpression(t.document.name)}`).join("<br>");
-  let content = await renderTemplate("systems/sw25-ru/templates/roll/roll-check.hbs", {
+  let content = await foundry.applications.handlebars.renderTemplate("systems/sw25-ru/templates/roll/roll-check.hbs", {
     formula: roll.formula, tooltip: await roll.getTooltip(), critical, fumble, total: roll.total, apply: "-", targetName: contested ? null : targetName,
     resist: showResistButton(resistData, targets) ? resistData : null,
   });

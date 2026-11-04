@@ -527,31 +527,31 @@ Hooks.once("init", function () {
   );
 
   // Register sheet application classes
-  Actors.unregisterSheet("core", ActorSheet);
-  Actors.registerSheet("sw25", SW25ActorSheet, {
+  foundry.documents.collections.Actors.unregisterSheet("core", foundry.appv1.sheets.ActorSheet);
+  foundry.documents.collections.Actors.registerSheet("sw25", SW25ActorSheet, {
     makeDefault: true,
     label: "SW25.SheetLabels.Actor",
   });
   // [UI redesign] the new character sheet; the classic sheet above stays available
   // from the sheet window's "Sheet" button (and stays the default for monsters / NPCs).
-  Actors.registerSheet("sw25", SW25CharacterSheetNew, {
+  foundry.documents.collections.Actors.registerSheet("sw25", SW25CharacterSheetNew, {
     types: ["character"],
     makeDefault: true, // [ru.11.1] the new sheet is the default for characters; the classic one stays selectable
     label: "SW25.SheetLabels.ActorNew", // a lang key: at init the client language is not known yet
   });
   // [ru.12.1] the same sheet with a compact header (small screens): picked per character with the «Sheet» button
-  Actors.registerSheet("sw25", SW25CharacterSheetCompact, {
+  foundry.documents.collections.Actors.registerSheet("sw25", SW25CharacterSheetCompact, {
     types: ["character"],
     label: "SW25.SheetLabels.ActorCompact",
   });
-  Items.unregisterSheet("core", ItemSheet);
-  Items.registerSheet("sw25", SW25ItemSheet, {
+  foundry.documents.collections.Items.unregisterSheet("core", foundry.appv1.sheets.ItemSheet);
+  foundry.documents.collections.Items.registerSheet("sw25", SW25ItemSheet, {
     makeDefault: true,
     label: "SW25.SheetLabels.Item",
   });
 
   // Register Active effect sheet Class
-  DocumentSheetConfig.unregisterSheet(ActiveEffect, "core", ActiveEffectConfig);
+  foundry.applications.apps.DocumentSheetConfig.unregisterSheet(ActiveEffect, "core", foundry.applications.sheets.ActiveEffectConfig);
 
   if (foundry.utils.isNewerVersion(game.version, "13")) {
     // v13 or newer
@@ -561,7 +561,7 @@ Hooks.once("init", function () {
     SW25ActiveEffectConfig = SW25ActiveEffectConfigV1;
   }
 
-  DocumentSheetConfig.registerSheet(
+  foundry.applications.apps.DocumentSheetConfig.registerSheet(
     ActiveEffect,
     "sw25",
     SW25ActiveEffectConfig,
@@ -933,7 +933,7 @@ Hooks.on("updateCombat", async (combat, changes, options, userId) => {
         rollMode: rollMode,
       };
 
-      chatData.content = await renderTemplate(
+      chatData.content = await foundry.applications.handlebars.renderTemplate(
         "systems/sw25-ru/templates/roll/hpmp-apply.hbs",
         {
           targetHP: targetHP,
