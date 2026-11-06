@@ -14,7 +14,7 @@
   ],
   "url": "https://github.com/IIP0CTOy/sw25-ru",
   "manifest": "https://github.com/IIP0CTOy/sw25-ru/releases/latest/download/system.json",
-  "download": "https://github.com/IIP0CTOy/sw25-ru/releases/download/v2.4.1-ru.7/sw25-ru.zip",
+  "download": "https://github.com/IIP0CTOy/sw25-ru/releases/download/v2.4.1-ru.12.4/sw25-ru.zip",
   "bugs": "https://github.com/IIP0CTOy/sw25-ru/issues",
   "license": "LICENSE.txt",
   "readme": "README.md",
@@ -26,7 +26,7 @@
       "thumbnail": "systems/sw25-ru/assets/sw25fvtt.png"
     }
   ],
-  "version": "2.4.1-ru.7",
+  "version": "2.4.1-ru.12.4",
   "compatibility": {
     "minimum": "14",
     "verified": "14",

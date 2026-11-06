@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.4.1-ru.12.4
+- System manifest: bump version to 2.4.1-ru.12.4 and update download URL.
+- Foundry v15 compatibility: qualify deprecated globals (renderTemplate, loadTemplates, ActorSheet, ItemSheet, Actors, Items, DocumentSheetConfig, ActiveEffectConfig).
+
 ## 2.4.1-ru.12.3
 - Damage cards: the GM can apply the damage again (after an undo), with a confirmation.
 - New monsters: token bars show when the owner hovers the token.
